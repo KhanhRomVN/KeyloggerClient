@@ -1,0 +1,36 @@
+#ifndef SYSTEMDATA_H
+#define SYSTEMDATA_H
+
+#include <string>
+#include <vector>
+#include <cstdint>
+
+struct SystemInfo {
+    std::string timestamp;
+    std::string computerName;
+    std::string userName;
+    std::string osVersion;
+    uint64_t memorySize;
+    std::string processorInfo;
+    uint64_t diskSize;
+    std::string networkInfo;
+    std::vector<std::string> runningProcesses;
+};
+
+class SystemDataCollector {
+public:
+    SystemDataCollector();
+    SystemInfo Collect() const;
+    
+private:
+    std::string GetComputerName() const;
+    std::string GetUserName() const;
+    std::string GetOSVersion() const;
+    uint64_t GetMemorySize() const;
+    std::string GetProcessorInfo() const;
+    uint64_t GetDiskSize() const;
+    std::string GetNetworkInfo() const;
+    std::vector<std::string> GetRunningProcesses() const;
+};
+
+#endif

