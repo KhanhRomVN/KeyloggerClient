@@ -1,62 +1,46 @@
-cmake_minimum_required(VERSION 3.15)
-project(KeyloggerResearchProject)
+# Find Windows SDK
+include(FindPackageHandleStandardArgs)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+find_path(WINDOWSSDK_INCLUDE_DIR
+    NAMES windows.h
+    PATHS
+    "$ENV{ProgramFiles}/Windows Kits/10/Include/*/um"
+    "$ENV{ProgramFiles(x86)}/Windows Kits/10/Include/*/um"
+    CMAKE_FIND_ROOT_PATH_BOTH
+)
 
-if(MSVC)
-    add_compile_options(/W4 /WX /MP /Oi /GL)
-    add_link_options(/LTCG)
-    string(REPLACE "/MT" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-    string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+find_library(WINDOWSSDK_LIBRARY
+    NAMES kernel32 user32 advapi32
+    PATHS
+    "$ENV{ProgramFiles}/Windows Kits/10/Lib/*/um/x86"
+    "$ENV{ProgramFiles(x86)}/Windows Kits/10/Lib/*/um/x86"
+    CMAKE_FIND_ROOT_PATH_BOTH
+)
+
+find_package_handle_standard_args(WindowsSDK
+    REQUIRED_VARS WINDOWSSDK_INCLUDE_DIR WINDOWSSDK_LIBRARY
+)
+
+if(WindowsSDK_FOUND)
+    set(WINDOWSSDK_INCLUDE_DIRS ${WINDOWSSDK_INCLUDE_DIR})
+    set(WINDOWSSDK_LIBRARIES ${WINDOWSSDK_LIBRARY})
 endif()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-
-find_package(WindowsSDK REQUIRED)
-find_package(Crypto REQUIRED)
-
-include_directories(
-    ${CMAKE_SOURCE_DIR}/include
-    ${WINDOWSSDK_INCLUDE_DIRS}
+# Find Crypto libraries
+find_path(CRYPTO_INCLUDE_DIR
+    NAMES wincrypt.h
+    PATHS ${WINDOWSSDK_INCLUDE_DIR}
 )
 
-file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "include/*.h")
-
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-    advapi32.lib
-    crypt32.lib
-    winhttp.lib
-    wininet.lib
-    dnsapi.lib
-    iphlpapi.lib
-    psapi.lib
-    gdiplus.lib
-    taskschd.lib
-    comsuppw.lib
-    ${CRYPTO_LIBRARIES}
+find_library(CRYPTO_LIBRARY
+    NAMES advapi32.lib crypt32.lib
 )
 
-if(MSVC)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS)
+find_package_handle_standard_args(Crypto
+    REQUIRED_VARS CRYPTO_INCLUDE_DIR CRYPTO_LIBRARY
+)
+
+if(CRYPTO_FOUND)
+    set(CRYPTO_INCLUDE_DIRS ${CRYPTO_INCLUDE_DIR})
+    set(CRYPTO_LIBRARIES ${CRYPTO_LIBRARY})
 endif()
-
-install(TARGETS ${PROJECT_NAME}
-    RUNTIME DESTINATION bin
-    BUNDLE DESTINATION bin
-)
-
-configure_file(
-    ${CMAKE_SOURCE_DIR}/resources/config/default.cfg
-    ${CMAKE_BINARY_DIR}/default.cfg
-    COPYONLY
-)

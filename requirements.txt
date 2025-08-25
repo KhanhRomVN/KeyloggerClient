@@ -1,0 +1,4 @@
+# Build requirements
+cmake>=3.15
+visualstudio2019
+windows-sdk
