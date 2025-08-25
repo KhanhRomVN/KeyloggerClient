@@ -29,10 +29,17 @@ if exist "%TOOLS_DIR%\cmake-%CMAKE_VERSION%-windows-x86_64\bin\cmake.exe" (
 )
 
 echo [INFO] Downloading CMake %CMAKE_VERSION%...
-powershell -Command "Invoke-WebRequest -Uri '%CMAKE_URL%' -OutFile '%CMAKE_INSTALLER%'"
+certutil -urlcache -split -f "%CMAKE_URL%" "%CMAKE_INSTALLER%"
 if %errorlevel% neq 0 (
-    echo [ERROR] Failed to download CMake
-    exit /b 1
+    echo [ERROR] Failed to download CMake using certutil
+    echo [INFO] Trying alternative download method...
+    bitsadmin /transfer cmakeDownload /download /priority normal "%CMAKE_URL%" "%CMAKE_INSTALLER%"
+    if %errorlevel% neq 0 (
+        echo [ERROR] Failed to download CMake
+        echo [INFO] Please download CMake manually from: https://cmake.org/download/
+        echo [INFO] And add it to your system PATH.
+        exit /b 1
+    )
 )
 
 echo [INFO] Installing CMake...
