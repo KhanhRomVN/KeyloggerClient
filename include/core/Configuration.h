@@ -1,3 +1,4 @@
+// KeyLoggerClient/include/core/Configuration.h
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
@@ -32,7 +33,14 @@ public:
     uint32_t GetTimeout() const;
     std::string GetEncryptionKey() const;
     
+    // Network mode methods
+    std::string GetNetworkMode() const;
+    std::string GetSameWifiServerUrl() const;
+    std::string GetDifferentWifiServerUrl() const;
+    
     bool SaveConfiguration() const;
+
+    
     
 private:
     std::unordered_map<std::string, std::string> m_configValues;

