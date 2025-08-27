@@ -25,6 +25,33 @@ set INPUT_FILE=%DIST_DIR%\KeyLoggerClient.exe
 set OUTPUT_FILE=%DIST_DIR%\KeyLoggerClient_protected.exe
 
 :: ================================
+:: Kiểm tra MinGW và make
+:: ================================
+echo [INFO] Checking MinGW installation...
+where gcc >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] MinGW GCC not found in PATH
+    echo [INFO] Please ensure you're running from MINGW64 terminal
+    exit /b 1
+)
+
+where mingw32-make >nul 2>nul
+if %errorlevel% equ 0 (
+    set MAKE_CMD=mingw32-make
+    echo [INFO] Found mingw32-make
+) else (
+    where make >nul 2>nul
+    if %errorlevel% equ 0 (
+        set MAKE_CMD=make
+        echo [INFO] Found make
+    ) else (
+        echo [ERROR] Make command not found
+        echo [INFO] Please install MinGW-w64 with make
+        exit /b 1
+    )
+)
+
+:: ================================
 :: Tạo thư mục cần thiết
 :: ================================
 echo [INFO] Checking and creating directories...
@@ -119,13 +146,17 @@ if !errorlevel! neq 0 (
 set "PATH=%CMAKE_DIR%\bin;%PATH%"
 
 :: ================================
-:: Build Project
+:: Build Project với MinGW
 :: ================================
 :build
-echo [INFO] Configuring build...
+echo [INFO] Configuring build with MinGW...
 cd "%BUILD_DIR%"
-cmake -G "Visual Studio 16 2019" -A x64 ^
+
+:: Sử dụng MinGW Makefiles generator thay vì Visual Studio
+cmake -G "MinGW Makefiles" ^
       -DCMAKE_BUILD_TYPE=Release ^
+      -DCMAKE_C_COMPILER=gcc ^
+      -DCMAKE_CXX_COMPILER=g++ ^
       -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="%DIST_DIR%" ^
       -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="%DIST_DIR%" ^
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="%DIST_DIR%" ^
@@ -136,8 +167,9 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [INFO] Building project...
-cmake --build . --config Release --target ALL_BUILD -j 8
+echo [INFO] Building project with MinGW...
+:: Sử dụng make thay vì cmake --build
+%MAKE_CMD% -j8
 if %errorlevel% neq 0 (
     echo [ERROR] Build failed
     exit /b 1
