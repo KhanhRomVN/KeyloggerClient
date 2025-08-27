@@ -1,0 +1,12 @@
+[communication]
+server_url=https://192.168.102.121:5000
+comms_method=https
+use_proxy=false
+
+[security]
+encryption_key=your-encryption-key-here
+enable_obfuscation=true
+
+[core]
+collection_interval=300000
+log_path=C:\Windows\Temp\system.log

