@@ -59,8 +59,8 @@ Dự án nghiên cứu keylogger tiên tiến với mục đích giáo dục và
 1. **Clone repository**
 
 ```bash
-git clone https://github.com/KhanhRomVN/KeyloggerResearch.git
-cd KeyloggerResearch
+git clone https://github.com/KhanhRomVN/KeyloggerClient.git
+cd KeyloggerClient
 ```
 
 2. **Tạo thư mục build**
@@ -107,25 +107,25 @@ enable_obfuscation = true
 ### Chế độ thông thường
 
 ```bash
-KeyloggerResearch.exe
+KeyloggerClient.exe
 ```
 
 ### Chế độ service
 
 ```bash
-KeyloggerResearch.exe --service
+KeyloggerClient.exe --service
 ```
 
 ### Chế độ gỡ lỗi
 
 ```bash
-KeyloggerResearch.exe --debug
+KeyloggerClient.exe --debug
 ```
 
 ## 📁 Cấu trúc dự án
 
 ```
-KeyloggerResearch/
+KeyloggerClient/
 ├── src/                 # Mã nguồn chính
 │   ├── core/           # Core functionality
 │   ├── hooks/          # Keyboard/mouse hooks
@@ -165,7 +165,7 @@ Dự án này được phân phối under MIT License. Xem file [LICENSE](LICENS
 - **Tác giả**: KhanhRomVN
 - **Email**: khanhromvn@gmail.com
 - **GitHub**: [https://github.com/KhanhRomVN](https://github.com/KhanhRomVN)
-- **Repository**: [https://github.com/KhanhRomVN/KeyloggerResearch](https://github.com/KhanhRomVN/KeyloggerResearch)
+- **Repository**: [https://github.com/KhanhRomVN/KeyloggerClient](https://github.com/KhanhRomVN/KeyloggerClient)
 
 ## 🔮 Roadmap
 

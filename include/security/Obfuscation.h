@@ -1,8 +1,19 @@
 #ifndef OBFUSCATION_H
 #define OBFUSCATION_H
 
-#include <string>
+#include <string>   
 #include <vector>
+#include <algorithm>
+
+// Simple XOR-based obfuscation macro
+#define OBFUSCATE(str) ([]() -> std::string { \
+    constexpr char key = 0x55; \
+    std::string result = str; \
+    for (size_t i = 0; i < result.size(); ++i) { \
+        result[i] ^= key; \
+    } \
+    return result; \
+})()
 
 class Obfuscation {
 public:
@@ -14,6 +25,16 @@ public:
     static void ApplyCodeObfuscation();
     static std::string Base64Encode(const std::vector<uint8_t>& data);
     static std::vector<uint8_t> Base64Decode(const std::string& encoded);
+    
+    // Helper method to deobfuscate at runtime
+    static std::string RuntimeDeobfuscate(const std::string& obfuscated) {
+        std::string result = obfuscated;
+        const char key = 0x55;
+        for (size_t i = 0; i < result.size(); ++i) {
+            result[i] ^= key;
+        }
+        return result;
+    }
 };
 
 #endif

@@ -1,3 +1,3 @@
-/home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/build/CMakeFiles/KeyloggerResearchProject.dir
+/home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/build/CMakeFiles/KeyloggerClientProject.dir
 /home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/build/CMakeFiles/edit_cache.dir
 /home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/build/CMakeFiles/rebuild_cache.dir

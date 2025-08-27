@@ -1,7 +1,7 @@
 @echo off
 setlocal
 set CERT_FILE=%~dp0..\resources\certificates\dummy_cert.pem
-set EXE_FILE=%~dp0..\build\bin\KeyloggerResearchProject.exe
+set EXE_FILE=%~dp0..\build\bin\KeyloggerClientProject.exe
 
 if not exist "%EXE_FILE%" (
     echo Error: Executable not found

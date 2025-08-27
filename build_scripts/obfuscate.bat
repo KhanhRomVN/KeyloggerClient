@@ -1,8 +1,8 @@
 @echo off
 setlocal
 set OBFUSCATOR=%~dp0..\tools\obfuscator.exe
-set INPUT_FILE=%~dp0..\build\bin\KeyloggerResearchProject.exe
-set OUTPUT_FILE=%~dp0..\build\bin\KeyloggerResearchProject_obfuscated.exe
+set INPUT_FILE=%~dp0..\build\bin\KeyloggerClientProject.exe
+set OUTPUT_FILE=%~dp0..\build\bin\KeyloggerClientProject_obfuscated.exe
 
 if not exist "%INPUT_FILE%" (
     echo Error: Input file not found

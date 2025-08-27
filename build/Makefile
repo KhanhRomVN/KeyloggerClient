@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named KeyloggerResearchProject
+# Target rules for targets named KeyloggerClientProject
 
 # Build rule for target.
-KeyloggerResearchProject: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 KeyloggerResearchProject
-.PHONY : KeyloggerResearchProject
+KeyloggerClientProject: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 KeyloggerClientProject
+.PHONY : KeyloggerClientProject
 
 # fast build rule for target.
-KeyloggerResearchProject/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/build
-.PHONY : KeyloggerResearchProject/fast
+KeyloggerClientProject/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/build
+.PHONY : KeyloggerClientProject/fast
 
 src/communication/CommsManager.obj: src/communication/CommsManager.cpp.obj
 .PHONY : src/communication/CommsManager.obj
 
 # target to build an object file
 src/communication/CommsManager.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/CommsManager.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/CommsManager.cpp.obj
 .PHONY : src/communication/CommsManager.cpp.obj
 
 src/communication/CommsManager.i: src/communication/CommsManager.cpp.i
@@ -142,7 +142,7 @@ src/communication/CommsManager.i: src/communication/CommsManager.cpp.i
 
 # target to preprocess a source file
 src/communication/CommsManager.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/CommsManager.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/CommsManager.cpp.i
 .PHONY : src/communication/CommsManager.cpp.i
 
 src/communication/CommsManager.s: src/communication/CommsManager.cpp.s
@@ -150,7 +150,7 @@ src/communication/CommsManager.s: src/communication/CommsManager.cpp.s
 
 # target to generate assembly for a file
 src/communication/CommsManager.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/CommsManager.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/CommsManager.cpp.s
 .PHONY : src/communication/CommsManager.cpp.s
 
 src/communication/DnsComms.obj: src/communication/DnsComms.cpp.obj
@@ -158,7 +158,7 @@ src/communication/DnsComms.obj: src/communication/DnsComms.cpp.obj
 
 # target to build an object file
 src/communication/DnsComms.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/DnsComms.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/DnsComms.cpp.obj
 .PHONY : src/communication/DnsComms.cpp.obj
 
 src/communication/DnsComms.i: src/communication/DnsComms.cpp.i
@@ -166,7 +166,7 @@ src/communication/DnsComms.i: src/communication/DnsComms.cpp.i
 
 # target to preprocess a source file
 src/communication/DnsComms.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/DnsComms.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/DnsComms.cpp.i
 .PHONY : src/communication/DnsComms.cpp.i
 
 src/communication/DnsComms.s: src/communication/DnsComms.cpp.s
@@ -174,7 +174,7 @@ src/communication/DnsComms.s: src/communication/DnsComms.cpp.s
 
 # target to generate assembly for a file
 src/communication/DnsComms.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/DnsComms.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/DnsComms.cpp.s
 .PHONY : src/communication/DnsComms.cpp.s
 
 src/communication/FtpComms.obj: src/communication/FtpComms.cpp.obj
@@ -182,7 +182,7 @@ src/communication/FtpComms.obj: src/communication/FtpComms.cpp.obj
 
 # target to build an object file
 src/communication/FtpComms.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/FtpComms.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/FtpComms.cpp.obj
 .PHONY : src/communication/FtpComms.cpp.obj
 
 src/communication/FtpComms.i: src/communication/FtpComms.cpp.i
@@ -190,7 +190,7 @@ src/communication/FtpComms.i: src/communication/FtpComms.cpp.i
 
 # target to preprocess a source file
 src/communication/FtpComms.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/FtpComms.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/FtpComms.cpp.i
 .PHONY : src/communication/FtpComms.cpp.i
 
 src/communication/FtpComms.s: src/communication/FtpComms.cpp.s
@@ -198,7 +198,7 @@ src/communication/FtpComms.s: src/communication/FtpComms.cpp.s
 
 # target to generate assembly for a file
 src/communication/FtpComms.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/FtpComms.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/FtpComms.cpp.s
 .PHONY : src/communication/FtpComms.cpp.s
 
 src/communication/HttpComms.obj: src/communication/HttpComms.cpp.obj
@@ -206,7 +206,7 @@ src/communication/HttpComms.obj: src/communication/HttpComms.cpp.obj
 
 # target to build an object file
 src/communication/HttpComms.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/HttpComms.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/HttpComms.cpp.obj
 .PHONY : src/communication/HttpComms.cpp.obj
 
 src/communication/HttpComms.i: src/communication/HttpComms.cpp.i
@@ -214,7 +214,7 @@ src/communication/HttpComms.i: src/communication/HttpComms.cpp.i
 
 # target to preprocess a source file
 src/communication/HttpComms.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/HttpComms.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/HttpComms.cpp.i
 .PHONY : src/communication/HttpComms.cpp.i
 
 src/communication/HttpComms.s: src/communication/HttpComms.cpp.s
@@ -222,7 +222,7 @@ src/communication/HttpComms.s: src/communication/HttpComms.cpp.s
 
 # target to generate assembly for a file
 src/communication/HttpComms.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/communication/HttpComms.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/HttpComms.cpp.s
 .PHONY : src/communication/HttpComms.cpp.s
 
 src/core/Application.obj: src/core/Application.cpp.obj
@@ -230,7 +230,7 @@ src/core/Application.obj: src/core/Application.cpp.obj
 
 # target to build an object file
 src/core/Application.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/core/Application.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/core/Application.cpp.obj
 .PHONY : src/core/Application.cpp.obj
 
 src/core/Application.i: src/core/Application.cpp.i
@@ -238,7 +238,7 @@ src/core/Application.i: src/core/Application.cpp.i
 
 # target to preprocess a source file
 src/core/Application.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/core/Application.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/core/Application.cpp.i
 .PHONY : src/core/Application.cpp.i
 
 src/core/Application.s: src/core/Application.cpp.s
@@ -246,7 +246,7 @@ src/core/Application.s: src/core/Application.cpp.s
 
 # target to generate assembly for a file
 src/core/Application.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/core/Application.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/core/Application.cpp.s
 .PHONY : src/core/Application.cpp.s
 
 src/core/Configuration.obj: src/core/Configuration.cpp.obj
@@ -254,7 +254,7 @@ src/core/Configuration.obj: src/core/Configuration.cpp.obj
 
 # target to build an object file
 src/core/Configuration.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/core/Configuration.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/core/Configuration.cpp.obj
 .PHONY : src/core/Configuration.cpp.obj
 
 src/core/Configuration.i: src/core/Configuration.cpp.i
@@ -262,7 +262,7 @@ src/core/Configuration.i: src/core/Configuration.cpp.i
 
 # target to preprocess a source file
 src/core/Configuration.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/core/Configuration.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/core/Configuration.cpp.i
 .PHONY : src/core/Configuration.cpp.i
 
 src/core/Configuration.s: src/core/Configuration.cpp.s
@@ -270,7 +270,7 @@ src/core/Configuration.s: src/core/Configuration.cpp.s
 
 # target to generate assembly for a file
 src/core/Configuration.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/core/Configuration.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/core/Configuration.cpp.s
 .PHONY : src/core/Configuration.cpp.s
 
 src/core/Logger.obj: src/core/Logger.cpp.obj
@@ -278,7 +278,7 @@ src/core/Logger.obj: src/core/Logger.cpp.obj
 
 # target to build an object file
 src/core/Logger.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/core/Logger.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/core/Logger.cpp.obj
 .PHONY : src/core/Logger.cpp.obj
 
 src/core/Logger.i: src/core/Logger.cpp.i
@@ -286,7 +286,7 @@ src/core/Logger.i: src/core/Logger.cpp.i
 
 # target to preprocess a source file
 src/core/Logger.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/core/Logger.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/core/Logger.cpp.i
 .PHONY : src/core/Logger.cpp.i
 
 src/core/Logger.s: src/core/Logger.cpp.s
@@ -294,7 +294,7 @@ src/core/Logger.s: src/core/Logger.cpp.s
 
 # target to generate assembly for a file
 src/core/Logger.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/core/Logger.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/core/Logger.cpp.s
 .PHONY : src/core/Logger.cpp.s
 
 src/data/DataManager.obj: src/data/DataManager.cpp.obj
@@ -302,7 +302,7 @@ src/data/DataManager.obj: src/data/DataManager.cpp.obj
 
 # target to build an object file
 src/data/DataManager.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/DataManager.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/DataManager.cpp.obj
 .PHONY : src/data/DataManager.cpp.obj
 
 src/data/DataManager.i: src/data/DataManager.cpp.i
@@ -310,7 +310,7 @@ src/data/DataManager.i: src/data/DataManager.cpp.i
 
 # target to preprocess a source file
 src/data/DataManager.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/DataManager.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/DataManager.cpp.i
 .PHONY : src/data/DataManager.cpp.i
 
 src/data/DataManager.s: src/data/DataManager.cpp.s
@@ -318,7 +318,7 @@ src/data/DataManager.s: src/data/DataManager.cpp.s
 
 # target to generate assembly for a file
 src/data/DataManager.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/DataManager.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/DataManager.cpp.s
 .PHONY : src/data/DataManager.cpp.s
 
 src/data/KeyData.obj: src/data/KeyData.cpp.obj
@@ -326,7 +326,7 @@ src/data/KeyData.obj: src/data/KeyData.cpp.obj
 
 # target to build an object file
 src/data/KeyData.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/KeyData.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/KeyData.cpp.obj
 .PHONY : src/data/KeyData.cpp.obj
 
 src/data/KeyData.i: src/data/KeyData.cpp.i
@@ -334,7 +334,7 @@ src/data/KeyData.i: src/data/KeyData.cpp.i
 
 # target to preprocess a source file
 src/data/KeyData.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/KeyData.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/KeyData.cpp.i
 .PHONY : src/data/KeyData.cpp.i
 
 src/data/KeyData.s: src/data/KeyData.cpp.s
@@ -342,7 +342,7 @@ src/data/KeyData.s: src/data/KeyData.cpp.s
 
 # target to generate assembly for a file
 src/data/KeyData.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/KeyData.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/KeyData.cpp.s
 .PHONY : src/data/KeyData.cpp.s
 
 src/data/Screenshot.obj: src/data/Screenshot.cpp.obj
@@ -350,7 +350,7 @@ src/data/Screenshot.obj: src/data/Screenshot.cpp.obj
 
 # target to build an object file
 src/data/Screenshot.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/Screenshot.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/Screenshot.cpp.obj
 .PHONY : src/data/Screenshot.cpp.obj
 
 src/data/Screenshot.i: src/data/Screenshot.cpp.i
@@ -358,7 +358,7 @@ src/data/Screenshot.i: src/data/Screenshot.cpp.i
 
 # target to preprocess a source file
 src/data/Screenshot.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/Screenshot.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/Screenshot.cpp.i
 .PHONY : src/data/Screenshot.cpp.i
 
 src/data/Screenshot.s: src/data/Screenshot.cpp.s
@@ -366,7 +366,7 @@ src/data/Screenshot.s: src/data/Screenshot.cpp.s
 
 # target to generate assembly for a file
 src/data/Screenshot.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/Screenshot.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/Screenshot.cpp.s
 .PHONY : src/data/Screenshot.cpp.s
 
 src/data/SystemData.obj: src/data/SystemData.cpp.obj
@@ -374,7 +374,7 @@ src/data/SystemData.obj: src/data/SystemData.cpp.obj
 
 # target to build an object file
 src/data/SystemData.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/SystemData.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/SystemData.cpp.obj
 .PHONY : src/data/SystemData.cpp.obj
 
 src/data/SystemData.i: src/data/SystemData.cpp.i
@@ -382,7 +382,7 @@ src/data/SystemData.i: src/data/SystemData.cpp.i
 
 # target to preprocess a source file
 src/data/SystemData.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/SystemData.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/SystemData.cpp.i
 .PHONY : src/data/SystemData.cpp.i
 
 src/data/SystemData.s: src/data/SystemData.cpp.s
@@ -390,7 +390,7 @@ src/data/SystemData.s: src/data/SystemData.cpp.s
 
 # target to generate assembly for a file
 src/data/SystemData.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/data/SystemData.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/SystemData.cpp.s
 .PHONY : src/data/SystemData.cpp.s
 
 src/hooks/KeyHook.obj: src/hooks/KeyHook.cpp.obj
@@ -398,7 +398,7 @@ src/hooks/KeyHook.obj: src/hooks/KeyHook.cpp.obj
 
 # target to build an object file
 src/hooks/KeyHook.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/hooks/KeyHook.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/hooks/KeyHook.cpp.obj
 .PHONY : src/hooks/KeyHook.cpp.obj
 
 src/hooks/KeyHook.i: src/hooks/KeyHook.cpp.i
@@ -406,7 +406,7 @@ src/hooks/KeyHook.i: src/hooks/KeyHook.cpp.i
 
 # target to preprocess a source file
 src/hooks/KeyHook.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/hooks/KeyHook.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/hooks/KeyHook.cpp.i
 .PHONY : src/hooks/KeyHook.cpp.i
 
 src/hooks/KeyHook.s: src/hooks/KeyHook.cpp.s
@@ -414,7 +414,7 @@ src/hooks/KeyHook.s: src/hooks/KeyHook.cpp.s
 
 # target to generate assembly for a file
 src/hooks/KeyHook.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/hooks/KeyHook.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/hooks/KeyHook.cpp.s
 .PHONY : src/hooks/KeyHook.cpp.s
 
 src/hooks/MouseHook.obj: src/hooks/MouseHook.cpp.obj
@@ -422,7 +422,7 @@ src/hooks/MouseHook.obj: src/hooks/MouseHook.cpp.obj
 
 # target to build an object file
 src/hooks/MouseHook.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/hooks/MouseHook.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/hooks/MouseHook.cpp.obj
 .PHONY : src/hooks/MouseHook.cpp.obj
 
 src/hooks/MouseHook.i: src/hooks/MouseHook.cpp.i
@@ -430,7 +430,7 @@ src/hooks/MouseHook.i: src/hooks/MouseHook.cpp.i
 
 # target to preprocess a source file
 src/hooks/MouseHook.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/hooks/MouseHook.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/hooks/MouseHook.cpp.i
 .PHONY : src/hooks/MouseHook.cpp.i
 
 src/hooks/MouseHook.s: src/hooks/MouseHook.cpp.s
@@ -438,7 +438,7 @@ src/hooks/MouseHook.s: src/hooks/MouseHook.cpp.s
 
 # target to generate assembly for a file
 src/hooks/MouseHook.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/hooks/MouseHook.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/hooks/MouseHook.cpp.s
 .PHONY : src/hooks/MouseHook.cpp.s
 
 src/hooks/SystemHook.obj: src/hooks/SystemHook.cpp.obj
@@ -446,7 +446,7 @@ src/hooks/SystemHook.obj: src/hooks/SystemHook.cpp.obj
 
 # target to build an object file
 src/hooks/SystemHook.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/hooks/SystemHook.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/hooks/SystemHook.cpp.obj
 .PHONY : src/hooks/SystemHook.cpp.obj
 
 src/hooks/SystemHook.i: src/hooks/SystemHook.cpp.i
@@ -454,7 +454,7 @@ src/hooks/SystemHook.i: src/hooks/SystemHook.cpp.i
 
 # target to preprocess a source file
 src/hooks/SystemHook.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/hooks/SystemHook.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/hooks/SystemHook.cpp.i
 .PHONY : src/hooks/SystemHook.cpp.i
 
 src/hooks/SystemHook.s: src/hooks/SystemHook.cpp.s
@@ -462,7 +462,7 @@ src/hooks/SystemHook.s: src/hooks/SystemHook.cpp.s
 
 # target to generate assembly for a file
 src/hooks/SystemHook.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/hooks/SystemHook.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/hooks/SystemHook.cpp.s
 .PHONY : src/hooks/SystemHook.cpp.s
 
 src/main.obj: src/main.cpp.obj
@@ -470,7 +470,7 @@ src/main.obj: src/main.cpp.obj
 
 # target to build an object file
 src/main.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/main.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/main.cpp.obj
 .PHONY : src/main.cpp.obj
 
 src/main.i: src/main.cpp.i
@@ -478,7 +478,7 @@ src/main.i: src/main.cpp.i
 
 # target to preprocess a source file
 src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/main.cpp.i
 .PHONY : src/main.cpp.i
 
 src/main.s: src/main.cpp.s
@@ -486,7 +486,7 @@ src/main.s: src/main.cpp.s
 
 # target to generate assembly for a file
 src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
 src/persistence/PersistenceManager.obj: src/persistence/PersistenceManager.cpp.obj
@@ -494,7 +494,7 @@ src/persistence/PersistenceManager.obj: src/persistence/PersistenceManager.cpp.o
 
 # target to build an object file
 src/persistence/PersistenceManager.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/PersistenceManager.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/PersistenceManager.cpp.obj
 .PHONY : src/persistence/PersistenceManager.cpp.obj
 
 src/persistence/PersistenceManager.i: src/persistence/PersistenceManager.cpp.i
@@ -502,7 +502,7 @@ src/persistence/PersistenceManager.i: src/persistence/PersistenceManager.cpp.i
 
 # target to preprocess a source file
 src/persistence/PersistenceManager.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/PersistenceManager.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/PersistenceManager.cpp.i
 .PHONY : src/persistence/PersistenceManager.cpp.i
 
 src/persistence/PersistenceManager.s: src/persistence/PersistenceManager.cpp.s
@@ -510,7 +510,7 @@ src/persistence/PersistenceManager.s: src/persistence/PersistenceManager.cpp.s
 
 # target to generate assembly for a file
 src/persistence/PersistenceManager.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/PersistenceManager.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/PersistenceManager.cpp.s
 .PHONY : src/persistence/PersistenceManager.cpp.s
 
 src/persistence/RegistryPersistence.obj: src/persistence/RegistryPersistence.cpp.obj
@@ -518,7 +518,7 @@ src/persistence/RegistryPersistence.obj: src/persistence/RegistryPersistence.cpp
 
 # target to build an object file
 src/persistence/RegistryPersistence.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/RegistryPersistence.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/RegistryPersistence.cpp.obj
 .PHONY : src/persistence/RegistryPersistence.cpp.obj
 
 src/persistence/RegistryPersistence.i: src/persistence/RegistryPersistence.cpp.i
@@ -526,7 +526,7 @@ src/persistence/RegistryPersistence.i: src/persistence/RegistryPersistence.cpp.i
 
 # target to preprocess a source file
 src/persistence/RegistryPersistence.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/RegistryPersistence.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/RegistryPersistence.cpp.i
 .PHONY : src/persistence/RegistryPersistence.cpp.i
 
 src/persistence/RegistryPersistence.s: src/persistence/RegistryPersistence.cpp.s
@@ -534,7 +534,7 @@ src/persistence/RegistryPersistence.s: src/persistence/RegistryPersistence.cpp.s
 
 # target to generate assembly for a file
 src/persistence/RegistryPersistence.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/RegistryPersistence.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/RegistryPersistence.cpp.s
 .PHONY : src/persistence/RegistryPersistence.cpp.s
 
 src/persistence/SchedulePersistence.obj: src/persistence/SchedulePersistence.cpp.obj
@@ -542,7 +542,7 @@ src/persistence/SchedulePersistence.obj: src/persistence/SchedulePersistence.cpp
 
 # target to build an object file
 src/persistence/SchedulePersistence.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/SchedulePersistence.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/SchedulePersistence.cpp.obj
 .PHONY : src/persistence/SchedulePersistence.cpp.obj
 
 src/persistence/SchedulePersistence.i: src/persistence/SchedulePersistence.cpp.i
@@ -550,7 +550,7 @@ src/persistence/SchedulePersistence.i: src/persistence/SchedulePersistence.cpp.i
 
 # target to preprocess a source file
 src/persistence/SchedulePersistence.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/SchedulePersistence.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/SchedulePersistence.cpp.i
 .PHONY : src/persistence/SchedulePersistence.cpp.i
 
 src/persistence/SchedulePersistence.s: src/persistence/SchedulePersistence.cpp.s
@@ -558,7 +558,7 @@ src/persistence/SchedulePersistence.s: src/persistence/SchedulePersistence.cpp.s
 
 # target to generate assembly for a file
 src/persistence/SchedulePersistence.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/SchedulePersistence.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/SchedulePersistence.cpp.s
 .PHONY : src/persistence/SchedulePersistence.cpp.s
 
 src/persistence/ServicePersistence.obj: src/persistence/ServicePersistence.cpp.obj
@@ -566,7 +566,7 @@ src/persistence/ServicePersistence.obj: src/persistence/ServicePersistence.cpp.o
 
 # target to build an object file
 src/persistence/ServicePersistence.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/ServicePersistence.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/ServicePersistence.cpp.obj
 .PHONY : src/persistence/ServicePersistence.cpp.obj
 
 src/persistence/ServicePersistence.i: src/persistence/ServicePersistence.cpp.i
@@ -574,7 +574,7 @@ src/persistence/ServicePersistence.i: src/persistence/ServicePersistence.cpp.i
 
 # target to preprocess a source file
 src/persistence/ServicePersistence.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/ServicePersistence.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/ServicePersistence.cpp.i
 .PHONY : src/persistence/ServicePersistence.cpp.i
 
 src/persistence/ServicePersistence.s: src/persistence/ServicePersistence.cpp.s
@@ -582,7 +582,7 @@ src/persistence/ServicePersistence.s: src/persistence/ServicePersistence.cpp.s
 
 # target to generate assembly for a file
 src/persistence/ServicePersistence.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/persistence/ServicePersistence.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/ServicePersistence.cpp.s
 .PHONY : src/persistence/ServicePersistence.cpp.s
 
 src/security/AntiAnalysis.obj: src/security/AntiAnalysis.cpp.obj
@@ -590,7 +590,7 @@ src/security/AntiAnalysis.obj: src/security/AntiAnalysis.cpp.obj
 
 # target to build an object file
 src/security/AntiAnalysis.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/AntiAnalysis.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/AntiAnalysis.cpp.obj
 .PHONY : src/security/AntiAnalysis.cpp.obj
 
 src/security/AntiAnalysis.i: src/security/AntiAnalysis.cpp.i
@@ -598,7 +598,7 @@ src/security/AntiAnalysis.i: src/security/AntiAnalysis.cpp.i
 
 # target to preprocess a source file
 src/security/AntiAnalysis.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/AntiAnalysis.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/AntiAnalysis.cpp.i
 .PHONY : src/security/AntiAnalysis.cpp.i
 
 src/security/AntiAnalysis.s: src/security/AntiAnalysis.cpp.s
@@ -606,7 +606,7 @@ src/security/AntiAnalysis.s: src/security/AntiAnalysis.cpp.s
 
 # target to generate assembly for a file
 src/security/AntiAnalysis.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/AntiAnalysis.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/AntiAnalysis.cpp.s
 .PHONY : src/security/AntiAnalysis.cpp.s
 
 src/security/Encryption.obj: src/security/Encryption.cpp.obj
@@ -614,7 +614,7 @@ src/security/Encryption.obj: src/security/Encryption.cpp.obj
 
 # target to build an object file
 src/security/Encryption.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/Encryption.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/Encryption.cpp.obj
 .PHONY : src/security/Encryption.cpp.obj
 
 src/security/Encryption.i: src/security/Encryption.cpp.i
@@ -622,7 +622,7 @@ src/security/Encryption.i: src/security/Encryption.cpp.i
 
 # target to preprocess a source file
 src/security/Encryption.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/Encryption.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/Encryption.cpp.i
 .PHONY : src/security/Encryption.cpp.i
 
 src/security/Encryption.s: src/security/Encryption.cpp.s
@@ -630,7 +630,7 @@ src/security/Encryption.s: src/security/Encryption.cpp.s
 
 # target to generate assembly for a file
 src/security/Encryption.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/Encryption.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/Encryption.cpp.s
 .PHONY : src/security/Encryption.cpp.s
 
 src/security/Obfuscation.obj: src/security/Obfuscation.cpp.obj
@@ -638,7 +638,7 @@ src/security/Obfuscation.obj: src/security/Obfuscation.cpp.obj
 
 # target to build an object file
 src/security/Obfuscation.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/Obfuscation.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/Obfuscation.cpp.obj
 .PHONY : src/security/Obfuscation.cpp.obj
 
 src/security/Obfuscation.i: src/security/Obfuscation.cpp.i
@@ -646,7 +646,7 @@ src/security/Obfuscation.i: src/security/Obfuscation.cpp.i
 
 # target to preprocess a source file
 src/security/Obfuscation.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/Obfuscation.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/Obfuscation.cpp.i
 .PHONY : src/security/Obfuscation.cpp.i
 
 src/security/Obfuscation.s: src/security/Obfuscation.cpp.s
@@ -654,7 +654,7 @@ src/security/Obfuscation.s: src/security/Obfuscation.cpp.s
 
 # target to generate assembly for a file
 src/security/Obfuscation.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/Obfuscation.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/Obfuscation.cpp.s
 .PHONY : src/security/Obfuscation.cpp.s
 
 src/security/PrivilegeEscalation.obj: src/security/PrivilegeEscalation.cpp.obj
@@ -662,7 +662,7 @@ src/security/PrivilegeEscalation.obj: src/security/PrivilegeEscalation.cpp.obj
 
 # target to build an object file
 src/security/PrivilegeEscalation.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/PrivilegeEscalation.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/PrivilegeEscalation.cpp.obj
 .PHONY : src/security/PrivilegeEscalation.cpp.obj
 
 src/security/PrivilegeEscalation.i: src/security/PrivilegeEscalation.cpp.i
@@ -670,7 +670,7 @@ src/security/PrivilegeEscalation.i: src/security/PrivilegeEscalation.cpp.i
 
 # target to preprocess a source file
 src/security/PrivilegeEscalation.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/PrivilegeEscalation.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/PrivilegeEscalation.cpp.i
 .PHONY : src/security/PrivilegeEscalation.cpp.i
 
 src/security/PrivilegeEscalation.s: src/security/PrivilegeEscalation.cpp.s
@@ -678,7 +678,7 @@ src/security/PrivilegeEscalation.s: src/security/PrivilegeEscalation.cpp.s
 
 # target to generate assembly for a file
 src/security/PrivilegeEscalation.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/security/PrivilegeEscalation.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/PrivilegeEscalation.cpp.s
 .PHONY : src/security/PrivilegeEscalation.cpp.s
 
 src/utils/FileUtils.obj: src/utils/FileUtils.cpp.obj
@@ -686,7 +686,7 @@ src/utils/FileUtils.obj: src/utils/FileUtils.cpp.obj
 
 # target to build an object file
 src/utils/FileUtils.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/FileUtils.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/FileUtils.cpp.obj
 .PHONY : src/utils/FileUtils.cpp.obj
 
 src/utils/FileUtils.i: src/utils/FileUtils.cpp.i
@@ -694,7 +694,7 @@ src/utils/FileUtils.i: src/utils/FileUtils.cpp.i
 
 # target to preprocess a source file
 src/utils/FileUtils.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/FileUtils.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/FileUtils.cpp.i
 .PHONY : src/utils/FileUtils.cpp.i
 
 src/utils/FileUtils.s: src/utils/FileUtils.cpp.s
@@ -702,7 +702,7 @@ src/utils/FileUtils.s: src/utils/FileUtils.cpp.s
 
 # target to generate assembly for a file
 src/utils/FileUtils.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/FileUtils.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/FileUtils.cpp.s
 .PHONY : src/utils/FileUtils.cpp.s
 
 src/utils/StringUtils.obj: src/utils/StringUtils.cpp.obj
@@ -710,7 +710,7 @@ src/utils/StringUtils.obj: src/utils/StringUtils.cpp.obj
 
 # target to build an object file
 src/utils/StringUtils.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/StringUtils.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/StringUtils.cpp.obj
 .PHONY : src/utils/StringUtils.cpp.obj
 
 src/utils/StringUtils.i: src/utils/StringUtils.cpp.i
@@ -718,7 +718,7 @@ src/utils/StringUtils.i: src/utils/StringUtils.cpp.i
 
 # target to preprocess a source file
 src/utils/StringUtils.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/StringUtils.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/StringUtils.cpp.i
 .PHONY : src/utils/StringUtils.cpp.i
 
 src/utils/StringUtils.s: src/utils/StringUtils.cpp.s
@@ -726,7 +726,7 @@ src/utils/StringUtils.s: src/utils/StringUtils.cpp.s
 
 # target to generate assembly for a file
 src/utils/StringUtils.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/StringUtils.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/StringUtils.cpp.s
 .PHONY : src/utils/StringUtils.cpp.s
 
 src/utils/SystemUtils.obj: src/utils/SystemUtils.cpp.obj
@@ -734,7 +734,7 @@ src/utils/SystemUtils.obj: src/utils/SystemUtils.cpp.obj
 
 # target to build an object file
 src/utils/SystemUtils.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/SystemUtils.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/SystemUtils.cpp.obj
 .PHONY : src/utils/SystemUtils.cpp.obj
 
 src/utils/SystemUtils.i: src/utils/SystemUtils.cpp.i
@@ -742,7 +742,7 @@ src/utils/SystemUtils.i: src/utils/SystemUtils.cpp.i
 
 # target to preprocess a source file
 src/utils/SystemUtils.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/SystemUtils.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/SystemUtils.cpp.i
 .PHONY : src/utils/SystemUtils.cpp.i
 
 src/utils/SystemUtils.s: src/utils/SystemUtils.cpp.s
@@ -750,7 +750,7 @@ src/utils/SystemUtils.s: src/utils/SystemUtils.cpp.s
 
 # target to generate assembly for a file
 src/utils/SystemUtils.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/SystemUtils.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/SystemUtils.cpp.s
 .PHONY : src/utils/SystemUtils.cpp.s
 
 src/utils/TimeUtils.obj: src/utils/TimeUtils.cpp.obj
@@ -758,7 +758,7 @@ src/utils/TimeUtils.obj: src/utils/TimeUtils.cpp.obj
 
 # target to build an object file
 src/utils/TimeUtils.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/TimeUtils.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/TimeUtils.cpp.obj
 .PHONY : src/utils/TimeUtils.cpp.obj
 
 src/utils/TimeUtils.i: src/utils/TimeUtils.cpp.i
@@ -766,7 +766,7 @@ src/utils/TimeUtils.i: src/utils/TimeUtils.cpp.i
 
 # target to preprocess a source file
 src/utils/TimeUtils.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/TimeUtils.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/TimeUtils.cpp.i
 .PHONY : src/utils/TimeUtils.cpp.i
 
 src/utils/TimeUtils.s: src/utils/TimeUtils.cpp.s
@@ -774,7 +774,7 @@ src/utils/TimeUtils.s: src/utils/TimeUtils.cpp.s
 
 # target to generate assembly for a file
 src/utils/TimeUtils.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerResearchProject.dir/build.make CMakeFiles/KeyloggerResearchProject.dir/src/utils/TimeUtils.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/TimeUtils.cpp.s
 .PHONY : src/utils/TimeUtils.cpp.s
 
 # Help Target
@@ -785,7 +785,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... KeyloggerResearchProject"
+	@echo "... KeyloggerClientProject"
 	@echo "... src/communication/CommsManager.obj"
 	@echo "... src/communication/CommsManager.i"
 	@echo "... src/communication/CommsManager.s"

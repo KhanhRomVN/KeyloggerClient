@@ -1621,6 +1621,7 @@ CMakeFiles/KeyloggerResearchProject.dir/src/data/KeyData.cpp.obj: /home/khanhrom
 CMakeFiles/KeyloggerResearchProject.dir/src/main.cpp.obj: /home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/src/main.cpp \
   /home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/include/core/Application.h \
   /home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/include/core/Logger.h \
+  /home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/include/obfuscate.h \
   /home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/include/security/AntiAnalysis.h \
   /home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/include/utils/SystemUtils.h \
   /usr/lib/gcc/x86_64-w64-mingw32/13-win32/include/c++/backward/auto_ptr.h \
@@ -1798,6 +1799,8 @@ CMakeFiles/KeyloggerResearchProject.dir/src/main.cpp.obj: /home/khanhromvn/Docum
   /usr/share/mingw-w64/include/wchar.h \
   /usr/share/mingw-w64/include/wctype.h
 
+
+/home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/include/obfuscate.h:
 
 /home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/src/data/KeyData.cpp:
 

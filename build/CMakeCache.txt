@@ -163,7 +163,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=KeyloggerResearchProject
+CMAKE_PROJECT_NAME:STATIC=KeyloggerClientProject
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION:STATIC=
@@ -268,6 +268,15 @@ CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
 //The directory containing a CMake configuration file for Crypto.
 Crypto_DIR:PATH=Crypto_DIR-NOTFOUND
+
+//Value Computed by CMake
+KeyloggerClientProject_BINARY_DIR:STATIC=/home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/build
+
+//Value Computed by CMake
+KeyloggerClientProject_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+KeyloggerClientProject_SOURCE_DIR:STATIC=/home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient
 
 //Value Computed by CMake
 KeyloggerResearchProject_BINARY_DIR:STATIC=/home/khanhromvn/Documents/Coding/Keylogger/KeyLoggerClient/build

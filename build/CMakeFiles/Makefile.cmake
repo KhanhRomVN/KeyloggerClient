@@ -61,5 +61,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "CMakeFiles/KeyloggerResearchProject.dir/DependInfo.cmake"
+  "CMakeFiles/KeyloggerClientProject.dir/DependInfo.cmake"
   )

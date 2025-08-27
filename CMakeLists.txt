@@ -1,17 +1,19 @@
-# KeyLoggerClient/CMakeLists.txt (updated)
+# KeyLoggerClient/CMakeLists.txt (optimized version)
 cmake_minimum_required(VERSION 3.15)
-project(KeyloggerResearchProject)
+project(KeyloggerClientProject)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Windows-specific settings
-if(WIN32)
+# Always define Windows-specific macros when targeting Windows
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     add_definitions(-DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-else()
-    # Cross-compilation settings
-    add_definitions(-DCROSS_COMPILE)
+    
+    # Cross-compilation flag for conditional code
+    if(CMAKE_CROSSCOMPILING)
+        add_definitions(-DCROSS_COMPILE)
+    endif()
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -28,15 +30,16 @@ include_directories(
     include/persistence
 )
 
-# Find Windows SDK (simulated for cross-compilation)
-find_package(WindowsSDK REQUIRED)
-include_directories(${WINDOWSSDK_INCLUDE_DIRS})
+# Conditional dependency finding based on target system
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    find_package(WindowsSDK REQUIRED)
+    include_directories(${WINDOWSSDK_INCLUDE_DIRS})
+    
+    find_package(Crypto REQUIRED)
+    include_directories(${CRYPTO_INCLUDE_DIRS})
+endif()
 
-# Find additional dependencies
-find_package(Crypto REQUIRED)
-include_directories(${CRYPTO_INCLUDE_DIRS})
-
-# Source files
+# Source files (removed duplicates)
 set(SOURCES
     src/main.cpp
     src/core/Application.cpp
@@ -44,7 +47,7 @@ set(SOURCES
     src/core/Logger.cpp
     src/data/DataManager.cpp
     src/data/KeyData.cpp
-    src/data/Screenshot.cpp
+    src/data/Screenshot.cpp 
     src/data/SystemData.cpp
     src/hooks/KeyHook.cpp
     src/hooks/MouseHook.cpp
@@ -68,28 +71,32 @@ set(SOURCES
 )
 
 # Add executable
-add_executable(KeyloggerResearchProject ${SOURCES})
+add_executable(KeyloggerClientProject ${SOURCES})
 
-# Link libraries
-target_link_libraries(KeyloggerResearchProject
-    ${WINDOWSSDK_LIBRARIES}
-    ${CRYPTO_LIBRARIES}
-)
-
-# Cross-compilation specific libraries
-if(NOT WIN32)
-    target_link_libraries(KeyloggerResearchProject
-        -lwinhttp
-        -lwininet
-        -ldnsapi
-        -ltaskschd
-        -lpsapi
-        -liphlpapi
-        -lgdiplus
-        -lshlwapi
-        -lole32
-        -loleaut32
-        -luuid
+# Platform-specific linking
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    target_link_libraries(KeyloggerClientProject
+        ${WINDOWSSDK_LIBRARIES}
+        ${CRYPTO_LIBRARIES}
+        # Windows-specific libraries
+        kernel32
+        user32
+        gdi32
+        winspool
+        shell32
+        ole32
+        oleaut32
+        uuid
+        comdlg32
+        advapi32
+        winhttp
+        wininet
+        dnsapi
+        taskschd
+        psapi
+        iphlpapi
+        gdiplus
+        shlwapi
     )
 endif()
 
