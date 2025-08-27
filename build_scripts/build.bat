@@ -8,10 +8,13 @@ set BUILD_DIR=%~dp0..\build
 set DIST_DIR=%~dp0..\dist
 set SRC_DIR=%~dp0..
 set TOOLS_DIR=%~dp0..\tools
-set CMAKE_VERSION=3.25.2
+set CMAKE_VERSION=4.1.0
 set CMAKE_ZIP=cmake-%CMAKE_VERSION%-windows-x86_64.zip
 set CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v%CMAKE_VERSION%/%CMAKE_ZIP%
 set CMAKE_DIR=%TOOLS_DIR%\cmake-%CMAKE_VERSION%-windows-x86_64
+
+:: Zip CMake đặt sẵn trong root project
+set LOCAL_CMAKE_ZIP=%SRC_DIR%\cmake-%CMAKE_VERSION%.zip
 
 :: Security tools config
 set OBFUSCATOR=%TOOLS_DIR%\obfuscator.exe
@@ -47,7 +50,21 @@ if exist "%CMAKE_DIR%\bin\cmake.exe" (
 )
 
 :: ================================
-:: Download & Extract CMake zip
+:: Ưu tiên dùng file zip CMake đặt sẵn trong dự án
+:: ================================
+if exist "%LOCAL_CMAKE_ZIP%" (
+    echo [INFO] Found pre-downloaded CMake archive: %LOCAL_CMAKE_ZIP%
+    powershell -Command "Expand-Archive '%LOCAL_CMAKE_ZIP%' -DestinationPath '%TOOLS_DIR%' -Force"
+    if %errorlevel% neq 0 (
+        echo [ERROR] Failed to extract local CMake zip
+        exit /b 1
+    )
+    set "PATH=%CMAKE_DIR%\bin;%PATH%"
+    goto :build
+)
+
+:: ================================
+:: Nếu không có thì tải từ GitHub
 :: ================================
 echo [INFO] Downloading CMake %CMAKE_VERSION%...
 powershell -Command "Invoke-WebRequest '%CMAKE_URL%' -OutFile '%TOOLS_DIR%\%CMAKE_ZIP%'"
