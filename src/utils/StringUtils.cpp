@@ -7,6 +7,9 @@
 #include <sstream>
 #include <random>
 #include <wincrypt.h>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 #pragma comment(lib, "advapi32.lib")
 

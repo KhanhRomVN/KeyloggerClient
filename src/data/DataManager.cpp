@@ -13,6 +13,9 @@
 #include <chrono>
 #include <thread>
 #include <iomanip>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 // Obfuscated strings
 constexpr auto OBF_DATA_MANAGER = OBFUSCATE("DataManager");

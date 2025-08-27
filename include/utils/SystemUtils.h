@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstdint>
 
-struct SystemInfo {
+struct SystemInfoUtils  {
     std::string computerName;
     std::string userName;
     std::string osVersion;

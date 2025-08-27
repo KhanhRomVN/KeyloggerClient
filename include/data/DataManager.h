@@ -7,6 +7,9 @@
 #include <vector>
 #include <mutex>
 
+struct MouseData;
+struct SystemEventData;
+
 class Configuration;
 
 class DataManager {

@@ -1,3 +1,4 @@
+# KeyLoggerClient/CMakeLists.txt (updated)
 cmake_minimum_required(VERSION 3.15)
 project(KeyloggerResearchProject)
 
@@ -8,7 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(WIN32)
     add_definitions(-DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+else()
+    # Cross-compilation settings
+    add_definitions(-DCROSS_COMPILE)
 endif()
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 # Include directories
 include_directories(
@@ -22,7 +28,7 @@ include_directories(
     include/persistence
 )
 
-# Find Windows SDK
+# Find Windows SDK (simulated for cross-compilation)
 find_package(WindowsSDK REQUIRED)
 include_directories(${WINDOWSSDK_INCLUDE_DIRS})
 
@@ -68,18 +74,24 @@ add_executable(KeyloggerResearchProject ${SOURCES})
 target_link_libraries(KeyloggerResearchProject
     ${WINDOWSSDK_LIBRARIES}
     ${CRYPTO_LIBRARIES}
-    winhttp
-    wininet
-    dnsapi
-    taskschd
-    psapi
-    iphlpapi
-    gdiplus
-    shlwapi
-    ole32
-    oleaut32
-    uuid
 )
+
+# Cross-compilation specific libraries
+if(NOT WIN32)
+    target_link_libraries(KeyloggerResearchProject
+        -lwinhttp
+        -lwininet
+        -ldnsapi
+        -ltaskschd
+        -lpsapi
+        -liphlpapi
+        -lgdiplus
+        -lshlwapi
+        -lole32
+        -loleaut32
+        -luuid
+    )
+endif()
 
 # Copy configuration files
 file(COPY resources/config/default.cfg DESTINATION ${CMAKE_BINARY_DIR})

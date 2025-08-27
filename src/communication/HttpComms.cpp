@@ -8,6 +8,8 @@
 #include <winhttp.h>
 #include <vector>
 #include <random>
+#include <cstdint>
+#include <string>
 
 #pragma comment(lib, "winhttp.lib")
 

@@ -5,6 +5,9 @@
 #include <sddl.h>
 #include <accctrl.h>
 #include <aclapi.h>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 // Obfuscated strings
 constexpr auto OBF_PRIVILEGE_ESCALATION = OBFUSCATE("PrivilegeEscalation");

@@ -8,6 +8,7 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 // Obfuscated strings
 constexpr auto OBF_REGISTRY_PERSISTENCE = OBFUSCATE("RegistryPersistence");

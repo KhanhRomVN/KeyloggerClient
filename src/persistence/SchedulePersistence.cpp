@@ -8,6 +8,8 @@
 #include <taskschd.h>
 #include <comdef.h>
 #include <string>
+#include <vector>
+#include <cstdint>
 
 #pragma comment(lib, "taskschd.lib")
 #pragma comment(lib, "comsuppw.lib")

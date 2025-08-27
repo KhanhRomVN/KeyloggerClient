@@ -6,6 +6,8 @@
 #include <Windows.h>
 #include <string>
 #include <psapi.h>
+#include <vector>
+#include <cstdint>
 
 // Obfuscated strings
 constexpr auto OBF_SYSTEMHOOK_MODULE = OBFUSCATE("SystemHook");

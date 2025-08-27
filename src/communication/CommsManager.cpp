@@ -15,6 +15,9 @@
 #include "utils/TimeUtils.h"
 #include <memory>
 #include <algorithm>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 // Obfuscated strings
 constexpr auto OBF_COMMS_MANAGER = OBFUSCATE("CommsManager");

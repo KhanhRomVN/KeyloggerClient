@@ -3,6 +3,9 @@
 #include <Windows.h>
 #include <algorithm>
 #include <random>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 // Obfuscated strings
 constexpr auto OBF_OBFUSCATION = OBFUSCATE("Obfuscation");

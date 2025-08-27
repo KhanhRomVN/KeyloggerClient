@@ -11,6 +11,7 @@
 #include <vector>
 #include <fstream>
 #include <chrono>
+#include <cstdint>
 
 // Obfuscated strings
 constexpr auto OBF_ANTI_ANALYSIS = OBFUSCATE("AntiAnalysis");

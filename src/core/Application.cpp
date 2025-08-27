@@ -16,6 +16,8 @@
 #include <thread>
 #include <chrono>
 #include <string>
+#include <vector>
+#include <cstdint>
 
 // Obfuscated strings
 constexpr auto OBFUSCATED_APP_NAME = OBFUSCATE("KeyloggerResearchProject");

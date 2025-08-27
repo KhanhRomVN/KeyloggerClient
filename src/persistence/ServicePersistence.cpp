@@ -7,6 +7,8 @@
 #include "security/PrivilegeEscalation.h"
 #include <Windows.h>
 #include <string>
+#include <vector>
+#include <cstdint>
 
 // Obfuscated strings
 constexpr auto OBF_SERVICE_PERSISTENCE = OBFUSCATE("ServicePersistence");

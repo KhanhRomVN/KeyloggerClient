@@ -7,6 +7,9 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 // Static member initialization
 std::ofstream Logger::m_logFile;

@@ -7,6 +7,9 @@
 #include "security/Obfuscation.h"
 #include <memory>
 #include <algorithm>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 // Obfuscated strings
 constexpr auto OBF_PERSISTENCE_MANAGER = OBFUSCATE("PersistenceManager");

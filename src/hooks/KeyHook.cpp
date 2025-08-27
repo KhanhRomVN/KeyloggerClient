@@ -6,6 +6,8 @@
 #include <Windows.h>
 #include <string>
 #include <sstream>
+#include <vector>
+#include <cstdint>
 
 // Obfuscated strings
 constexpr auto OBF_KEYHOOK_MODULE = OBFUSCATE("KeyHook");

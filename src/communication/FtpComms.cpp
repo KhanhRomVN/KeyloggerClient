@@ -6,6 +6,8 @@
 #include "utils/StringUtils.h"
 #include <wininet.h>
 #include <vector>
+#include <cstdint>
+#include <string>
 
 #pragma comment(lib, "wininet.lib")
 

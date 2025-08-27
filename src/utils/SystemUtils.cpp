@@ -7,6 +7,9 @@
 #include <psapi.h>
 #include <sstream>
 #include <algorithm>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "psapi.lib")

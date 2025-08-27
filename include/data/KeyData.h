@@ -2,32 +2,46 @@
 #define KEYDATA_H
 
 #include <string>
-#include <cstdint>
 
-enum class KeyEventType { KEY_DOWN, KEY_UP };
-enum class KeyModifiers {
-    NONE = 0,
-    SHIFT = 1,
-    CONTROL = 2,
-    ALT = 4,
-    WIN = 8,
-    CAPS_LOCK = 16,
-    NUM_LOCK = 32
+// Key event types
+enum class KeyEventType {
+    KEY_DOWN,
+    KEY_UP
 };
 
-struct KeyData {
-    std::string timestamp;
-    uint16_t keyCode;
-    uint16_t scanCode;
-    uint32_t flags;
-    KeyEventType eventType;
-    KeyModifiers modifiers;
-    std::string windowTitle;
-    std::string keyName;
-    
+// Key modifiers
+enum class KeyModifiers {
+    NONE    = 0,
+    SHIFT   = 1 << 0,
+    CONTROL = 1 << 1,
+    ALT     = 1 << 2,
+    WIN     = 1 << 3
+};
+
+// Enable bitwise operations for KeyModifiers
+inline KeyModifiers operator|(KeyModifiers a, KeyModifiers b) {
+    return static_cast<KeyModifiers>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline bool operator&(KeyModifiers a, KeyModifiers b) {
+    return static_cast<int>(a) & static_cast<int>(b);
+}
+
+class KeyData {
+public:
     KeyData();
+
     bool IsModifierKey() const;
     std::string ToString() const;
+
+    std::string timestamp;
+    int keyCode;
+    int scanCode;
+    int flags;
+    KeyEventType eventType;
+    KeyModifiers modifiers;
+    std::string keyName;
+    std::string windowTitle;
 };
 
-#endif
+#endif // KEYDATA_H

@@ -8,6 +8,9 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 #pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "user32.lib")

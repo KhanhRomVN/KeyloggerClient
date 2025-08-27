@@ -11,6 +11,9 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <algorithm>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 // Obfuscated configuration keys
 constexpr auto OBF_KEY_LOG_PATH = OBFUSCATE("log_path");

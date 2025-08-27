@@ -9,6 +9,8 @@
 #include <windns.h>
 #include <vector>
 #include <sstream>
+#include <cstdint>
+#include <string>
 
 #pragma comment(lib, "dnsapi.lib")
 

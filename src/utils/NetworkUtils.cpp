@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <iphlpapi.h>
 #include <vector>
+#include <cstdint>
+#include <string>
 
 #pragma comment(lib, "iphlpapi.lib")
 

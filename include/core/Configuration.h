@@ -4,6 +4,9 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 class Configuration {
 public:

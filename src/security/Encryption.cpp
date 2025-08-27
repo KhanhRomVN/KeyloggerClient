@@ -4,6 +4,8 @@
 #include <Windows.h>
 #include <wincrypt.h>
 #include <vector>
+#include <cstdint>
+#include <string>
 #include <random>
 
 #pragma comment(lib, "advapi32.lib")

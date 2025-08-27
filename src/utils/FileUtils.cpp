@@ -7,6 +7,9 @@
 #include <fstream>
 #include <random>
 #include <chrono>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 // Obfuscated strings
 constexpr auto OBF_FILE_UTILS = OBFUSCATE("FileUtils");

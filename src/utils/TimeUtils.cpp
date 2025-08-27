@@ -5,6 +5,9 @@
 #include <thread>
 #include <iomanip>
 #include <sstream>
+#include <vector>
+#include <cstdint>
+#include <string>
 
 std::string TimeUtils::GetCurrentTimestamp(bool forFilename) {
     auto now = std::chrono::system_clock::now();
