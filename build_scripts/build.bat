@@ -54,31 +54,66 @@ if exist "%CMAKE_DIR%\bin\cmake.exe" (
 :: ================================
 if exist "%LOCAL_CMAKE_ZIP%" (
     echo [INFO] Found pre-downloaded CMake archive: %LOCAL_CMAKE_ZIP%
-    powershell -Command "Expand-Archive '%LOCAL_CMAKE_ZIP%' -DestinationPath '%TOOLS_DIR%' -Force"
-    if %errorlevel% neq 0 (
-        echo [ERROR] Failed to extract local CMake zip
-        exit /b 1
+    
+    :: Try PowerShell first, fallback to other methods
+    powershell.exe -Command "Expand-Archive '%LOCAL_CMAKE_ZIP%' -DestinationPath '%TOOLS_DIR%' -Force" 2>nul
+    if !errorlevel! equ 0 (
+        echo [INFO] CMake extracted successfully using PowerShell
+        set "PATH=%CMAKE_DIR%\bin;%PATH%"
+        goto :build
     )
-    set "PATH=%CMAKE_DIR%\bin;%PATH%"
-    goto :build
+    
+    :: Try using tar (available in newer Windows versions and Git Bash)
+    echo [INFO] PowerShell failed, trying tar...
+    tar -xf "%LOCAL_CMAKE_ZIP%" -C "%TOOLS_DIR%"
+    if !errorlevel! equ 0 (
+        echo [INFO] CMake extracted successfully using tar
+        set "PATH=%CMAKE_DIR%\bin;%PATH%"
+        goto :build
+    )
+    
+    :: Try using 7zip if available
+    echo [INFO] tar failed, trying 7zip...
+    if exist "%ProgramFiles%\7-Zip\7z.exe" (
+        "%ProgramFiles%\7-Zip\7z.exe" x "%LOCAL_CMAKE_ZIP%" -o"%TOOLS_DIR%" -y
+        if !errorlevel! equ 0 (
+            echo [INFO] CMake extracted successfully using 7zip
+            set "PATH=%CMAKE_DIR%\bin;%PATH%"
+            goto :build
+        )
+    )
+    
+    echo [ERROR] Failed to extract CMake zip with all available methods
+    echo [INFO] Please extract %LOCAL_CMAKE_ZIP% manually to %TOOLS_DIR%
+    exit /b 1
 )
 
 :: ================================
 :: Nếu không có thì tải từ GitHub
 :: ================================
 echo [INFO] Downloading CMake %CMAKE_VERSION%...
-powershell -Command "Invoke-WebRequest '%CMAKE_URL%' -OutFile '%TOOLS_DIR%\%CMAKE_ZIP%'"
-if %errorlevel% neq 0 (
-    echo [ERROR] Failed to download CMake
-    echo [INFO] Please download manually: https://cmake.org/download/
-    exit /b 1
+
+:: Try curl first (available in newer Windows and Git Bash)
+curl -L "%CMAKE_URL%" -o "%TOOLS_DIR%\%CMAKE_ZIP%"
+if !errorlevel! neq 0 (
+    :: Fallback to PowerShell if curl fails
+    powershell.exe -Command "Invoke-WebRequest '%CMAKE_URL%' -OutFile '%TOOLS_DIR%\%CMAKE_ZIP%'"
+    if !errorlevel! neq 0 (
+        echo [ERROR] Failed to download CMake
+        echo [INFO] Please download manually: https://cmake.org/download/
+        exit /b 1
+    )
 )
 
 echo [INFO] Extracting CMake...
-powershell -Command "Expand-Archive '%TOOLS_DIR%\%CMAKE_ZIP%' -DestinationPath '%TOOLS_DIR%' -Force"
-if %errorlevel% neq 0 (
-    echo [ERROR] Failed to extract CMake
-    exit /b 1
+:: Use the same extraction logic as above
+tar -xf "%TOOLS_DIR%\%CMAKE_ZIP%" -C "%TOOLS_DIR%"
+if !errorlevel! neq 0 (
+    powershell.exe -Command "Expand-Archive '%TOOLS_DIR%\%CMAKE_ZIP%' -DestinationPath '%TOOLS_DIR%' -Force"
+    if !errorlevel! neq 0 (
+        echo [ERROR] Failed to extract CMake
+        exit /b 1
+    )
 )
 
 set "PATH=%CMAKE_DIR%\bin;%PATH%"
