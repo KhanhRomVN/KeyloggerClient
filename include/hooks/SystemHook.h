@@ -46,7 +46,7 @@ private:
     static SystemHook* s_instance;
     
 #if PLATFORM_WINDOWS
-    static LRESULT CALLBACK ShellProc(int nCode, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ShellProc(int nCode, WPARAM wParam, LPARAM lParam); 
     void ProcessShellEvent(WPARAM eventType, LPARAM lParam);
     void HandleWindowCreated(HWND hwnd);
     void HandleWindowDestroyed(HWND hwnd);

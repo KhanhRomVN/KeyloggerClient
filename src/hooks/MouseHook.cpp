@@ -19,9 +19,8 @@
 #endif
 
 // Obfuscated strings - use char arrays instead of std::string for constexpr
-constexpr const char* OBF_MOUSEHOOK_MODULE = OBFUSCATE("MouseHook");
-constexpr const char* OBF_MOUSELOG_FORMAT = OBFUSCATE("MouseEvent: { action: %s, button: %s, pos: (%d, %d), wheel: %d }");
-
+const std::string OBF_MOUSEHOOK_MODULE = OBFUSCATE("MouseHook");
+const std::string OBF_MOUSELOG_FORMAT = OBFUSCATE("MouseEvent: { action: %s, button: %s, pos: (%d, %d), wheel: %d }");
 // Static member initialization
 MouseHook* MouseHook::s_instance = nullptr;
 

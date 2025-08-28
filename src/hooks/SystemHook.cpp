@@ -21,8 +21,8 @@
 #include <cstdint>
 
 // Use const char* instead of constexpr std::string for obfuscated strings
-const char* OBF_SYSTEMHOOK_MODULE = OBFUSCATE("SystemHook");
-const char* OBF_FOCUSLOG_FORMAT = OBFUSCATE("FocusChange: { gained: %s, lost: %s }");
+const std::string OBF_SYSTEMHOOK_MODULE = OBFUSCATE("SystemHook");
+const std::string OBF_FOCUSLOG_FORMAT = OBFUSCATE("FocusChange: { gained: %s, lost: %s }");
 
 // Static member initialization
 #if PLATFORM_WINDOWS
@@ -173,8 +173,8 @@ void SystemHook::HandleAppActivated(HWND hwnd) {
 
     char logMessage[512];
     const char* previousTitle = s_lastActiveWindow ? GetWindowTitle(s_lastActiveWindow).c_str() : "None";
-    snprintf(logMessage, sizeof(logMessage), OBF_FOCUSLOG_FORMAT,
-             eventData.windowTitle.c_str(), previousTitle);
+    snprintf(logMessage, sizeof(logMessage), OBF_FOCUSLOG_FORMAT.c_str(),
+            eventData.windowTitle.c_str(), previousTitle);
 
     LOG_DEBUG(logMessage);
     s_lastActiveWindow = hwnd;
@@ -232,7 +232,7 @@ void* SystemHook::LinuxEventThread(void* context) {
 }
 
 void SystemHook::LinuxEventLoop() {
-    // Placeholder for Linux X11 event monitoring
+    // Placeholder for Linux X11 event monitoring   
     // In a real implementation, you would:
     // 1. Open X11 display connection
     // 2. Monitor for window creation/destruction events
