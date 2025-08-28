@@ -99,7 +99,7 @@ void DataManager::AddSystemData(const utils::SystemInfo& systemInfo) {
     std::lock_guard<std::mutex> lock(m_dataMutex);
     
     std::string dataStr = SystemInfoToString(systemInfo);
-    m_systemDataBuffer += dataStr;
+    m_systemDataBuffer += dataStr;  
     
     if (m_systemDataBuffer.size() >= m_maxBufferSize / 8) {
         FlushSystemData();
@@ -419,6 +419,7 @@ std::string DataManager::SystemEventToString(const SystemEventData& event) const
     std::stringstream ss;
     ss << "SYSEVENT|" << event.timestamp << "|"
        << static_cast<int>(event.eventType) << "|"
+       << event.windowHandle << "|" // Add window handle
        << event.windowTitle << "|" << event.processName << "|"
        << event.extraInfo << "\n";
     return ss.str();

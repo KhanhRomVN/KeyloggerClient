@@ -48,7 +48,7 @@ struct MouseData {
 };
 
 struct SystemEventData {
-    uint64_t timestamp;
+    std::string timestamp;
     enum class EventType { 
         PROCESS_START,
         PROCESS_END,
@@ -60,12 +60,13 @@ struct SystemEventData {
         USER_LOGOUT
     };
     EventType eventType;
+    uint64_t windowHandle;
     std::string windowTitle;
     std::string processName;
     std::string extraInfo;
 };
 
-class DataManager {
+class DataManager { 
 public:
     explicit DataManager(Configuration* config);
     ~DataManager();

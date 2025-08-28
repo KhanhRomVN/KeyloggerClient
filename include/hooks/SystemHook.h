@@ -1,29 +1,20 @@
+// include/hooks/SystemHook.h
 #ifndef SYSTEMHOOK_H
 #define SYSTEMHOOK_H
 
 #include "core/Platform.h"
+#include "data/DataManager.h" // Add this include
 #include <string>
 
 class DataManager;
+
+namespace hooks {
 
 enum class SystemEventType {
     WINDOW_CREATED,
     WINDOW_DESTROYED,
     APP_ACTIVATED,
     SHELL_ACTIVATED
-};
-
-struct SystemEventData {
-    std::string timestamp;
-    SystemEventType eventType;
-#if PLATFORM_WINDOWS
-    HWND windowHandle;
-#else
-    void* windowHandle; // Generic handle for cross-platform
-#endif
-    std::string windowTitle;
-    std::string processName;
-    std::string extraInfo;
 };
 
 class SystemHook {
@@ -56,11 +47,12 @@ private:
     
     void HandleShellActivated();
     
-    // Linux-specific methods (placeholder for future implementation)
 #if PLATFORM_LINUX
     void LinuxEventLoop();
     static void* LinuxEventThread(void* context);
 #endif
 };
+
+} // namespace hooks
 
 #endif

@@ -26,9 +26,11 @@ const std::string OBF_FOCUSLOG_FORMAT = OBFUSCATE("FocusChange: { gained: %s, lo
 
 // Static member initialization
 #if PLATFORM_WINDOWS
-HHOOK SystemHook::s_systemHook = nullptr;
+HHOOK hooks::SystemHook::s_systemHook = nullptr;
 #endif
-SystemHook* SystemHook::s_instance = nullptr;
+hooks::SystemHook* hooks::SystemHook::s_instance = nullptr;
+
+namespace hooks {
 
 SystemHook::SystemHook(DataManager* dataManager)
     : m_dataManager(dataManager), m_isActive(false) {
@@ -128,8 +130,8 @@ void SystemHook::HandleWindowCreated(HWND hwnd) {
 
     SystemEventData eventData;
     eventData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
-    eventData.eventType = SystemEventType::WINDOW_CREATED;
-    eventData.windowHandle = hwnd;
+    eventData.eventType = SystemEventData::EventType::WINDOW_OPEN;
+    eventData.windowHandle = reinterpret_cast<uint64_t>(hwnd);
     eventData.windowTitle = GetWindowTitle(hwnd);
     eventData.processName = GetProcessName(hwnd);
 
@@ -142,8 +144,8 @@ void SystemHook::HandleWindowDestroyed(HWND hwnd) {
 
     SystemEventData eventData;
     eventData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
-    eventData.eventType = SystemEventType::WINDOW_DESTROYED;
-    eventData.windowHandle = hwnd;
+    eventData.eventType = SystemEventData::EventType::WINDOW_CLOSE;
+    eventData.windowHandle = reinterpret_cast<uint64_t>(hwnd);
     eventData.windowTitle = GetWindowTitle(hwnd);
     eventData.processName = GetProcessName(hwnd);
 
@@ -159,8 +161,8 @@ void SystemHook::HandleAppActivated(HWND hwnd) {
 
     SystemEventData eventData;
     eventData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
-    eventData.eventType = SystemEventType::APP_ACTIVATED;
-    eventData.windowHandle = hwnd;
+    eventData.eventType = SystemEventData::EventType::WINDOW_OPEN;
+    eventData.windowHandle = reinterpret_cast<uint64_t>(hwnd);
     eventData.windowTitle = GetWindowTitle(hwnd);
     eventData.processName = GetProcessName(hwnd);
 
@@ -216,7 +218,7 @@ std::string SystemHook::GetProcessName(HWND hwnd) const {
 void SystemHook::HandleShellActivated() {
     SystemEventData eventData;
     eventData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
-    eventData.eventType = SystemEventType::SHELL_ACTIVATED;
+    eventData.eventType = SystemEventData::EventType::SYSTEM_UNLOCK;
 
     m_dataManager->AddSystemEventData(eventData);
     LOG_DEBUG("Shell activated");
@@ -250,3 +252,5 @@ void SystemHook::LinuxEventLoop() {
     }
 }
 #endif // PLATFORM_LINUX
+
+} // namespace hooks
