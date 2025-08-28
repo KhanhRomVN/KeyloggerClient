@@ -1,15 +1,19 @@
 #include "core/Logger.h"
 #include "utils/TimeUtils.h"
 #include "utils/FileUtils.h"
-#include "security/Obfuscation.h"
+#include "utils/StringUtils.h"
 #include "security/Encryption.h"
 #include <iostream>
 #include <sstream>
-#include <iomanip>
-#include <chrono>
+#include <iomanip>  
 #include <vector>
 #include <cstdint>
 #include <string>
+
+// Windows specific includes
+#if PLATFORM_WINDOWS
+#include <Windows.h>
+#endif
 
 // Static member initialization
 std::ofstream Logger::m_logFile;
@@ -21,7 +25,10 @@ void Logger::Init(const std::string& logPath) {
     std::lock_guard<std::mutex> lock(m_mutex);
     
     m_logPath = logPath;
-    utils::FileUtils::CreateDirectories(utils::FileUtils::GetDirectoryPath(logPath));
+    
+    // Convert to wide string for Windows file operations if needed
+    std::wstring wideLogPath = utils::StringUtils::Utf8ToWide(logPath);
+    utils::FileUtils::CreateDirectories(utils::FileUtils::GetDirectoryPath(wideLogPath));
     
     m_logFile.open(logPath, std::ios::out | std::ios::app);
     if (!m_logFile.is_open()) {
@@ -63,9 +70,11 @@ void Logger::Write(LogLevel level, const std::string& message) {
         m_logFile.flush();
     }
 
-    // Emergency output if file logging fails
+    // Emergency output if file logging fails (Windows only)
     if (!m_logFile.is_open() && level >= LogLevel::ERROR) {
-        OutputDebugStringA(logEntry.str().c_str());
+#if PLATFORM_WINDOWS
+        OutputDebugStringA(logEntry.str().c_str()); // Convert to const char*
+#endif
     }
 }
 
@@ -90,7 +99,11 @@ void Logger::RotateLogFile() {
     std::string backupPath = m_logPath + "." + 
         utils::TimeUtils::GetCurrentTimestamp(true);
     
-    utils::FileUtils::MoveFile(m_logPath, backupPath);
+    // Convert paths to wide strings for Windows
+    std::wstring wideLogPath = utils::StringUtils::Utf8ToWide(m_logPath);
+    std::wstring wideBackupPath = utils::StringUtils::Utf8ToWide(backupPath);
+    
+    utils::FileUtils::MoveFile(wideLogPath, wideBackupPath);
     
     // Reopen log file
     m_logFile.open(m_logPath, std::ios::out | std::ios::app);
@@ -104,15 +117,26 @@ void Logger::EncryptLogs() {
     }
 
     try {
-        auto logData = utils::FileUtils::ReadBinaryFile(m_logPath);
+        // Convert path to wide string for file operations
+        std::wstring wideLogPath = utils::StringUtils::Utf8ToWide(m_logPath);
+        auto logData = utils::FileUtils::ReadBinaryFile(wideLogPath);
+        
         if (!logData.empty()) {
-            std::string encryptedData = security::Encryption::EncryptAES(
+            // Convert vector<uint8_t> to string for encryption
+            std::string logDataStr(logData.begin(), logData.end());
+            
+            // Encrypt the log data
+            std::vector<uint8_t> encryptedData = security::Encryption::EncryptAES(
                 logData,
-                OBFUSCATE("LOG_ENCRYPTION_KEY_4F2A9C")
+                "LOG_ENCRYPTION_KEY_4F2A9C" // Use actual key management in production
             );
             
-            utils::FileUtils::WriteBinaryFile(m_logPath + ".enc", encryptedData);
-            utils::FileUtils::DeleteFile(m_logPath);
+            // Write encrypted file
+            std::wstring encryptedPath = wideLogPath + L".enc";
+            utils::FileUtils::WriteBinaryFile(encryptedPath, encryptedData);
+            
+            // Delete original log file
+            utils::FileUtils::DeleteFile(wideLogPath);
         }
     }
     catch (...) {
@@ -121,7 +145,7 @@ void Logger::EncryptLogs() {
     }
 }
 
-// Helper macros implementation
+// Helper functions implementation
 void LogDebug(const std::string& message) {
     Logger::Write(LogLevel::DEBUG, message);
 }

@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 
+namespace utils {
 class FileUtils {
 public:
     static std::wstring GetCurrentExecutablePath();
@@ -34,5 +35,6 @@ public:
     static uint64_t GetFileModifiedTime(const std::wstring& path);
     static bool IsFileSigned(const std::wstring& path);
 };
+}
 
 #endif

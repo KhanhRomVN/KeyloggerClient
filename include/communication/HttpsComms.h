@@ -2,20 +2,35 @@
 #ifndef HTTPSCOMMS_H
 #define HTTPSCOMMS_H
 
-#include "communication/HttpComms.h"
+#include "communication/BaseComms.h"
+#include "core/Platform.h"
+#include <vector>
+#include <cstdint>
 
-class HttpsComms : public HttpComms {
+class Configuration;
+
+class HttpsComms : public BaseComms {
 public:
     explicit HttpsComms(Configuration* config);
+    ~HttpsComms();
     
     bool Initialize() override;
     bool SendData(const std::vector<uint8_t>& data) override;
+    void Cleanup() override;
+    bool TestConnection() const override;
+    std::vector<uint8_t> ReceiveData() override;
     
 private:
+    Configuration* m_config;
+    
     #if PLATFORM_WINDOWS
+    HINTERNET m_hSession;
+    HINTERNET m_hConnect;
     bool ConfigureSslWindows();
     #else
-    bool ConfigureSslLinux(CURL* curl);
+    void* m_hSession;
+    void* m_hConnect;
+    bool ConfigureSslLinux(void* curl);
     #endif
 };
 

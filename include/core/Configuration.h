@@ -39,7 +39,7 @@ public:
     // Network mode methods
     std::string GetNetworkMode() const;
     std::string GetSameWifiServerUrl() const;
-    std::string GetDifferentWifiServerUrl() const;
+    std::string GetDifferentWifiServerUrl() const;  
     
     bool SaveConfiguration() const;
 

