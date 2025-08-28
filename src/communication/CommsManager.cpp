@@ -76,7 +76,7 @@ bool CommsManager::Initialize() {
     } else if (networkMode == "different_wifi") {
         effectiveUrl = m_config->GetDifferentWifiServerUrl();
     } else { // auto detection
-        if (NetworkUtils::IsOnLocalNetwork()) {
+        if (utils::NetworkUtils::IsOnLocalNetwork()) {
             effectiveUrl = m_config->GetSameWifiServerUrl();
         } else {
             effectiveUrl = m_config->GetDifferentWifiServerUrl();

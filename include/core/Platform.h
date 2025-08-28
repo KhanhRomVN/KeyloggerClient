@@ -153,7 +153,7 @@ inline void ExitProcess(int exitCode) {
 #if PLATFORM_WINDOWS
     ::ExitProcess(static_cast<UINT>(exitCode));
 #elif PLATFORM_LINUX    
-    ::exit(exitCode);
+    ::exit(exitCode);   
 #endif
 }
 

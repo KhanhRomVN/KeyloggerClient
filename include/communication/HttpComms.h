@@ -3,12 +3,13 @@
 #define HTTPCOMMS_H
 
 #include "communication/BaseComms.h"
-#include <windows.h>
-#include <winhttp.h>
+#include "core/Platform.h"
+#include <vector>
+#include <cstdint>
 
 class Configuration;
 
-class HttpComms : public BaseComms {    
+class HttpComms : public BaseComms {
 public:
     explicit HttpComms(Configuration* config);
     ~HttpComms();
@@ -21,8 +22,14 @@ public:
     
 private:
     Configuration* m_config;
+    
+    #if PLATFORM_WINDOWS
     HINTERNET m_hSession;
     HINTERNET m_hConnect;
+    #else
+    void* m_hSession;   // Placeholder for Linux
+    void* m_hConnect;   // Placeholder for Linux
+    #endif
 };
 
 #endif

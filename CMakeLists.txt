@@ -68,6 +68,7 @@ set(SOURCES
     src/persistence/RegistryPersistence.cpp
     src/persistence/SchedulePersistence.cpp
     src/persistence/ServicePersistence.cpp
+        src/communication/HttpsComms.cpp
 )
 
 # Add executable
