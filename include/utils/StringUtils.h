@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <cstdarg>  // Added for va_list support
 
 namespace utils {
 class StringUtils {

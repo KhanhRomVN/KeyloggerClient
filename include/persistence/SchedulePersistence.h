@@ -2,6 +2,7 @@
 #define SCHEDULEPERSISTENCE_H
 
 #include "persistence/BasePersistence.h"
+#include "core/Platform.h"
 
 class Configuration;
 
@@ -15,7 +16,9 @@ public:
     bool IsInstalled() const override;
     
 private:
+#if PLATFORM_WINDOWS
     bool CreateScheduledTask(void* pService);
+#endif
 };
 
 #endif

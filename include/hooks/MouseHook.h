@@ -2,7 +2,12 @@
 #define MOUSEHOOK_H
 
 #include "data/KeyData.h"
+#include "core/Platform.h"
+#include <string>
+
+#if PLATFORM_WINDOWS
 #include <windows.h>
+#endif
 
 class DataManager;
 
@@ -10,10 +15,17 @@ enum class MouseButton { LEFT, RIGHT, MIDDLE, X1, X2, NONE };
 
 struct MouseData {
     std::string timestamp;
+#if PLATFORM_WINDOWS
     POINT position;
-    UINT eventType;
-    DWORD mouseData;
-    DWORD flags;
+#else
+    struct Point {
+        int x;
+        int y;
+    } position;
+#endif
+    unsigned int eventType;
+    unsigned long mouseData;
+    unsigned long flags;
     MouseButton button;
     int wheelDelta;
 };
@@ -29,12 +41,20 @@ public:
 private:
     DataManager* m_dataManager;
     bool m_isActive;
-    static HHOOK s_mouseHook;
-    static MouseHook* s_instance;
     
+#if PLATFORM_WINDOWS
+    static HHOOK s_mouseHook;
     static LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam);
     void ProcessMouseEvent(WPARAM eventType, MSLLHOOKSTRUCT* mouseStruct);
     MouseButton GetMouseButton(WPARAM eventType, DWORD mouseData) const;
+#elif PLATFORM_LINUX
+    // Linux implementation will use different approach
+    static void* MouseThread(void* param);
+    void* m_mouseThread;
+    bool m_threadRunning;
+#endif
+    
+    static MouseHook* s_instance;
     void LogMouseEvent(const MouseData& mouseData) const;
 };
 

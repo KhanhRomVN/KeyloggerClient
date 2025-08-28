@@ -6,9 +6,10 @@
 #include <cctype>
 #include <sstream>
 #include <random>
-#include <vector>
+#include <vector>   
 #include <cstdint>
 #include <string>
+#include <cstdarg>  // Added for va_list support
 
 #if PLATFORM_WINDOWS
 #include <Windows.h>
@@ -285,18 +286,12 @@ std::string utils::StringUtils::Base32Encode(const std::vector<uint8_t>& data) {
 }
 
 std::vector<uint8_t> utils::StringUtils::Base32Decode(const std::string& encoded) {
-    static const int base32Index[256] = {
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,26,27,28,
-        29,30,31,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
-        17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+    // Use a function to get the base32 index instead of a large array
+    auto getBase32Index = [](char c) -> int {
+        if (c >= 'A' && c <= 'Z') return c - 'A';
+        if (c >= 'a' && c <= 'z') return c - 'a';
+        if (c >= '2' && c <= '7') return 26 + (c - '2');
+        return -1;
     };
     
     std::vector<uint8_t> decoded;
@@ -308,7 +303,7 @@ std::vector<uint8_t> utils::StringUtils::Base32Decode(const std::string& encoded
     for (char c : encoded) {
         if (c == '=') break; // Padding
         
-        int value = base32Index[(uint8_t)c];
+        int value = getBase32Index(c);
         if (value == -1) continue; // Skip invalid characters
         
         buffer = (buffer << 5) | value;
@@ -359,18 +354,14 @@ std::string utils::StringUtils::Base64Encode(const std::vector<uint8_t>& data) {
 }
 
 std::vector<uint8_t> utils::StringUtils::Base64Decode(const std::string& encoded) {
-    static const int base64Index[256] = {
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,52,53,54,55,
-        56,57,58,59,60,61,-1,-1,-1,-1,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
-        16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,
-        36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+    // Use a function to get the base64 index instead of a large array
+    auto getBase64Index = [](char c) -> int {
+        if (c >= 'A' && c <= 'Z') return c - 'A';
+        if (c >= 'a' && c <= 'z') return 26 + (c - 'a');
+        if (c >= '0' && c <= '9') return 52 + (c - '0');
+        if (c == '+') return 62;
+        if (c == '/') return 63;
+        return -1;
     };
     
     std::vector<uint8_t> decoded;
@@ -378,10 +369,10 @@ std::vector<uint8_t> utils::StringUtils::Base64Decode(const std::string& encoded
     
     size_t i = 0;
     while (i < encoded.size()) {
-        int val1 = base64Index[(uint8_t)encoded[i++]];
-        int val2 = base64Index[(uint8_t)encoded[i++]];
-        int val3 = base64Index[(uint8_t)encoded[i++]];
-        int val4 = base64Index[(uint8_t)encoded[i++]];
+        int val1 = getBase64Index(encoded[i++]);
+        int val2 = i < encoded.size() ? getBase64Index(encoded[i++]) : -1;
+        int val3 = i < encoded.size() ? getBase64Index(encoded[i++]) : -1;
+        int val4 = i < encoded.size() ? getBase64Index(encoded[i++]) : -1;
         
         if (val1 == -1 || val2 == -1) break;
         
@@ -401,13 +392,18 @@ std::string utils::StringUtils::Format(const char* format, ...) {
     va_list args;
     va_start(args, format);
     
-    int size = vsnprintf(nullptr, 0, format, args);
-    va_end(args);
+    // Determine the required size
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int size = vsnprintf(nullptr, 0, format, args_copy);
+    va_end(args_copy);
     
-    if (size <= 0) return "";
+    if (size <= 0) {
+        va_end(args);
+        return "";
+    }
     
     std::string result(size, 0);
-    va_start(args, format);
     vsnprintf(&result[0], size + 1, format, args);
     va_end(args);
     

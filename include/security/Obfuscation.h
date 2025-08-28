@@ -4,6 +4,9 @@
 #include <string>   
 #include <vector>
 #include <algorithm>
+#include <cstdint>
+
+namespace security {
 
 // Simple XOR-based obfuscation macro
 #define OBFUSCATE(str) ([]() -> std::string { \
@@ -36,5 +39,7 @@ public:
         return result;
     }
 };
+
+} // namespace security
 
 #endif

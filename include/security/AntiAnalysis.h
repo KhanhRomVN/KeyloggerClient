@@ -1,8 +1,9 @@
 #ifndef ANTIANALYSIS_H
 #define ANTIANALYSIS_H
 
+#include <string>
+
 namespace security {
-namespace security;
 
 class AntiAnalysis {
 public:
@@ -12,7 +13,11 @@ public:
     static void EvadeAnalysis();    
     static bool IsLowOnResources();
     static void Countermeasure();
+    static void ExecuteDecoyOperations();
+    static void CreateDecoyArtifacts();
+    static void VMEvasionTechniques();
 };
 
 } // namespace security
+
 #endif

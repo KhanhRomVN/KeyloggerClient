@@ -7,7 +7,7 @@
     #define PLATFORM_WINDOWS 1
     #define PLATFORM_LINUX   0
 #elif defined(__linux__)
-    #define PLATFORM_WINDOWS 0
+    #define PLATFORM_WINDOWS 0  
     #define PLATFORM_LINUX   1
 #else
     #error "Unsupported platform"

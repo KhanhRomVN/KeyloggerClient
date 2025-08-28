@@ -3,7 +3,8 @@
 
 #include <vector>
 #include <string>
-#include <windows.h>
+#include <cstdint>
+#include "core/Platform.h"
 
 class Screenshot {
 public:
@@ -12,8 +13,8 @@ public:
     ~Screenshot();
     
     bool Capture();
-    bool Capture(HWND hwnd);
-    bool SaveToFile(const std::wstring& path) const;
+    bool Capture(void* nativeHandle = nullptr); // Thay HWND bằng void* cho đa nền tảng
+    bool SaveToFile(const std::string& path) const; // Thay std::wstring bằng std::string
     std::vector<uint8_t> Compress(int quality = 85) const;
     
     std::vector<uint8_t> GetImageData() const;
@@ -25,9 +26,9 @@ public:
     bool IsValid() const;
     
     static std::vector<uint8_t> CaptureToMemory(int quality = 85);
-    static bool CaptureToFile(const std::wstring& path, int quality = 85);
+    static bool CaptureToFile(const std::string& path, int quality = 85); // Thay std::wstring
     static std::vector<Screenshot> CaptureMultipleDisplays();
-    static void CleanupGDIplus();
+    static void Cleanup();
     
 private:
     int m_width;
@@ -36,8 +37,18 @@ private:
     std::vector<uint8_t> m_imageData;
     std::string m_timestamp;
     
-    void InitializeGDIplus();
-    static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
+    void Initialize();
+    static int GetEncoderClsid(const char* format, void* pClsid); // Thay WCHAR* bằng char*
+    
+#if PLATFORM_WINDOWS
+    bool CaptureWindows(HWND hwnd);
+    bool SaveToFileWindows(const std::string& path) const;
+    std::vector<uint8_t> CompressWindows(int quality) const;
+#elif PLATFORM_LINUX
+    bool CaptureLinux();
+    bool SaveToFileLinux(const std::string& path) const;
+    std::vector<uint8_t> CompressLinux(int quality) const;
+#endif
 };
 
 #endif

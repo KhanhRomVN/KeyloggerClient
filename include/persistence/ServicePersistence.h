@@ -2,7 +2,7 @@
 #define SERVICEPERSISTENCE_H
 
 #include "persistence/BasePersistence.h"
-#include <windows.h>
+#include "core/Platform.h"
 
 class Configuration;
 

