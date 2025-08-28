@@ -1,14 +1,15 @@
 #ifndef SYSTEMUTILS_H
 #define SYSTEMUTILS_H
-
 #include <string>
 #include <vector>
 #include <cstdint>
 
+namespace utils {
+
 struct SystemInfoUtils  {
     std::string computerName;
     std::string userName;
-    std::string osVersion;
+    std::string osVersion;  
     uint64_t memorySize;
     std::string processorInfo;
     uint64_t diskSize;
@@ -37,5 +38,8 @@ public:
     
     static void CriticalShutdown();
 };
+} // namespace utils
+
+} // namespace utils
 
 #endif

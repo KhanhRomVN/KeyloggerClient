@@ -2,7 +2,7 @@
 #include "utils/SystemUtils.h"
 #include "core/Logger.h"
 #include <Windows.h>
-#include <Lmcons.h>
+#include <Lmcons.h> 
 #include <iphlpapi.h>
 #include <psapi.h>
 #include <sstream>
@@ -13,6 +13,7 @@
 
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "psapi.lib")
+namespace utils {
 
 std::string SystemUtils::GetComputerName() {
     char buffer[MAX_COMPUTERNAME_LENGTH + 1];
@@ -179,5 +180,6 @@ std::string SystemUtils::GetMACAddress() {
 
 void SystemUtils::CriticalShutdown() {
     // Emergency cleanup and shutdown procedure
-    ExitProcess(0);
+    ::ExitProcess(0);
 }
+} // namespace utils
