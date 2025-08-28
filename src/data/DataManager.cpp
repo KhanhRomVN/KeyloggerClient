@@ -14,6 +14,8 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <cstring>  // Added for strftime
+#include <ctime>    // Added for std::localtime
 
 // Platform-specific includes
 #if PLATFORM_WINDOWS
@@ -60,9 +62,10 @@ void DataManager::InitializeStorage() {
 #endif
     
     // Create initial data file
-    std::string filename = "data_" + std::to_string(
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count()) + ".bin";
+    auto now = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()).count();
+    std::string filename = "data_" + std::to_string(timestamp) + ".bin";
     m_currentDataFile = m_storagePath + filename;
     
     LOG_INFO("Data storage initialized at: " + m_storagePath);
@@ -92,7 +95,7 @@ void DataManager::AddMouseData(const MouseData& mouseData) {
     }
 }
 
-void DataManager::AddSystemData(const SystemInfo& systemInfo) {
+void DataManager::AddSystemData(const utils::SystemInfo& systemInfo) {
     std::lock_guard<std::mutex> lock(m_dataMutex);
     
     std::string dataStr = SystemInfoToString(systemInfo);
@@ -134,9 +137,14 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
             std::vector<uint8_t> fileData(size);
             if (fread(fileData.data(), 1, size, f) == size) {
                 // Add file delimiter with metadata
-                std::string delimiter = "FILE_DELIMITER:" + 
-                    file.substr(file.find_last_of("/\\") + 1) + 
-                    ":SIZE:" + std::to_string(fileData.size()) + "\n";
+                std::string delimiter = "FILE_DELIMITER:";
+                size_t lastSlash = file.find_last_of("/\\");
+                if (lastSlash != std::string::npos) {
+                    delimiter += file.substr(lastSlash + 1);
+                } else {
+                    delimiter += file;
+                }
+                delimiter += ":SIZE:" + std::to_string(fileData.size()) + "\n";
                 
                 allData.insert(allData.end(), 
                               delimiter.begin(), delimiter.end());
@@ -157,10 +165,11 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
     
     // Add metadata header
     std::string metadata = "METADATA_START\n";
-    metadata += "client_id:" + "system_fingerprint" + "\n"; // Simplified
-    metadata += "timestamp:" + std::to_string(
-        std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count()) + "\n";
+    metadata += "client_id:system_fingerprint\n"; // Simplified
+    auto now = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::seconds>(
+        now.time_since_epoch()).count();
+    metadata += "timestamp:" + std::to_string(timestamp) + "\n";
     metadata += "total_size:" + std::to_string(allData.size()) + "\n";
     metadata += "file_count:" + std::to_string(dataFiles.size()) + "\n";
     metadata += "METADATA_END\n";
@@ -280,7 +289,7 @@ void DataManager::AppendToFile(const std::string& path, const std::string& data)
         long size = ftell(fcheck);
         fclose(fcheck);
         
-        if (size > m_maxBufferSize) {
+        if (static_cast<size_t>(size) > m_maxBufferSize) {
             RotateDataFile();
         }
     }
@@ -301,9 +310,10 @@ void DataManager::RotateDataFileIfNeeded() {
 
 void DataManager::RotateDataFile() {
     // Close current file and create new one
-    std::string filename = "data_" + std::to_string(
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count()) + ".bin";
+    auto now = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()).count();
+    std::string filename = "data_" + std::to_string(timestamp) + ".bin";
     m_currentDataFile = m_storagePath + filename;
     
     LOG_DEBUG("Rotated data file to: " + m_currentDataFile);
@@ -395,7 +405,7 @@ std::string DataManager::MouseDataToString(const MouseData& data) {
     return ss.str();
 }
 
-std::string DataManager::SystemInfoToString(const SystemInfo& info) {
+std::string DataManager::SystemInfoToString(const utils::SystemInfo& info) {
     std::stringstream ss;
     ss << "SYSINFO|" << info.timestamp << "|"
        << info.computerName << "|" << info.userName << "|"
@@ -404,6 +414,7 @@ std::string DataManager::SystemInfoToString(const SystemInfo& info) {
     return ss.str();
 }
 
+// Fixed: Added const qualifier
 std::string DataManager::SystemEventToString(const SystemEventData& event) const {
     std::stringstream ss;
     ss << "SYSEVENT|" << event.timestamp << "|"
@@ -437,12 +448,12 @@ std::vector<uint8_t> DataManager::GetBatchData() {
     std::string batchData;
     batchData += "BATCH_START\n";
     batchData += "batch_id:" + GenerateBatchId() + "\n";
-    batchData += "start_time:" + 
-        std::to_string(std::chrono::duration_cast<std::chrono::seconds>(
-            m_batchStartTime.time_since_epoch()).count()) + "\n";
-    batchData += "end_time:" + 
-        std::to_string(std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::steady_clock::now().time_since_epoch()).count()) + "\n";
+    auto startTime = std::chrono::duration_cast<std::chrono::seconds>(
+        m_batchStartTime.time_since_epoch()).count();
+    batchData += "start_time:" + std::to_string(startTime) + "\n";
+    auto endTime = std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    batchData += "end_time:" + std::to_string(endTime) + "\n";
     
     // Add all collected data
     batchData += m_keyDataBuffer;
@@ -469,7 +480,12 @@ std::string DataManager::GenerateBatchId() const {
     auto time = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
     char timeStr[20];
-    strftime(timeStr, sizeof(timeStr), "%Y%m%d_%H%M%S", std::localtime(&time));
-    ss << timeStr << "_system_fingerprint";
+    std::tm* localTime = std::localtime(&time);
+    if (localTime) {
+        strftime(timeStr, sizeof(timeStr), "%Y%m%d_%H%M%S", localTime);
+        ss << timeStr << "_system_fingerprint";
+    } else {
+        ss << "unknown_system_fingerprint";
+    }
     return ss.str();
 }

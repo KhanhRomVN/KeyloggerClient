@@ -18,9 +18,9 @@
 #include <unistd.h>
 #endif
 
-// Obfuscated strings
-constexpr auto OBF_MOUSEHOOK_MODULE = OBFUSCATE("MouseHook");
-constexpr auto OBF_MOUSELOG_FORMAT = OBFUSCATE("MouseEvent: { action: %s, button: %s, pos: (%d, %d), wheel: %d }");
+// Obfuscated strings - use char arrays instead of std::string for constexpr
+constexpr const char* OBF_MOUSEHOOK_MODULE = OBFUSCATE("MouseHook");
+constexpr const char* OBF_MOUSELOG_FORMAT = OBFUSCATE("MouseEvent: { action: %s, button: %s, pos: (%d, %d), wheel: %d }");
 
 // Static member initialization
 MouseHook* MouseHook::s_instance = nullptr;
@@ -193,6 +193,8 @@ void* MouseHook::MouseThread(void* param) {
             mouseData.position.x = event.xbutton.x;
             mouseData.position.y = event.xbutton.y;
             mouseData.wheelDelta = 0;
+            mouseData.mouseData = 0;
+            mouseData.flags = 0;
 
             switch (event.type) {
                 case ButtonPress:
@@ -275,7 +277,7 @@ void MouseHook::LogMouseEvent(const MouseData& mouseData) const {
     }
 
     char logMessage[512];
-    snprintf(logMessage, sizeof(logMessage), OBFUSCATED_MOUSELOG_FORMAT,
+    snprintf(logMessage, sizeof(logMessage), OBF_MOUSELOG_FORMAT, // Fixed macro name
              action.c_str(), button.c_str(),
              mouseData.position.x, mouseData.position.y,
              mouseData.wheelDelta);

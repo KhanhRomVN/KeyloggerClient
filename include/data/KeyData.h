@@ -12,12 +12,14 @@ enum class KeyEventType {
 };
 
 // Key modifiers
-enum class KeyModifiers : uint32_t {
-    NONE    = 0,
-    SHIFT   = 1 << 0,
+enum class KeyModifiers {
+    NONE = 0,
+    SHIFT = 1 << 0,
     CONTROL = 1 << 1,
-    ALT     = 1 << 2,
-    WIN     = 1 << 3
+    ALT = 1 << 2,
+    WIN = 1 << 3,
+    CAPS_LOCK = 1 << 4,
+    NUM_LOCK = 1 << 5
 };
 
 // Enable bitwise operations for KeyModifiers

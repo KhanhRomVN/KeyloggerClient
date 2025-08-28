@@ -20,9 +20,9 @@
 #include <vector>
 #include <cstdint>
 
-// Obfuscated strings
-constexpr auto OBF_SYSTEMHOOK_MODULE = OBFUSCATE("SystemHook");
-constexpr auto OBF_FOCUSLOG_FORMAT = OBFUSCATE("FocusChange: { gained: %s, lost: %s }");
+// Use const char* instead of constexpr std::string for obfuscated strings
+const char* OBF_SYSTEMHOOK_MODULE = OBFUSCATE("SystemHook");
+const char* OBF_FOCUSLOG_FORMAT = OBFUSCATE("FocusChange: { gained: %s, lost: %s }");
 
 // Static member initialization
 #if PLATFORM_WINDOWS
@@ -173,7 +173,7 @@ void SystemHook::HandleAppActivated(HWND hwnd) {
 
     char logMessage[512];
     const char* previousTitle = s_lastActiveWindow ? GetWindowTitle(s_lastActiveWindow).c_str() : "None";
-    snprintf(logMessage, sizeof(logMessage), OBFUSCATED_FOCUSLOG_FORMAT,
+    snprintf(logMessage, sizeof(logMessage), OBF_FOCUSLOG_FORMAT,
              eventData.windowTitle.c_str(), previousTitle);
 
     LOG_DEBUG(logMessage);
@@ -241,7 +241,12 @@ void SystemHook::LinuxEventLoop() {
     LOG_INFO("Linux system event monitoring started (placeholder)");
     
     while (m_isActive) {
-        Platform::SleepMs(1000); // Simulate event loop
+        // Use sleep function appropriate for the platform
+        #if PLATFORM_WINDOWS
+        Sleep(1000);
+        #else
+        sleep(1);
+        #endif
     }
 }
 #endif // PLATFORM_LINUX

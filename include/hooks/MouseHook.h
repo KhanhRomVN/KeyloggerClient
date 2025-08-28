@@ -13,6 +13,7 @@ class DataManager;
 
 enum class MouseButton { LEFT, RIGHT, MIDDLE, X1, X2, NONE };
 
+// Renamed from MouseEventData to MouseData to match implementation
 struct MouseData {
     std::string timestamp;
 #if PLATFORM_WINDOWS
@@ -48,14 +49,13 @@ private:
     void ProcessMouseEvent(WPARAM eventType, MSLLHOOKSTRUCT* mouseStruct);
     MouseButton GetMouseButton(WPARAM eventType, DWORD mouseData) const;
 #elif PLATFORM_LINUX
-    // Linux implementation will use different approach
     static void* MouseThread(void* param);
     void* m_mouseThread;
     bool m_threadRunning;
 #endif
     
     static MouseHook* s_instance;
-    void LogMouseEvent(const MouseData& mouseData) const;
+    void LogMouseEvent(const MouseData& mouseData) const; // Fixed parameter type
 };
 
-#endif
+#endif // MOUSEHOOK_H

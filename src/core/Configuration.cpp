@@ -62,7 +62,9 @@ bool Configuration::LoadConfiguration() {
     std::vector<std::wstring> configPaths = GetConfigurationPaths();
 
     for (const auto& path : configPaths) {
-        if (utils::FileUtils::FileExists(path)) {
+        // Convert wstring to string before checking file existence
+        std::string pathStr = utils::StringUtils::WideToUtf8(path);
+        if (utils::FileUtils::FileExists(pathStr)) {
             LOG_INFO("Found configuration file: " + utils::StringUtils::WideToUtf8(path));
             if (LoadFromEncryptedFile(path)) {
                 LOG_INFO("Configuration loaded successfully from file");
@@ -88,7 +90,9 @@ bool Configuration::LoadConfiguration() {
     };
     
     for (const auto& path : linuxConfigPaths) {
-        if (utils::FileUtils::FileExists(path)) {
+        // Convert wstring to string before checking file existence
+        std::string pathStr = utils::StringUtils::WideToUtf8(path);
+        if (utils::FileUtils::FileExists(pathStr)) {
             LOG_INFO("Found Linux configuration file: " + utils::StringUtils::WideToUtf8(path));
             if (LoadFromEncryptedFile(path)) {
                 LOG_INFO("Configuration loaded from Linux config");
@@ -151,7 +155,9 @@ std::vector<std::wstring> Configuration::GetConfigurationPaths() const {
 
 bool Configuration::LoadFromEncryptedFile(const std::wstring& path) {
     try {
-        auto encryptedData = utils::FileUtils::ReadBinaryFile(path);
+        // Convert wstring to string before passing to FileUtils
+        std::string pathStr = utils::StringUtils::WideToUtf8(path);
+        auto encryptedData = utils::FileUtils::ReadBinaryFile(pathStr);
         if (encryptedData.empty()) {
             LOG_WARN("Configuration file is empty: " + utils::StringUtils::WideToUtf8(path));
             return false;
@@ -458,10 +464,10 @@ bool Configuration::SaveConfiguration() const {
             GenerateConfigurationKey()
         );
         
-        // Convert string to wstring for the path
+        // Convert to string path (not wstring)
         std::string appDataPathStr = utils::FileUtils::GetAppDataPath();
         if (!appDataPathStr.empty()) {
-            std::wstring configPath = utils::StringUtils::Utf8ToWide(appDataPathStr) + L"/config.enc";
+            std::string configPath = appDataPathStr + "/config.enc";
             return utils::FileUtils::WriteBinaryFile(configPath, encryptedData);
         }
         return false;

