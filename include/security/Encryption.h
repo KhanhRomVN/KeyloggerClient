@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+namespace security {
+
 class Encryption {
 public:
     static std::vector<uint8_t> EncryptAES(const std::vector<uint8_t>& data, const std::string& key);
@@ -13,5 +15,7 @@ public:
     static std::vector<uint8_t> XOREncrypt(const std::vector<uint8_t>& data, const std::string& key);
     static std::vector<uint8_t> XORDecrypt(const std::vector<uint8_t>& encryptedData, const std::string& key);
 };
+
+} // namespace security
 
 #endif

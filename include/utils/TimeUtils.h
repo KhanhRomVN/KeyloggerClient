@@ -4,6 +4,8 @@
 #include <string>
 #include <cstdint>
 
+namespace utils {
+
 class TimeUtils {
 public:
     static std::string GetCurrentTimestamp(bool forFilename = false);
@@ -15,5 +17,7 @@ public:
     static bool IsTimeOddSecond();
     static void SyncWithSystemTime();
 };
+
+} // namespace utils
 
 #endif
