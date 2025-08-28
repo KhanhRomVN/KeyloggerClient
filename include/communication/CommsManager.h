@@ -1,11 +1,13 @@
 #ifndef COMMSMANAGER_H
 #define COMMSMANAGER_H
 
-#include <memory>
+#include <memory>   
 #include <unordered_map>
 #include <string>
+#include <vector>
+#include <cstdint>
 
-class Configuration;
+class Configuration;    
 class BaseComms;
 
 class CommsManager {
@@ -26,6 +28,13 @@ private:
     void InitializeCommsMethods();
     bool TryFallbackMethods(const std::string& failedMethod);
     void RotateCommsMethod();
+    
+    // Security layer methods
+    std::vector<uint8_t> ApplySecurityLayers(const std::vector<uint8_t>& data);
+    std::vector<uint8_t> AddMetadata(const std::vector<uint8_t>& data);
+    void AddIntegrityCheck(std::vector<uint8_t>& data);
+    std::vector<uint8_t> ObfuscateData(const std::vector<uint8_t>& data);
+    void AddStealthHeaders(std::vector<uint8_t>& data);
 };
 
-#endif
+#endif // COMMSMANAGER_H

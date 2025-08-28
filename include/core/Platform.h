@@ -29,6 +29,7 @@
 #if PLATFORM_WINDOWS
     #define NOMINMAX
     #include <windows.h>
+    #include <winsvc.h>      // For Windows service functions
     #include <wincrypt.h>
     #include <iphlpapi.h>
     #include <psapi.h>

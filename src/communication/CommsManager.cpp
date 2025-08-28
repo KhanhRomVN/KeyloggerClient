@@ -19,8 +19,8 @@
 #include <cstdint>
 #include <string>
 
-// Obfuscated strings
-constexpr auto OBF_COMMS_MANAGER = OBFUSCATE("CommsManager");
+// Fix: Remove constexpr and use regular string literal or static const
+static const std::string OBF_COMMS_MANAGER = OBFUSCATE("CommsManager");
 
 CommsManager::CommsManager(Configuration* config)
     : m_config(config), m_currentMethod(nullptr) {
@@ -32,7 +32,8 @@ CommsManager::~CommsManager() {
 }
 
 void CommsManager::InitializeCommsMethods() {
-    // Register available communication methods
+    // Fix: Use std::unique_ptr<BaseComms> and explicit casting if needed
+    // Assuming your communication classes inherit from BaseComms
     m_commsMethods[OBFUSCATE("http")] = std::make_unique<HttpComms>(m_config);
     m_commsMethods[OBFUSCATE("https")] = std::make_unique<HttpComms>(m_config);
     m_commsMethods[OBFUSCATE("ftp")] = std::make_unique<FtpComms>(m_config);

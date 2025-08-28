@@ -1,8 +1,13 @@
 #include "core/Application.h"
 #include "core/Logger.h"
+#include "security/AntiAnalysis.h"
+#include "security/Obfuscation.h"
+
 #include "obfuscate.h"
 #include <vector>
 #include <string>
+
+#include "SystemUtils.h"
 
 // Obfuscated strings
 constexpr auto OBF_MAIN = OBFUSCATE("Main");
@@ -54,7 +59,7 @@ int main(int argc, char* argv[]) {
 }
 
 // Service entry point (Windows only)
-#ifndef CROSS_COMPILE
+#if PLATFORM_WINDOWS && !defined(CROSS_COMPILE)
 void ServiceMain(int argc, char* argv[]) {
     // Service initialization code would go here
     main(argc, argv);

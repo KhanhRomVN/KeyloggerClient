@@ -8,13 +8,14 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <random>
 
 std::string TimeUtils::GetCurrentTimestamp(bool forFilename) {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
         now.time_since_epoch()) % 1000;
-
+    
     std::stringstream ss;
     if (forFilename) {
         ss << std::put_time(std::localtime(&time), "%Y%m%d_%H%M%S");
@@ -23,7 +24,6 @@ std::string TimeUtils::GetCurrentTimestamp(bool forFilename) {
         ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S");
         ss << "." << std::setfill('0') << std::setw(3) << ms.count();
     }
-
     return ss.str();
 }
 
@@ -42,10 +42,18 @@ void TimeUtils::Sleep(uint64_t milliseconds) {
 void TimeUtils::JitterSleep(uint64_t baseMs, double jitterFactor) {
     if (jitterFactor < 0) jitterFactor = 0;
     if (jitterFactor > 1) jitterFactor = 1;
-
-    uint64_t jitter = static_cast<uint64_t>(baseMs * jitterFactor);
-    uint64_t sleepTime = baseMs + (rand() % (jitter * 2 + 1)) - jitter;
     
+    // Use proper random number generation instead of rand()
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    
+    uint64_t jitter = static_cast<uint64_t>(baseMs * jitterFactor);
+    std::uniform_int_distribution<uint64_t> dist(
+        baseMs > jitter ? baseMs - jitter : 0, 
+        baseMs + jitter
+    );
+    
+    uint64_t sleepTime = dist(gen);
     Sleep(sleepTime);
 }
 
@@ -54,14 +62,14 @@ std::string TimeUtils::FormatDuration(uint64_t milliseconds) {
     uint64_t minutes = seconds / 60;
     uint64_t hours = minutes / 60;
     uint64_t days = hours / 24;
-
+    
     std::stringstream ss;
     if (days > 0) ss << days << "d ";
     if (hours > 0) ss << hours % 24 << "h ";
     if (minutes > 0) ss << minutes % 60 << "m ";
     ss << seconds % 60 << "s ";
     ss << milliseconds % 1000 << "ms";
-
+    
     return ss.str();
 }
 
@@ -73,4 +81,5 @@ bool TimeUtils::IsTimeOddSecond() {
 
 void TimeUtils::SyncWithSystemTime() {
     // Could implement NTP sync or similar in advanced version
+    // For now, this is a placeholder function
 }
