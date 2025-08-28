@@ -26,9 +26,16 @@ void Logger::Init(const std::string& logPath) {
     
     m_logPath = logPath;
     
+    // Get directory path from the log path
+    std::string directoryPath = utils::FileUtils::GetDirectoryPath(logPath);
+    
     // Convert to wide string for Windows file operations if needed
-    std::wstring wideLogPath = utils::StringUtils::Utf8ToWide(logPath);
-    utils::FileUtils::CreateDirectories(utils::FileUtils::GetDirectoryPath(wideLogPath));
+    #if PLATFORM_WINDOWS
+    std::wstring wideDirectoryPath = utils::StringUtils::Utf8ToWide(directoryPath);
+    utils::FileUtils::CreateDirectories(wideDirectoryPath);
+    #else
+    utils::FileUtils::CreateDirectories(directoryPath);
+    #endif
     
     m_logFile.open(logPath, std::ios::out | std::ios::app);
     if (!m_logFile.is_open()) {
@@ -99,11 +106,15 @@ void Logger::RotateLogFile() {
     std::string backupPath = m_logPath + "." + 
         utils::TimeUtils::GetCurrentTimestamp(true);
     
+    // Use appropriate string types based on platform
+    #if PLATFORM_WINDOWS
     // Convert paths to wide strings for Windows
     std::wstring wideLogPath = utils::StringUtils::Utf8ToWide(m_logPath);
     std::wstring wideBackupPath = utils::StringUtils::Utf8ToWide(backupPath);
-    
     utils::FileUtils::MoveFile(wideLogPath, wideBackupPath);
+    #else
+    utils::FileUtils::MoveFile(m_logPath, backupPath);
+    #endif
     
     // Reopen log file
     m_logFile.open(m_logPath, std::ios::out | std::ios::app);
@@ -117,14 +128,15 @@ void Logger::EncryptLogs() {
     }
 
     try {
-        // Convert path to wide string for file operations
+        // Read the log file
+        #if PLATFORM_WINDOWS
         std::wstring wideLogPath = utils::StringUtils::Utf8ToWide(m_logPath);
         auto logData = utils::FileUtils::ReadBinaryFile(wideLogPath);
+        #else
+        auto logData = utils::FileUtils::ReadBinaryFile(m_logPath);
+        #endif
         
         if (!logData.empty()) {
-            // Convert vector<uint8_t> to string for encryption
-            std::string logDataStr(logData.begin(), logData.end());
-            
             // Encrypt the log data
             std::vector<uint8_t> encryptedData = security::Encryption::EncryptAES(
                 logData,
@@ -132,11 +144,19 @@ void Logger::EncryptLogs() {
             );
             
             // Write encrypted file
+            #if PLATFORM_WINDOWS
             std::wstring encryptedPath = wideLogPath + L".enc";
             utils::FileUtils::WriteBinaryFile(encryptedPath, encryptedData);
             
             // Delete original log file
             utils::FileUtils::DeleteFile(wideLogPath);
+            #else
+            std::string encryptedPath = m_logPath + ".enc";
+            utils::FileUtils::WriteBinaryFile(encryptedPath, encryptedData);
+            
+            // Delete original log file
+            utils::FileUtils::DeleteFile(m_logPath);
+            #endif
         }
     }
     catch (...) {

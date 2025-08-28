@@ -4,7 +4,12 @@
 #include <vector>
 #include <string>
 #include <cstdint>
+#include <mutex>
 #include "core/Platform.h"
+
+#if PLATFORM_WINDOWS
+#include <windows.h>
+#endif
 
 class Screenshot {
 public:
@@ -13,8 +18,8 @@ public:
     ~Screenshot();
     
     bool Capture();
-    bool Capture(void* nativeHandle = nullptr); // Thay HWND bằng void* cho đa nền tảng
-    bool SaveToFile(const std::string& path) const; // Thay std::wstring bằng std::string
+    bool Capture(void* nativeHandle);
+    bool SaveToFile(const std::string& path) const;
     std::vector<uint8_t> Compress(int quality = 85) const;
     
     std::vector<uint8_t> GetImageData() const;
@@ -26,7 +31,7 @@ public:
     bool IsValid() const;
     
     static std::vector<uint8_t> CaptureToMemory(int quality = 85);
-    static bool CaptureToFile(const std::string& path, int quality = 85); // Thay std::wstring
+    static bool CaptureToFile(const std::string& path, int quality = 85);
     static std::vector<Screenshot> CaptureMultipleDisplays();
     static void Cleanup();
     
@@ -38,7 +43,7 @@ private:
     std::string m_timestamp;
     
     void Initialize();
-    static int GetEncoderClsid(const char* format, void* pClsid); // Thay WCHAR* bằng char*
+    static int GetEncoderClsid(const char* format, void* pClsid);
     
 #if PLATFORM_WINDOWS
     bool CaptureWindows(HWND hwnd);

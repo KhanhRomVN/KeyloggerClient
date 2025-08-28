@@ -3,7 +3,6 @@
 #include "utils/TimeUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
-#include "security/Obfuscation.h"
 
 #include <iostream>
 #include <sstream>
@@ -12,6 +11,7 @@
 #include <cstdint>
 #include <string>
 #include <cstdio>
+#include <mutex>
 
 #if PLATFORM_WINDOWS
 #include <Windows.h>
@@ -32,15 +32,6 @@ std::once_flag g_gdiplusInitFlag;
 #include <png.h>
 #include <jpeglib.h>
 #endif
-
-// Obfuscated strings
-constexpr auto OBF_SCREENSHOT = OBFUSCATE("Screenshot");
-constexpr auto OBF_CAPTURE_SUCCESS = OBFUSCATE("Screenshot captured successfully: %dx%d, %zu bytes");
-constexpr auto OBF_CAPTURE_FAILED = OBFUSCATE("Screenshot capture failed");
-constexpr auto OBF_SAVE_SUCCESS = OBFUSCATE("Screenshot saved to: %s");
-constexpr auto OBF_SAVE_FAILED = OBFUSCATE("Failed to save screenshot to: %s");
-constexpr auto OBF_COMPRESS_SUCCESS = OBFUSCATE("Screenshot compressed: %zu -> %zu bytes (%.1f%%)");
-constexpr auto OBF_COMPRESS_FAILED = OBFUSCATE("Screenshot compression failed");
 
 Screenshot::Screenshot()
     : m_width(0), m_height(0), m_bpp(0), m_timestamp(utils::TimeUtils::GetCurrentTimestamp()) {
@@ -64,7 +55,7 @@ void Screenshot::Initialize() {
         Gdiplus::GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, nullptr);
     });
 #elif PLATFORM_LINUX
-    // Không cần khởi tạo đặc biệt cho Linux
+    // No special initialization needed for Linux
 #endif
 }
 
@@ -192,7 +183,7 @@ bool Screenshot::CaptureWindows(HWND hwnd) {
         m_timestamp = utils::TimeUtils::GetCurrentTimestamp();
 
         char logMsg[256];
-        snprintf(logMsg, sizeof(logMsg), OBFUSCATED(OBF_CAPTURE_SUCCESS), 
+        snprintf(logMsg, sizeof(logMsg), "Screenshot captured successfully: %dx%d, %zu bytes", 
                 m_width, m_height, m_imageData.size());
         LOG_INFO(logMsg);
 
@@ -253,7 +244,7 @@ bool Screenshot::CaptureLinux() {
         m_timestamp = utils::TimeUtils::GetCurrentTimestamp();
 
         char logMsg[256];
-        snprintf(logMsg, sizeof(logMsg), OBFUSCATED(OBF_CAPTURE_SUCCESS), 
+        snprintf(logMsg, sizeof(logMsg), "Screenshot captured successfully: %dx%d, %zu bytes", 
                 m_width, m_height, m_imageData.size());
         LOG_INFO(logMsg);
 
@@ -320,12 +311,12 @@ bool Screenshot::SaveToFileWindows(const std::string& path) const {
         
         if (status == Gdiplus::Ok) {
             char logMsg[512];
-            snprintf(logMsg, sizeof(logMsg), OBFUSCATED(OBF_SAVE_SUCCESS), path.c_str());
+            snprintf(logMsg, sizeof(logMsg), "Screenshot saved to: %s", path.c_str());
             LOG_INFO(logMsg);
             return true;
         } else {
             char logMsg[512];
-            snprintf(logMsg, sizeof(logMsg), OBFUSCATED(OBF_SAVE_FAILED), path.c_str());
+            snprintf(logMsg, sizeof(logMsg), "Failed to save screenshot to: %s", path.c_str());
             LOG_ERROR(logMsg);
             return false;
         }
@@ -378,19 +369,19 @@ bool Screenshot::SaveToFileLinux(const std::string& path) const {
     png_write_info(png, info);
 
     // Write image data
-    png_bytep row_pointers[m_height];
+    std::vector<png_bytep> row_pointers(m_height);
     for (int y = 0; y < m_height; y++) {
         row_pointers[y] = const_cast<png_byte*>(&m_imageData[y * m_width * 3]);
     }
 
-    png_write_image(png, row_pointers);
+    png_write_image(png, row_pointers.data());
     png_write_end(png, nullptr);
 
     png_destroy_write_struct(&png, &info);
     fclose(fp);
 
     char logMsg[512];
-    snprintf(logMsg, sizeof(logMsg), OBFUSCATED(OBF_SAVE_SUCCESS), path.c_str());
+    snprintf(logMsg, sizeof(logMsg), "Screenshot saved to: %s", path.c_str());
     LOG_INFO(logMsg);
 
     return true;
@@ -475,7 +466,7 @@ std::vector<uint8_t> Screenshot::CompressWindows(int quality) const {
         // Log compression results
         double compressionRatio = (1.0 - (double)compressedData.size() / m_imageData.size()) * 100.0;
         char logMsg[256];
-        snprintf(logMsg, sizeof(logMsg), OBFUSCATED(OBF_COMPRESS_SUCCESS),
+        snprintf(logMsg, sizeof(logMsg), "Screenshot compressed: %zu -> %zu bytes (%.1f%%)",
                 m_imageData.size(), compressedData.size(), compressionRatio);
         LOG_INFO(logMsg);
 
@@ -529,7 +520,7 @@ std::vector<uint8_t> Screenshot::CompressLinux(int quality) const {
         // Log compression results
         double compressionRatio = (1.0 - (double)compressedData.size() / m_imageData.size()) * 100.0;
         char logMsg[256];
-        snprintf(logMsg, sizeof(logMsg), OBFUSCATED(OBF_COMPRESS_SUCCESS),
+        snprintf(logMsg, sizeof(logMsg), "Screenshot compressed: %zu -> %zu bytes (%.1f%%)",
                 m_imageData.size(), compressedData.size(), compressionRatio);
         LOG_INFO(logMsg);
         
@@ -647,7 +638,7 @@ std::vector<Screenshot> Screenshot::CaptureMultipleDisplays() {
         }
     }
 #elif PLATFORM_LINUX
-    // Linux thường chỉ có một màn hình chính
+    // Linux typically only has one main screen
     Screenshot screenshot;
     if (screenshot.Capture()) {
         screenshots.push_back(std::move(screenshot));

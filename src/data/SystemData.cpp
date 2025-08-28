@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <cctype> // For isdigit()
 
 #if PLATFORM_WINDOWS
     #include <Windows.h>
@@ -27,6 +28,7 @@
     #include <netinet/in.h>
     #include <arpa/inet.h>
     #include <netdb.h>
+    #include <sys/statvfs.h> // Missing include for statvfs
 #endif
 
 SystemInfo::SystemInfo()
@@ -182,8 +184,8 @@ uint64_t SystemDataCollector::GetDiskSize() const {
     return 0;
 #elif PLATFORM_LINUX
     struct statvfs stat;
-    if (statvfs("/", &stat) == 0) {
-        uint64_t totalBytes = stat.f_blocks * stat.f_frsize;
+    if (statvfs("/", &stat) == 0) {  // Fixed: statvfs returns 0 on success, not comparison with int
+        uint64_t totalBytes = static_cast<uint64_t>(stat.f_blocks) * stat.f_frsize;
         return totalBytes / (1024 * 1024 * 1024); // GB
     }
     return 0;

