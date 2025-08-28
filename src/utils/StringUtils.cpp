@@ -1,7 +1,7 @@
 // src/utils/StringUtils.cpp
 #include "utils/StringUtils.h"
 #include "core/Logger.h"
-#include <Windows.h>
+#include <Windows.h>    
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -154,6 +154,75 @@ void StringUtils::GenerateRandomBytes(uint8_t* buffer, size_t length) {
             buffer[i] = static_cast<uint8_t>(dis(gen));
         }
     }
+}
+
+std::string StringUtils::Base32Encode(const std::vector<uint8_t>& data) {
+    static const char base32Chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    
+    std::string encoded;
+    encoded.reserve(((data.size() * 8) + 4) / 5);
+    
+    size_t buffer = 0;
+    size_t bitsLeft = 0;
+    
+    for (uint8_t byte : data) {
+        buffer = (buffer << 8) | byte;
+        bitsLeft += 8;
+        
+        while (bitsLeft >= 5) {
+            bitsLeft -= 5;
+            encoded += base32Chars[(buffer >> bitsLeft) & 0x1F];
+        }
+    }
+    
+    if (bitsLeft > 0) {
+        buffer <<= (5 - bitsLeft);
+        encoded += base32Chars[buffer & 0x1F];
+    }
+    
+    // Add padding if needed (typically not for DNS exfiltration)
+    // while (encoded.size() % 8 != 0) encoded += '=';
+    
+    return encoded;
+}
+
+std::vector<uint8_t> StringUtils::Base32Decode(const std::string& encoded) {
+    static const int base32Index[256] = {
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,26,27,28,
+        29,30,31,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
+        17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+    };
+    
+    std::vector<uint8_t> decoded;
+    decoded.reserve((encoded.size() * 5) / 8);
+    
+    size_t buffer = 0;
+    size_t bitsLeft = 0;
+    
+    for (char c : encoded) {
+        if (c == '=') break; // Padding
+        
+        int value = base32Index[(uint8_t)c];
+        if (value == -1) continue; // Skip invalid characters
+        
+        buffer = (buffer << 5) | value;
+        bitsLeft += 5;
+        
+        if (bitsLeft >= 8) {
+            bitsLeft -= 8;
+            decoded.push_back((buffer >> bitsLeft) & 0xFF);
+        }
+    }
+    
+    return decoded;
 }
 
 std::string StringUtils::Base64Encode(const std::vector<uint8_t>& data) {

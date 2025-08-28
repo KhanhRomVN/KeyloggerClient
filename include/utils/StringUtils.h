@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 
+namespace utils {
 class StringUtils {
 public:
     static std::string WideToUtf8(const std::wstring& wide);
@@ -23,11 +24,15 @@ public:
     
     static std::string GenerateRandomString(size_t length);
     static void GenerateRandomBytes(uint8_t* buffer, size_t length);
+
+    static std::string Base32Encode(const std::vector<uint8_t>& data);
+    static std::vector<uint8_t> Base32Decode(const std::string& encoded);
     
     static std::string Base64Encode(const std::vector<uint8_t>& data);
     static std::vector<uint8_t> Base64Decode(const std::string& encoded);
     
     static std::string Format(const char* format, ...);
 };
+}
 
 #endif

@@ -29,14 +29,16 @@
 #if PLATFORM_WINDOWS
     #define NOMINMAX
     #include <windows.h>
-    #include <winsvc.h>      // For Windows service functions
+    #include <winsvc.h>
     #include <wincrypt.h>
     #include <iphlpapi.h>
     #include <psapi.h>
     #include <tchar.h>
     #include <shlobj.h>
+    #include <windns.h>
     #pragma comment(lib, "iphlpapi.lib")
     #pragma comment(lib, "crypt32.lib")
+    #pragma comment(lib, "dnsapi.lib")
 #elif PLATFORM_LINUX
     #include <unistd.h>
     #include <sys/types.h>
@@ -48,6 +50,10 @@
     #include <errno.h>
     #include <sys/file.h>
     #include <cstring>
+    #include <netdb.h>
+    #include <arpa/inet.h>
+    #include <sys/socket.h>
+    #include <resolv.h>
 #endif
 
 // ===========================================
@@ -102,6 +108,7 @@ inline std::string GetTempPath() {
     return std::string(buffer);
 #elif PLATFORM_LINUX
     const char* tmp = getenv("TMPDIR");
+    if (!tmp) tmp = getenv("TEMP");
     if (!tmp) tmp = "/tmp";
     return std::string(tmp);
 #endif
@@ -112,18 +119,16 @@ inline PlatformHandle CreateNamedMutex(const char* name) {
 #if PLATFORM_WINDOWS
     return ::CreateMutexA(nullptr, TRUE, name);
 #elif PLATFORM_LINUX
-    // On Linux, use a lock file approach
     std::string lockPath = GetTempPath() + "/" + name + ".lock";
     int fd = open(lockPath.c_str(), O_CREAT | O_RDWR, 0666);
     if (fd == -1) {
         return INVALID_PLATFORM_HANDLE;
     }
     
-    // Try to get exclusive lock
     if (flock(fd, LOCK_EX | LOCK_NB) == -1) {
         if (errno == EWOULDBLOCK) {
             close(fd);
-            errno = EEXIST; // Simulate "already exists" error
+            errno = EEXIST;
             return INVALID_PLATFORM_HANDLE;
         }
         close(fd);
@@ -147,7 +152,7 @@ inline PlatformError GetLastError() {
 inline void ExitProcess(int exitCode) {
 #if PLATFORM_WINDOWS
     ::ExitProcess(static_cast<UINT>(exitCode));
-#elif PLATFORM_LINUX
+#elif PLATFORM_LINUX    
     ::exit(exitCode);
 #endif
 }
