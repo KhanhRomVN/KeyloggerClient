@@ -2,9 +2,10 @@
 #include "communication/DnsComms.h"
 #include "core/Logger.h"
 #include "core/Configuration.h"
-#include "security/Obfuscation.h"
+#include "security/Obfuscation.h"   
 #include "utils/StringUtils.h"
 #include "utils/NetworkUtils.h"
+#include "utils/TimeUtils.h"
 #include <windows.h>
 #include <windns.h>
 #include <vector>
@@ -15,7 +16,7 @@
 #pragma comment(lib, "dnsapi.lib")
 
 // Obfuscated strings
-constexpr auto OBF_DNS_COMMS = OBFUSCATE("DnsComms");
+static const auto OBF_DNS_COMMS = OBFUSCATE("DnsComms");
 
 DnsComms::DnsComms(Configuration* config)
     : m_config(config), m_dnsServer("8.8.8.8") {}

