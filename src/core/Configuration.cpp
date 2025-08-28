@@ -16,6 +16,8 @@
 #if PLATFORM_WINDOWS
 #include <windows.h>
 #include <shlobj.h>
+#elif PLATFORM_LINUX
+#include <cstdlib>
 #endif
 
 // Obfuscated configuration keys
@@ -103,9 +105,10 @@ bool Configuration::LoadConfiguration() {
 std::vector<std::wstring> Configuration::GetConfigurationPaths() const {
     std::vector<std::wstring> paths;
     
-    // Current directory
-    std::wstring currentPath = utils::FileUtils::GetCurrentExecutablePath();
-    if (!currentPath.empty()) {
+    // Current directory - convert string to wstring
+    std::string currentPathStr = utils::FileUtils::GetCurrentExecutablePath();
+    if (!currentPathStr.empty()) {
+        std::wstring currentPath = utils::StringUtils::Utf8ToWide(currentPathStr);
         paths.push_back(currentPath + L"\\config.enc");
     }
     
@@ -116,15 +119,17 @@ std::vector<std::wstring> Configuration::GetConfigurationPaths() const {
         paths.push_back(std::wstring(programDataPath) + L"\\SystemConfig\\system.cfg");
     }
     
-    // AppData directory
-    std::wstring appDataPath = utils::FileUtils::GetAppDataPath();
-    if (!appDataPath.empty()) {
+    // AppData directory - convert string to wstring
+    std::string appDataPathStr = utils::FileUtils::GetAppDataPath();
+    if (!appDataPathStr.empty()) {
+        std::wstring appDataPath = utils::StringUtils::Utf8ToWide(appDataPathStr);
         paths.push_back(appDataPath + L"\\config.enc");
     }
     
-    // Temp directory
-    std::wstring tempPath = utils::FileUtils::GetTempPath();
-    if (!tempPath.empty()) {
+    // Temp directory - convert string to wstring
+    std::string tempPathStr = utils::FileUtils::GetTempPath();
+    if (!tempPathStr.empty()) {
+        std::wstring tempPath = utils::StringUtils::Utf8ToWide(tempPathStr);
         paths.push_back(tempPath + L"\\system_config.bin");
     }
 #elif PLATFORM_LINUX
@@ -270,11 +275,12 @@ void Configuration::ParseRegistryConfiguration(const std::string& registryData) 
 void Configuration::SetDefaultValues() {
     LOG_DEBUG("Setting default configuration values");
     
-    // Get temp path safely
-    std::wstring tempPath = utils::FileUtils::GetTempPath();
+    // Get temp path safely - convert string to wstring
+    std::string tempPathStr = utils::FileUtils::GetTempPath();
     std::string defaultLogPath;
     
-    if (!tempPath.empty()) {
+    if (!tempPathStr.empty()) {
+        std::wstring tempPath = utils::StringUtils::Utf8ToWide(tempPathStr);
         defaultLogPath = utils::StringUtils::WideToUtf8(tempPath + L"/logs/system.log");
     } else {
         defaultLogPath = "/tmp/logs/system.log"; // Fallback for Linux
@@ -324,9 +330,9 @@ std::string Configuration::GetValue(const std::string& key,
 
 // Specific getter implementations
 std::string Configuration::GetLogPath() const {
-    std::wstring tempPath = utils::FileUtils::GetTempPath();
-    std::string defaultPath = tempPath.empty() ? "/tmp/logs/system.log" : 
-        utils::StringUtils::WideToUtf8(tempPath + L"/logs/system.log");
+    std::string tempPathStr = utils::FileUtils::GetTempPath();
+    std::string defaultPath = tempPathStr.empty() ? "/tmp/logs/system.log" : 
+        utils::StringUtils::WideToUtf8(utils::StringUtils::Utf8ToWide(tempPathStr) + L"/logs/system.log");
     
     return GetValue("log_path", defaultPath);
 }
@@ -429,6 +435,10 @@ std::string Configuration::GetDifferentWifiServerUrl() const {
     return GetValue("different_wifi_server_url", "https://your-external-server.com");
 }
 
+std::string Configuration::GetEncryptionKey() const {
+    return GetValue("encryption_key", GenerateConfigurationKey());
+}
+
 void Configuration::SetValue(const std::string& key, const std::string& value) {
     m_configValues[key] = value;
 }
@@ -448,8 +458,13 @@ bool Configuration::SaveConfiguration() const {
             GenerateConfigurationKey()
         );
         
-        std::wstring configPath = utils::FileUtils::GetAppDataPath() + L"/config.enc";
-        return utils::FileUtils::WriteBinaryFile(configPath, encryptedData);
+        // Convert string to wstring for the path
+        std::string appDataPathStr = utils::FileUtils::GetAppDataPath();
+        if (!appDataPathStr.empty()) {
+            std::wstring configPath = utils::StringUtils::Utf8ToWide(appDataPathStr) + L"/config.enc";
+            return utils::FileUtils::WriteBinaryFile(configPath, encryptedData);
+        }
+        return false;
     }
     catch (...) {
         LOG_ERROR("Failed to save configuration");
