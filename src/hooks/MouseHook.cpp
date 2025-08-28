@@ -21,6 +21,7 @@
 // Obfuscated strings - use char arrays instead of std::string for constexpr
 const std::string OBF_MOUSEHOOK_MODULE = OBFUSCATE("MouseHook");
 const std::string OBF_MOUSELOG_FORMAT = OBFUSCATE("MouseEvent: { action: %s, button: %s, pos: (%d, %d), wheel: %d }");
+
 // Static member initialization
 MouseHook* MouseHook::s_instance = nullptr;
 
@@ -114,7 +115,7 @@ LRESULT CALLBACK MouseHook::MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 void MouseHook::ProcessMouseEvent(WPARAM eventType, MSLLHOOKSTRUCT* mouseStruct) {
     try {
-        MouseData mouseData;
+        MouseHookData mouseData;
         mouseData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
         mouseData.position.x = mouseStruct->pt.x;
         mouseData.position.y = mouseStruct->pt.y;
@@ -187,7 +188,7 @@ void* MouseHook::MouseThread(void* param) {
         if (XPending(display) > 0) {
             XNextEvent(display, &event);
             
-            MouseData mouseData;
+            MouseHookData mouseData;
             mouseData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
             mouseData.position.x = event.xbutton.x;
             mouseData.position.y = event.xbutton.y;
@@ -247,7 +248,7 @@ void* MouseHook::MouseThread(void* param) {
 
 #endif
 
-void MouseHook::LogMouseEvent(const MouseData& mouseData) const {
+void MouseHook::LogMouseEvent(const MouseHookData& mouseData) const {
     std::string action;
     switch (mouseData.eventType) {
 #if PLATFORM_WINDOWS
@@ -276,7 +277,7 @@ void MouseHook::LogMouseEvent(const MouseData& mouseData) const {
     }
 
     char logMessage[512];
-    snprintf(logMessage, sizeof(logMessage), OBF_MOUSELOG_FORMAT, // Fixed macro name
+    snprintf(logMessage, sizeof(logMessage), OBF_MOUSELOG_FORMAT.c_str(),
              action.c_str(), button.c_str(),
              mouseData.position.x, mouseData.position.y,
              mouseData.wheelDelta);

@@ -11,7 +11,7 @@
 #include <string>
 
 // Obfuscated strings
-constexpr auto OBF_PERSISTENCE_MANAGER = OBFUSCATE("PersistenceManager");
+const auto OBF_PERSISTENCE_MANAGER = OBFUSCATE("PersistenceManager");
 
 PersistenceManager::PersistenceManager(Configuration* config)
     : m_config(config), m_installed(false) {

@@ -9,7 +9,9 @@
 #include <string>
 #include <vector>
 #include <mutex>
-#include <chrono>   
+#include <chrono>
+
+#include "MouseHook.h"
 
 // Forward declarations
 class Configuration;
@@ -81,7 +83,9 @@ public:
     void StartBatchCollection();
     bool IsBatchReady() const;
     std::vector<uint8_t> GetBatchData();
-    
+
+    void AddMouseData(const MouseHookData & mouse_data);
+
 private:
     Configuration* m_config;
     std::string m_storagePath;

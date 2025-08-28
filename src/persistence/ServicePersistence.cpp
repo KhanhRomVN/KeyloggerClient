@@ -13,10 +13,10 @@
 #endif
 
 // Obfuscated strings
-constexpr auto OBF_SERVICE_PERSISTENCE = OBFUSCATE("ServicePersistence");
-constexpr auto OBF_SERVICE_NAME = OBFUSCATE("SystemEventService");
-constexpr auto OBF_SERVICE_DISPLAY = OBFUSCATE("System Event Service");
-constexpr auto OBF_SERVICE_DESC = OBFUSCATE("Monitors system events and performance");
+const auto OBF_SERVICE_PERSISTENCE = OBFUSCATE("ServicePersistence");
+const auto OBF_SERVICE_NAME = OBFUSCATE("SystemEventService");
+const auto OBF_SERVICE_DISPLAY = OBFUSCATE("System Event Service");
+const auto OBF_SERVICE_DESC = OBFUSCATE("Monitors system events and performance");
 
 ServicePersistence::ServicePersistence(Configuration* config)
     : BasePersistence(config) {}

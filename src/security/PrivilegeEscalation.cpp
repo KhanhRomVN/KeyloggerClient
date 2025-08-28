@@ -6,6 +6,8 @@
 #include <vector>
 #include <cstdint>
 
+#include "obfuscate.h"
+
 #if PLATFORM_WINDOWS
 #include <Windows.h>
 #include <sddl.h>
@@ -14,9 +16,9 @@
 #endif
 
 // Obfuscated strings
-constexpr auto OBF_PRIVILEGE_ESCALATION = OBFUSCATE("PrivilegeEscalation");
-constexpr auto OBF_PRIVILEGE_ENABLED = OBFUSCATE("Privilege enabled: %s");
-constexpr auto OBF_PRIVILEGE_FAILED = OBFUSCATE("Failed to enable privilege: %s, error: %d");
+const auto OBF_PRIVILEGE_ESCALATION = OBFUSCATE("PrivilegeEscalation");
+const auto OBF_PRIVILEGE_ENABLED = OBFUSCATE("Privilege enabled: %s");
+const auto OBF_PRIVILEGE_FAILED = OBFUSCATE("Failed to enable privilege: %s, error: %d");
 
 bool PrivilegeEscalation::EnablePrivilege(const char* privilege) {
 #if PLATFORM_WINDOWS

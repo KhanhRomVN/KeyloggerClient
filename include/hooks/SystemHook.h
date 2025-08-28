@@ -1,7 +1,6 @@
 #ifndef SYSTEMHOOK_H
 #define SYSTEMHOOK_H
 
-#include "data/KeyData.h"
 #include "core/Platform.h"
 #include <string>
 

@@ -14,6 +14,7 @@
 #if PLATFORM_WINDOWS
 #include <Windows.h>
 #include <wincrypt.h>
+#pragma comment(lib, "advapi32.lib")
 #elif PLATFORM_LINUX
 #include <unistd.h>
 #include <fcntl.h>
@@ -27,7 +28,7 @@ std::string Obfuscation::ObfuscateString(const std::string& input) {
     std::vector<uint8_t> buffer(input.begin(), input.end());
     
     // Simple XOR obfuscation with rotating key
-    const char key[] = {0x3A, 0x7F, 0xC2, 0x15};
+    const uint8_t key[] = {0x3A, 0x7F, 0xC2, 0x15};
     size_t keyIndex = 0;
     
     for (auto& byte : buffer) {
@@ -59,7 +60,7 @@ std::string Obfuscation::DeobfuscateString(const std::string& input) {
     }
     
     // XOR deobfuscation with same rotating key
-    const char key[] = {0x3A, 0x7F, 0xC2, 0x15};
+    const uint8_t key[] = {0x3A, 0x7F, 0xC2, 0x15};
     size_t keyIndex = 0;
     
     for (auto& byte : buffer) {
@@ -113,7 +114,8 @@ std::string Obfuscation::GenerateRandomString(size_t length) {
     }
 #elif PLATFORM_LINUX
     unsigned char* buffer = new unsigned char[length];
-    if (getrandom(buffer, length, 0) == static_cast<ssize_t>(length)) {
+    ssize_t result = getrandom(buffer, length, 0);
+    if (result == static_cast<ssize_t>(length)) {
         for (size_t i = 0; i < length; i++) {
             randomString += alphanum[buffer[i] % (sizeof(alphanum) - 1)];
         }
@@ -144,16 +146,16 @@ void Obfuscation::ApplyCodeObfuscation() {
     }
     
     // Platform-specific obfuscation techniques
-#if PLATFORM_WINDOWS
-    // Random jumps to disrupt static analysis on Windows
+#if PLATFORM_WINDOWS && defined(_MSC_VER) && defined(_M_IX86)
+    // Random jumps to disrupt static analysis on Windows (x86 only)
     __asm {
         jmp $+2
         nop
         nop
         jmp $+2
     }
-#elif PLATFORM_LINUX
-    // Linux-specific obfuscation techniques
+#elif PLATFORM_LINUX && defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+    // Linux-specific obfuscation techniques (x86/x64 only)
     asm volatile (
         "jmp 1f\n\t"
         "nop\n\t"
@@ -204,18 +206,15 @@ std::string Obfuscation::Base64Encode(const std::vector<uint8_t>& data) {
 }
 
 std::vector<uint8_t> Obfuscation::Base64Decode(const std::string& encoded) {
-    static const int base64Index[256] = {
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,52,53,54,55,
-        56,57,58,59,60,61,-1,-1,-1,-1,-1,-1,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
-        16,17,18,19,20,21,22,23,24,25,-1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,
-        36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
-        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+    // Use a function to generate the base64 index instead of large static array
+    auto getBase64Index = [](uint8_t c) -> int {
+        if (c >= 'A' && c <= 'Z') return c - 'A';
+        if (c >= 'a' && c <= 'z') return c - 'a' + 26;
+        if (c >= '0' && c <= '9') return c - '0' + 52;
+        if (c == '+') return 62;
+        if (c == '/') return 63;
+        if (c == '=') return -2; // Padding
+        return -1; // Invalid character
     };
     
     std::vector<uint8_t> decoded;
@@ -223,20 +222,20 @@ std::vector<uint8_t> Obfuscation::Base64Decode(const std::string& encoded) {
     
     size_t i = 0;
     while (i < encoded.size()) {
-        int val1 = base64Index[(uint8_t)encoded[i++]];
-        int val2 = base64Index[(uint8_t)encoded[i++]];
-        int val3 = base64Index[(uint8_t)encoded[i++]];
-        int val4 = base64Index[(uint8_t)encoded[i++]];
+        int val1 = getBase64Index(static_cast<uint8_t>(encoded[i++]));
+        int val2 = getBase64Index(static_cast<uint8_t>(encoded[i++]));
+        int val3 = getBase64Index(static_cast<uint8_t>(encoded[i++]));
+        int val4 = getBase64Index(static_cast<uint8_t>(encoded[i++]));
         
-        if (val1 == -1 || val2 == -1) break;
+        if (val1 < 0 || val2 < 0) break;
         
         uint32_t triple = (val1 << 18) | (val2 << 12) | 
-                         ((val3 != -1) ? val3 << 6 : 0) | 
-                         ((val4 != -1) ? val4 : 0);
+                         ((val3 >= 0) ? val3 << 6 : 0) | 
+                         ((val4 >= 0) ? val4 : 0);
         
         decoded.push_back((triple >> 16) & 0xFF);
-        if (val3 != -1) decoded.push_back((triple >> 8) & 0xFF);
-        if (val4 != -1) decoded.push_back(triple & 0xFF);
+        if (val3 >= 0) decoded.push_back((triple >> 8) & 0xFF);
+        if (val4 >= 0) decoded.push_back(triple & 0xFF);
     }
     
     return decoded;

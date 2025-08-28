@@ -13,8 +13,7 @@ class DataManager;
 
 enum class MouseButton { LEFT, RIGHT, MIDDLE, X1, X2, NONE };
 
-// Renamed from MouseEventData to MouseData to match implementation
-struct MouseData {
+struct MouseHookData {
     std::string timestamp;
 #if PLATFORM_WINDOWS
     POINT position;
@@ -55,7 +54,7 @@ private:
 #endif
     
     static MouseHook* s_instance;
-    void LogMouseEvent(const MouseData& mouseData) const; // Fixed parameter type
+    void LogMouseEvent(const MouseHookData& mouseData) const;
 };
 
 #endif // MOUSEHOOK_H
