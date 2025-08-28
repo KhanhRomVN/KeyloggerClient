@@ -1,6 +1,6 @@
 // KeyLoggerClient/include/utils/NetworkUtils.h
 #ifndef NETWORKUTILS_H
-#define NETWORKUTILS_H
+#define NETWORKUTILS_H  
 
 #include <string>
 #include <vector>

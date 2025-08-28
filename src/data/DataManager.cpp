@@ -1,5 +1,3 @@
-// KeyLoggerClient/src/data/DataManager.cpp
-
 #include "data/DataManager.h"
 #include "core/Logger.h"
 #include "security/Encryption.h"

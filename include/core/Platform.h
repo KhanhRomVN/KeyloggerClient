@@ -155,7 +155,7 @@ inline void ExitProcess(int exitCode) {
 #elif PLATFORM_LINUX    
     ::exit(exitCode);   
 #endif
-}
+}   
 
 // 关闭句柄
 inline bool CloseHandle(PlatformHandle handle) {

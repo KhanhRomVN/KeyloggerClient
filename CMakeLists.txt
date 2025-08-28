@@ -69,6 +69,8 @@ set(SOURCES
     src/persistence/SchedulePersistence.cpp
     src/persistence/ServicePersistence.cpp
         src/communication/HttpsComms.cpp
+        src/utils/DataUtils.cpp
+        src/utils/NetworkUtils.cpp
 )
 
 # Add executable

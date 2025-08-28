@@ -6,7 +6,7 @@
 
 namespace utils {
 
-struct SystemInfoUtils  {
+struct SystemInfo {
     std::string computerName;
     std::string userName;
     std::string osVersion;  

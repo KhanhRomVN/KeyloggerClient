@@ -1,55 +1,115 @@
 // src/utils/StringUtils.cpp
 #include "utils/StringUtils.h"
 #include "core/Logger.h"
-#include <Windows.h>    
+#include "core/Platform.h"
 #include <algorithm>
 #include <cctype>
 #include <sstream>
 #include <random>
-#include <wincrypt.h>
 #include <vector>
 #include <cstdint>
 #include <string>
 
+#if PLATFORM_WINDOWS
+#include <Windows.h>
+#include <wincrypt.h>
 #pragma comment(lib, "advapi32.lib")
+#endif
 
-std::string StringUtils::WideToUtf8(const std::wstring& wide) {
+std::string utils::StringUtils::WideToUtf8(const std::wstring& wide) {
     if (wide.empty()) return "";
     
+#if PLATFORM_WINDOWS
     int size = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), (int)wide.size(), 
                                  NULL, 0, NULL, NULL);
     std::string utf8(size, 0);
     WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), (int)wide.size(), 
                         &utf8[0], size, NULL, NULL);
     return utf8;
+#elif PLATFORM_LINUX
+    std::string result;
+    result.reserve(wide.size() * 4); // Maximum UTF-8 bytes per character
+    
+    for (wchar_t wc : wide) {
+        if (wc <= 0x7F) {
+            result += static_cast<char>(wc);
+        } else if (wc <= 0x7FF) {
+            result += static_cast<char>(0xC0 | ((wc >> 6) & 0x1F));
+            result += static_cast<char>(0x80 | (wc & 0x3F));
+        } else if (wc <= 0xFFFF) {
+            result += static_cast<char>(0xE0 | ((wc >> 12) & 0x0F));
+            result += static_cast<char>(0x80 | ((wc >> 6) & 0x3F));
+            result += static_cast<char>(0x80 | (wc & 0x3F));
+        } else if (wc <= 0x10FFFF) {
+            result += static_cast<char>(0xF0 | ((wc >> 18) & 0x07));
+            result += static_cast<char>(0x80 | ((wc >> 12) & 0x3F));
+            result += static_cast<char>(0x80 | ((wc >> 6) & 0x3F));
+            result += static_cast<char>(0x80 | (wc & 0x3F));
+        }
+    }
+    return result;
+#endif
 }
 
-std::wstring StringUtils::Utf8ToWide(const std::string& utf8) {
+std::wstring utils::StringUtils::Utf8ToWide(const std::string& utf8) {
     if (utf8.empty()) return L"";
     
+#if PLATFORM_WINDOWS
     int size = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), 
                                   NULL, 0);
     std::wstring wide(size, 0);
     MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), 
                        &wide[0], size);
     return wide;
+#elif PLATFORM_LINUX
+    std::wstring result;
+    result.reserve(utf8.size());
+    
+    for (size_t i = 0; i < utf8.size(); ) {
+        wchar_t wc = 0;
+        unsigned char c = utf8[i];
+        
+        if (c <= 0x7F) {
+            wc = c;
+            i += 1;
+        } else if ((c & 0xE0) == 0xC0) {
+            if (i + 1 >= utf8.size()) break;
+            wc = ((c & 0x1F) << 6) | (utf8[i+1] & 0x3F);
+            i += 2;
+        } else if ((c & 0xF0) == 0xE0) {
+            if (i + 2 >= utf8.size()) break;
+            wc = ((c & 0x0F) << 12) | ((utf8[i+1] & 0x3F) << 6) | (utf8[i+2] & 0x3F);
+            i += 3;
+        } else if ((c & 0xF8) == 0xF0) {
+            if (i + 3 >= utf8.size()) break;
+            wc = ((c & 0x07) << 18) | ((utf8[i+1] & 0x3F) << 12) | 
+                 ((utf8[i+2] & 0x3F) << 6) | (utf8[i+3] & 0x3F);
+            i += 4;
+        } else {
+            i++; // Invalid UTF-8, skip
+        }
+        
+        result += wc;
+    }
+    return result;
+#endif
 }
 
-std::string StringUtils::ToLower(const std::string& str) {
+std::string utils::StringUtils::ToLower(const std::string& str) {
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(),
                   [](unsigned char c) { return std::tolower(c); });
     return result;
 }
 
-std::string StringUtils::ToUpper(const std::string& str) {
+std::string utils::StringUtils::ToUpper(const std::string& str) {
     std::string result = str;
     std::transform(result.begin(), result.end(), result.begin(),
                   [](unsigned char c) { return std::toupper(c); });
     return result;
 }
 
-std::string StringUtils::Trim(const std::string& str) {
+std::string utils::StringUtils::Trim(const std::string& str) {
     auto start = str.begin();
     while (start != str.end() && std::isspace(*start)) {
         start++;
@@ -63,7 +123,7 @@ std::string StringUtils::Trim(const std::string& str) {
     return std::string(start, end + 1);
 }
 
-std::vector<std::string> StringUtils::Split(const std::string& str, char delimiter) {
+std::vector<std::string> utils::StringUtils::Split(const std::string& str, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(str);
     std::string token;
@@ -75,7 +135,7 @@ std::vector<std::string> StringUtils::Split(const std::string& str, char delimit
     return tokens;
 }
 
-std::string StringUtils::Join(const std::vector<std::string>& tokens, const std::string& delimiter) {
+std::string utils::StringUtils::Join(const std::vector<std::string>& tokens, const std::string& delimiter) {
     std::string result;
     for (size_t i = 0; i < tokens.size(); i++) {
         if (i > 0) result += delimiter;
@@ -84,17 +144,17 @@ std::string StringUtils::Join(const std::vector<std::string>& tokens, const std:
     return result;
 }
 
-bool StringUtils::StartsWith(const std::string& str, const std::string& prefix) {
+bool utils::StringUtils::StartsWith(const std::string& str, const std::string& prefix) {
     if (prefix.size() > str.size()) return false;
     return std::equal(prefix.begin(), prefix.end(), str.begin());
 }
 
-bool StringUtils::EndsWith(const std::string& str, const std::string& suffix) {
+bool utils::StringUtils::EndsWith(const std::string& str, const std::string& suffix) {
     if (suffix.size() > str.size()) return false;
     return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
 }
 
-std::string StringUtils::Replace(const std::string& str, const std::string& from, const std::string& to) {
+std::string utils::StringUtils::Replace(const std::string& str, const std::string& from, const std::string& to) {
     std::string result = str;
     size_t pos = 0;
     while ((pos = result.find(from, pos)) != std::string::npos) {
@@ -104,7 +164,7 @@ std::string StringUtils::Replace(const std::string& str, const std::string& from
     return result;
 }
 
-std::string StringUtils::GenerateRandomString(size_t length) {
+std::string utils::StringUtils::GenerateRandomString(size_t length) {
     static const char alphanum[] =
         "0123456789"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -113,6 +173,7 @@ std::string StringUtils::GenerateRandomString(size_t length) {
     std::string randomString;
     randomString.reserve(length);
     
+#if PLATFORM_WINDOWS
     HCRYPTPROV hProv;
     if (CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
         BYTE* buffer = new BYTE[length];
@@ -124,6 +185,20 @@ std::string StringUtils::GenerateRandomString(size_t length) {
         delete[] buffer;
         CryptReleaseContext(hProv, 0);
     }
+#elif PLATFORM_LINUX
+    // Use /dev/urandom for Linux
+    FILE* urandom = fopen("/dev/urandom", "rb");
+    if (urandom) {
+        uint8_t* buffer = new uint8_t[length];
+        if (fread(buffer, 1, length, urandom) == length) {
+            for (size_t i = 0; i < length; i++) {
+                randomString += alphanum[buffer[i] % (sizeof(alphanum) - 1)];
+            }
+        }
+        delete[] buffer;
+        fclose(urandom);
+    }
+#endif
     
     // Fallback to std::random if crypto API fails
     if (randomString.empty()) {
@@ -139,7 +214,8 @@ std::string StringUtils::GenerateRandomString(size_t length) {
     return randomString;
 }
 
-void StringUtils::GenerateRandomBytes(uint8_t* buffer, size_t length) {
+void utils::StringUtils::GenerateRandomBytes(uint8_t* buffer, size_t length) {
+#if PLATFORM_WINDOWS
     HCRYPTPROV hProv;
     if (CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
         CryptGenRandom(hProv, (DWORD)length, buffer);
@@ -154,9 +230,34 @@ void StringUtils::GenerateRandomBytes(uint8_t* buffer, size_t length) {
             buffer[i] = static_cast<uint8_t>(dis(gen));
         }
     }
+#elif PLATFORM_LINUX
+    FILE* urandom = fopen("/dev/urandom", "rb");
+    if (urandom) {
+        if (fread(buffer, 1, length, urandom) != length) {
+            // Fallback to std::random if /dev/urandom fails
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, 255);
+            
+            for (size_t i = 0; i < length; i++) {
+                buffer[i] = static_cast<uint8_t>(dis(gen));
+            }
+        }
+        fclose(urandom);
+    } else {
+        // Fallback to std::random
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, 255);
+        
+        for (size_t i = 0; i < length; i++) {
+            buffer[i] = static_cast<uint8_t>(dis(gen));
+        }
+    }
+#endif
 }
 
-std::string StringUtils::Base32Encode(const std::vector<uint8_t>& data) {
+std::string utils::StringUtils::Base32Encode(const std::vector<uint8_t>& data) {
     static const char base32Chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     
     std::string encoded;
@@ -180,13 +281,10 @@ std::string StringUtils::Base32Encode(const std::vector<uint8_t>& data) {
         encoded += base32Chars[buffer & 0x1F];
     }
     
-    // Add padding if needed (typically not for DNS exfiltration)
-    // while (encoded.size() % 8 != 0) encoded += '=';
-    
     return encoded;
 }
 
-std::vector<uint8_t> StringUtils::Base32Decode(const std::string& encoded) {
+std::vector<uint8_t> utils::StringUtils::Base32Decode(const std::string& encoded) {
     static const int base32Index[256] = {
         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,26,27,28,
@@ -225,7 +323,7 @@ std::vector<uint8_t> StringUtils::Base32Decode(const std::string& encoded) {
     return decoded;
 }
 
-std::string StringUtils::Base64Encode(const std::vector<uint8_t>& data) {
+std::string utils::StringUtils::Base64Encode(const std::vector<uint8_t>& data) {
     static const char base64Chars[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz"
@@ -260,7 +358,7 @@ std::string StringUtils::Base64Encode(const std::vector<uint8_t>& data) {
     return encoded;
 }
 
-std::vector<uint8_t> StringUtils::Base64Decode(const std::string& encoded) {
+std::vector<uint8_t> utils::StringUtils::Base64Decode(const std::string& encoded) {
     static const int base64Index[256] = {
         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
         -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,62,-1,-1,-1,63,52,53,54,55,
@@ -299,7 +397,7 @@ std::vector<uint8_t> StringUtils::Base64Decode(const std::string& encoded) {
     return decoded;
 }
 
-std::string StringUtils::Format(const char* format, ...) {
+std::string utils::StringUtils::Format(const char* format, ...) {
     va_list args;
     va_start(args, format);
     

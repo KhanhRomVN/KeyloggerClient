@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cstdint>
+#include "core/Platform.h"
 
 namespace utils {
 
