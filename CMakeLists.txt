@@ -73,6 +73,7 @@ set(SOURCES
         src/utils/NetworkUtils.cpp
         src/security/StealthComms.cpp
         src/persistence/BasePersistence.cpp
+        src/data/Windows.cpp
 )
 
 # Add executable

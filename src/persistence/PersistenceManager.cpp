@@ -37,7 +37,6 @@ void PersistenceManager::InitializePersistenceMethods() {
 
 bool PersistenceManager::Install() {
     if (m_installed) {
-        LOG_WARN("Persistence already installed");
         return true;
     }
 
@@ -106,8 +105,7 @@ bool PersistenceManager::Remove() {
 }
 
 bool PersistenceManager::TryForceRemove() {
-    LOG_WARN("Attempting force removal of all persistence methods");
-    
+
     bool success = true;
     for (const auto& [method, persistence] : m_persistenceMethods) {
         if (!persistence->Remove()) {
@@ -132,7 +130,6 @@ bool PersistenceManager::IsInstalled() const {
 
 void PersistenceManager::RotatePersistence() {
     if (!m_installed) {
-        LOG_WARN("Cannot rotate persistence - not installed");
         return;
     }
 

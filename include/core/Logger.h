@@ -6,10 +6,10 @@
 #include <mutex>    
 
 enum class LogLevel {
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR
+    LEVEL_DEBUG,
+    LEVEL_INFO, 
+    LEVEL_WARN,
+    LEVEL_ERROR
 };
 
 class Logger {
@@ -35,9 +35,9 @@ private:
 };
 
 // Helper macros
-#define LOG_DEBUG(message) Logger::Write(LogLevel::DEBUG, message)
-#define LOG_INFO(message) Logger::Write(LogLevel::INFO, message)
-#define LOG_WARN(message) Logger::Write(LogLevel::WARN, message)
-#define LOG_ERROR(message) Logger::Write(LogLevel::ERROR, message)
+#define LOG_DEBUG(message) Logger::Write(LogLevel::LEVEL_DEBUG, message)
+#define LOG_INFO(message) Logger::Write(LogLevel::LEVEL_INFO, message)
+#define LOG_WARN(message) Logger::Write(LogLevel::LEVEL_WARN, message)
+#define LOG_ERROR(message) Logger::Write(LogLevel::LEVEL_ERROR, message)
 
 #endif

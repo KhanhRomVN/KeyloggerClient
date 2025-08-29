@@ -45,7 +45,6 @@ MouseHook::~MouseHook() {
 
 bool MouseHook::InstallHook() {
     if (m_isActive) {
-        LOG_WARN("Mouse hook already installed");
         return true;
     }
 
@@ -138,7 +137,7 @@ void MouseHook::ProcessMouseEvent(WPARAM eventType, MSLLHOOKSTRUCT* mouseStruct)
         }
 
         // Debug logging
-        if (Logger::GetLogLevel() <= LogLevel::DEBUG) {
+        if (Logger::GetLogLevel() <= LogLevel::LEVEL_DEBUG) {
             LogMouseEvent(mouseData);
         }
     }
@@ -234,7 +233,7 @@ void* MouseHook::MouseThread(void* param) {
                 instance->m_dataManager->AddMouseData(mouseData);
             }
 
-            if (Logger::GetLogLevel() <= LogLevel::DEBUG) {
+            if (Logger::GetLogLevel() <= LogLevel::LEVEL_DEBUG) {
                 instance->LogMouseEvent(mouseData);
             }
         } else {

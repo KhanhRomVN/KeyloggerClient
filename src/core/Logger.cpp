@@ -19,7 +19,7 @@
 std::ofstream Logger::m_logFile;
 std::string Logger::m_logPath;
 std::mutex Logger::m_mutex;
-LogLevel Logger::m_logLevel = LogLevel::INFO;
+LogLevel Logger::m_logLevel = LogLevel::LEVEL_INFO;
 
 void Logger::Init(const std::string& logPath) {
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -78,7 +78,7 @@ void Logger::Write(LogLevel level, const std::string& message) {
     }
 
     // Emergency output if file logging fails (Windows only)
-    if (!m_logFile.is_open() && level >= LogLevel::ERROR) {
+    if (!m_logFile.is_open() && level >= LogLevel::LEVEL_ERROR) {
 #if PLATFORM_WINDOWS
         OutputDebugStringA(logEntry.str().c_str()); // Convert to const char*
 #endif
@@ -87,10 +87,10 @@ void Logger::Write(LogLevel level, const std::string& message) {
 
 std::string Logger::LogLevelToString(LogLevel level) {
     switch (level) {
-        case LogLevel::DEBUG: return "DEBUG";
-        case LogLevel::INFO:  return "INFO";
-        case LogLevel::WARN:  return "WARN";
-        case LogLevel::ERROR: return "ERROR";
+        case LogLevel::LEVEL_DEBUG: return "DEBUG";
+        case LogLevel::LEVEL_INFO:  return "INFO";
+        case LogLevel::LEVEL_WARN:  return "WARN";
+        case LogLevel::LEVEL_ERROR: return "ERROR";
         default: return "UNKNOWN";
     }
 }
@@ -167,17 +167,17 @@ void Logger::EncryptLogs() {
 
 // Helper functions implementation
 void LogDebug(const std::string& message) {
-    Logger::Write(LogLevel::DEBUG, message);
+    Logger::Write(LogLevel::LEVEL_DEBUG, message);
 }
 
 void LogInfo(const std::string& message) {
-    Logger::Write(LogLevel::INFO, message);
+    Logger::Write(LogLevel::LEVEL_INFO, message);
 }
 
 void LogWarning(const std::string& message) {
-    Logger::Write(LogLevel::WARN, message);
+    Logger::Write(LogLevel::LEVEL_WARN, message);
 }
 
 void LogError(const std::string& message) {
-    Logger::Write(LogLevel::ERROR, message);
+    Logger::Write(LogLevel::LEVEL_ERROR, message);
 }

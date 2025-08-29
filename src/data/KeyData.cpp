@@ -14,12 +14,12 @@ KeyData::KeyData()
 
 bool KeyData::IsModifierKey() const {
     // Sử dụng virtual key codes cross-platform
-    return (keyCode == static_cast<int>(VirtualKey::VK_SHIFT) ||
-            keyCode == static_cast<int>(VirtualKey::VK_CONTROL) ||
-            keyCode == static_cast<int>(VirtualKey::VK_MENU) ||
-            keyCode == static_cast<int>(VirtualKey::VK_LWIN) ||
-            keyCode == static_cast<int>(VirtualKey::VK_RWIN) ||
-            keyCode == static_cast<int>(VirtualKey::VK_CAPITAL));
+    return (keyCode == static_cast<int>(PlatformKey::VK_SHIFT) ||
+            keyCode == static_cast<int>(PlatformKey::VK_CONTROL) ||
+            keyCode == static_cast<int>(PlatformKey::VK_MENU) ||
+            keyCode == static_cast<int>(PlatformKey::VK_LWIN) ||
+            keyCode == static_cast<int>(PlatformKey::VK_RWIN) ||
+            keyCode == static_cast<int>(PlatformKey::VK_CAPITAL));
 }
 
 std::string KeyData::ToString() const {

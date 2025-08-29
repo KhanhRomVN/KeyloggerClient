@@ -27,7 +27,7 @@ private:
     void ProcessKeyEvent(WPARAM eventType, KBDLLHOOKSTRUCT* kbStruct);
     std::string GetActiveWindowTitle() const;
     KeyModifiers GetModifierKeys() const;
-    std::string VirtualKeyCodeToString(UINT vkCode) const;
+    std::string PlatformKeyCodeToString(UINT vkCode) const;
 #endif
     
     void LogKeyEvent(const KeyData& keyData) const;

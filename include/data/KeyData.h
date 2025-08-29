@@ -41,7 +41,7 @@ inline bool HasModifier(KeyModifiers modifiers, KeyModifiers test) {
 }
 
 // Cross-platform virtual key codes
-enum class VirtualKey : int {
+enum class PlatformKey : int {
     VK_SHIFT    = 0x10,
     VK_CONTROL  = 0x11,
     VK_MENU     = 0x12,     // ALT key

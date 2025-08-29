@@ -16,7 +16,7 @@
 // ===========================================
 //  通用类型定义 (Common Type Definitions)
 // ===========================================
-#include <cstdint>
+#include <cstdint>  
 #include <string>
 #include <vector>
 #include <memory>
@@ -27,7 +27,6 @@
 //  平台特定包含 (Platform Specific Includes)
 // ===========================================
 #if PLATFORM_WINDOWS
-    #define NOMINMAX
     #include <windows.h>
     #include <winsvc.h>
     #include <wincrypt.h>

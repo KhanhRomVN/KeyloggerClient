@@ -6,7 +6,7 @@
 #include <vector>
 #include <cstdint>
 
-#include "obfuscate.h"
+#include "Obfuscation.h"
 
 #if PLATFORM_WINDOWS
 #include <Windows.h>

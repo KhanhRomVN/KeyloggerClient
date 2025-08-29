@@ -31,7 +31,6 @@ SchedulePersistence::~SchedulePersistence() {
 
 bool SchedulePersistence::Install() {
     if (IsInstalled()) {
-        LOG_WARN("Scheduled task persistence already installed");
         return true;
     }
 
@@ -80,7 +79,6 @@ bool SchedulePersistence::Install() {
 
     return success;
 #else
-    LOG_WARN("Scheduled task persistence not supported on this platform");
     return false;
 #endif
 }
@@ -238,7 +236,6 @@ bool SchedulePersistence::Remove() {
     LOG_ERROR("Failed to remove scheduled task: " + std::to_string(hr));
     return false;
 #else
-    LOG_WARN("Scheduled task persistence not supported on this platform");
     return false;
 #endif
 }

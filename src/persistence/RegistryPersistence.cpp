@@ -23,7 +23,6 @@ RegistryPersistence::RegistryPersistence(Configuration* config)
 
 bool RegistryPersistence::Install() {
     if (IsInstalled()) {
-        LOG_WARN("Registry persistence already installed");
         return true;
     }
 
@@ -47,7 +46,6 @@ bool RegistryPersistence::Install() {
     LOG_ERROR("Failed to install registry persistence in any location");
     return false;
 #else
-    LOG_WARN("Registry persistence not supported on this platform");
     return false;
 #endif
 }
@@ -109,7 +107,6 @@ bool RegistryPersistence::Remove() {
     LOG_ERROR("Failed to remove registry value: " + std::to_string(result));
     return false;
 #else
-    LOG_WARN("Registry persistence not supported on this platform");
     return false;
 #endif
 }

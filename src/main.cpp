@@ -3,11 +3,13 @@
 #include "security/AntiAnalysis.h"
 #include "security/Obfuscation.h"
 
-#include "obfuscate.h"
 #include <vector>
 #include <string>
 
 #include "SystemUtils.h"
+
+#define OBFUSCATE(str) str
+#define OBFUSCATE_STR(str) str
 
 // Obfuscated strings
 constexpr auto OBF_MAIN = OBFUSCATE("Main");

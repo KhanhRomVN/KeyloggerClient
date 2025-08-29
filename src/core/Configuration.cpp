@@ -101,8 +101,6 @@ bool Configuration::LoadConfiguration() {
         }
     }
 #endif
-
-    LOG_WARN("No external configuration found, using default values");
     return true; // Continue with defaults
 }
 
@@ -159,7 +157,6 @@ bool Configuration::LoadFromEncryptedFile(const std::wstring& path) {
         std::string pathStr = utils::StringUtils::WideToUtf8(path);
         auto encryptedData = utils::FileUtils::ReadBinaryFile(pathStr);
         if (encryptedData.empty()) {
-            LOG_WARN("Configuration file is empty: " + utils::StringUtils::WideToUtf8(path));
             return false;
         }
 
@@ -330,7 +327,6 @@ std::string Configuration::GetValue(const std::string& key,
         return it->second;
     }
     
-    LOG_WARN("Configuration key not found: " + key + ", using default: " + defaultValue);
     return defaultValue;
 }
 

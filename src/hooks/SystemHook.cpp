@@ -44,7 +44,6 @@ SystemHook::~SystemHook() {
 
 bool SystemHook::InstallHook() {
     if (m_isActive) {
-        LOG_WARN("System hook already installed");
         return true;
     }
 

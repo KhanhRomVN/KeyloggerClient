@@ -357,7 +357,7 @@ std::vector<std::string> DataManager::GetDataFilesReadyForTransmission() {
             
             // Check file modification time (simplified)
             struct stat fileInfo;
-            if (stat(file.c_str(), &fileInfo) == 0) {
+            if (::stat(file.c_str(), &fileInfo) == 0) {
                 auto currentTime = std::chrono::system_clock::now();
                 auto modTime = std::chrono::system_clock::from_time_t(fileInfo.st_mtime);
                 auto elapsed = std::chrono::duration_cast<std::chrono::minutes>(

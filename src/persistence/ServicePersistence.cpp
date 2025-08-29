@@ -23,7 +23,6 @@ ServicePersistence::ServicePersistence(Configuration* config)
 
 bool ServicePersistence::Install() {
     if (IsInstalled()) {
-        LOG_WARN("Service persistence already installed");
         return true;
     }
 
@@ -92,7 +91,6 @@ bool ServicePersistence::Install() {
     LOG_INFO("Service persistence installed successfully");
     return true;
 #else
-    LOG_WARN("Service persistence not supported on this platform");
     return false;
 #endif
 }
@@ -128,7 +126,6 @@ bool ServicePersistence::Remove() {
 
     return success;
 #else
-    LOG_WARN("Service persistence not supported on this platform");
     return false;
 #endif
 }
