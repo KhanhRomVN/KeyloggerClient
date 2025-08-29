@@ -1,26 +1,26 @@
-# FindCrypto.cmake - Dummy module for MinGW cross-compilation
-
-if(CMAKE_CROSSCOMPILING AND CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    # For MinGW cross-compilation, set dummy variables
-    set(Crypto_FOUND TRUE)
-    set(CRYPTO_INCLUDE_DIRS "")
-    set(CRYPTO_LIBRARIES advapi32 crypt32)
-    
-    message(STATUS "Found Crypto (MinGW cross-compilation mode)")
-else()
-    # For native Windows builds, try to find actual Crypto libraries
-    find_path(CRYPTO_INCLUDE_DIR wincrypt.h)
-    find_library(ADVAPI32_LIBRARY advapi32)
-    find_library(CRYPT32_LIBRARY crypt32)
-
-    if(CRYPTO_INCLUDE_DIR AND ADVAPI32_LIBRARY AND CRYPT32_LIBRARY)
+# cmake/FindCrypto.cmake - Minimal version
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    if(MINGW OR CMAKE_CROSSCOMPILING)
         set(Crypto_FOUND TRUE)
-        set(CRYPTO_INCLUDE_DIRS ${CRYPTO_INCLUDE_DIR})
-        set(CRYPTO_LIBRARIES ${ADVAPI32_LIBRARY} ${CRYPT32_LIBRARY})
+        set(CRYPTO_INCLUDE_DIRS "")
+        set(CRYPTO_LIBRARIES advapi32 crypt32)
+        message(STATUS "Using MinGW - Found Crypto (advapi32, crypt32)")
     else()
-        set(Crypto_FOUND FALSE)
+        # MSVC: link trực tiếp Windows libs
+        find_library(ADVAPI32_LIB advapi32)
+        find_library(CRYPT32_LIB crypt32)
+
+        if(ADVAPI32_LIB AND CRYPT32_LIB)
+            set(Crypto_FOUND TRUE)
+            set(CRYPTO_INCLUDE_DIRS "")
+            set(CRYPTO_LIBRARIES ${ADVAPI32_LIB} ${CRYPT32_LIB})
+            message(STATUS "Found Crypto libraries for MSVC")
+        else()
+            set(Crypto_FOUND FALSE)
+            message(FATAL_ERROR "Crypto libraries not found")
+        endif()
     endif()
-    
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(Crypto DEFAULT_MSG CRYPTO_LIBRARIES CRYPTO_INCLUDE_DIRS)
+else()
+    set(Crypto_FOUND FALSE)
+    message(STATUS "Crypto not needed for ${CMAKE_SYSTEM_NAME}")
 endif()

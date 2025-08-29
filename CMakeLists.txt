@@ -7,13 +7,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Always define Windows-specific macros when targeting Windows
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    add_definitions(-DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-    
-    # Cross-compilation flag for conditional code
-    if(CMAKE_CROSSCOMPILING)
-        add_definitions(-DCROSS_COMPILE)
+    if(MSVC)
+        # MSVC sẽ cần Windows SDK
+        find_package(WindowsSDK REQUIRED)
+        include_directories(${WINDOWSSDK_INCLUDE_DIRS})
+    else()
+        # MinGW: bỏ qua Windows SDK
+        message(STATUS "Using MinGW - skipping Windows SDK lookup")
     endif()
+
+    find_package(Crypto REQUIRED)
+    include_directories(${CRYPTO_INCLUDE_DIRS})
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -75,6 +79,10 @@ set(SOURCES
         src/persistence/BasePersistence.cpp
         src/data/Windows.cpp
         include/data/BatchData.h
+        src/communication/CommsManager.cpp
+        src/communication/CommsManager.cpp
+        src/communication/CommsManager.cpp
+        src/communication/CommsManager.cpp
 )
 
 # Add executable

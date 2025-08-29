@@ -10,12 +10,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     else()
         # Native Windows build: try to find actual SDK
         find_path(WINDOWSSDK_INCLUDE_DIR
-            NAMES windows.h
-            PATHS
-            "$ENV{ProgramFiles}/Windows Kits/10/Include/*/um"
-            "$ENV{ProgramFiles(x86)}/Windows Kits/10/Include/*/um"
+                NAMES windows.h
+                PATHS
+                "$ENV{ProgramFiles}/Windows Kits/10/Include/*/um"
+                "$ENV{ProgramFiles\(x86\)}/Windows Kits/10/Include/*/um"
         )
-        
+
         if(WINDOWSSDK_INCLUDE_DIR)
             set(WindowsSDK_FOUND TRUE)
             set(WINDOWSSDK_INCLUDE_DIRS ${WINDOWSSDK_INCLUDE_DIR})
