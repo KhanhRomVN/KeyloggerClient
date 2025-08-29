@@ -10,8 +10,6 @@
 #include <psapi.h>
 #elif PLATFORM_LINUX
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
 #include <pthread.h>
 #include <unistd.h>
 #endif
@@ -214,7 +212,7 @@ std::string SystemHook::GetProcessName(HWND hwnd) const {
 }
 #endif // PLATFORM_WINDOWS
 
-void SystemHook::HandleShellActivated() {
+void SystemHook::HandleShellActivated() const {
     SystemEventData eventData;
     eventData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
     eventData.eventType = SystemEventData::EventType::SYSTEM_UNLOCK;
@@ -225,14 +223,13 @@ void SystemHook::HandleShellActivated() {
 
 #if PLATFORM_LINUX
 void* SystemHook::LinuxEventThread(void* context) {
-    SystemHook* instance = static_cast<SystemHook*>(context);
-    if (instance) {
+    if (auto* instance = static_cast<SystemHook*>(context)) {
         instance->LinuxEventLoop();
     }
     return nullptr;
 }
 
-void SystemHook::LinuxEventLoop() {
+void SystemHook::LinuxEventLoop() const {
     // Placeholder for Linux X11 event monitoring   
     // In a real implementation, you would:
     // 1. Open X11 display connection

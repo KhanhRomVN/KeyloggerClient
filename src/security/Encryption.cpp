@@ -116,7 +116,7 @@ std::vector<uint8_t> Encryption::EncryptAES(const std::vector<uint8_t>& data, co
     std::vector<uint8_t> derivedKey(32); // 256 bits
     SHA256(reinterpret_cast<const unsigned char*>(key.c_str()), key.length(), derivedKey.data());
 
-    if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, derivedKey.data(), iv.data()) != 1) {
+    if (EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, derivedKey.data(), iv.data()) != 1) {
         LOG_ERROR("Failed to initialize encryption");
         EVP_CIPHER_CTX_free(ctx);
         return {};
@@ -124,14 +124,13 @@ std::vector<uint8_t> Encryption::EncryptAES(const std::vector<uint8_t>& data, co
 
     std::vector<uint8_t> encryptedData(data.size() + AES_BLOCK_SIZE);
     int len;
-    int ciphertext_len;
 
     if (EVP_EncryptUpdate(ctx, encryptedData.data(), &len, data.data(), data.size()) != 1) {
         LOG_ERROR("Encryption failed");
         EVP_CIPHER_CTX_free(ctx);
         return {};
     }
-    ciphertext_len = len;
+    int ciphertext_len = len;
 
     if (EVP_EncryptFinal_ex(ctx, encryptedData.data() + len, &len) != 1) {
         LOG_ERROR("Encryption finalization failed");
@@ -237,7 +236,7 @@ std::vector<uint8_t> Encryption::DecryptAES(const std::vector<uint8_t>& encrypte
     std::vector<uint8_t> derivedKey(32); // 256 bits
     SHA256(reinterpret_cast<const unsigned char*>(key.c_str()), key.length(), derivedKey.data());
 
-    if (EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, derivedKey.data(), iv.data()) != 1) {
+    if (EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, derivedKey.data(), iv.data()) != 1) {
         LOG_ERROR("Failed to initialize decryption");
         EVP_CIPHER_CTX_free(ctx);
         return {};
@@ -245,14 +244,13 @@ std::vector<uint8_t> Encryption::DecryptAES(const std::vector<uint8_t>& encrypte
 
     std::vector<uint8_t> decryptedData(ciphertext.size());
     int len;
-    int plaintext_len;
 
     if (EVP_DecryptUpdate(ctx, decryptedData.data(), &len, ciphertext.data(), ciphertext.size()) != 1) {
         LOG_ERROR("Decryption failed");
         EVP_CIPHER_CTX_free(ctx);
         return {};
     }
-    plaintext_len = len;
+    int plaintext_len = len;
 
     if (EVP_DecryptFinal_ex(ctx, decryptedData.data() + len, &len) != 1) {
         LOG_ERROR("Decryption finalization failed");
@@ -333,8 +331,8 @@ std::string Encryption::GenerateSHA256(const std::string& input) {
     
     std::string hashStr;
     char buf[3];
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        snprintf(buf, sizeof(buf), "%02x", hash[i]);
+    for (const unsigned char i : hash) {
+        snprintf(buf, sizeof(buf), "%02x", i);
         hashStr += buf;
     }
     
@@ -369,7 +367,7 @@ std::string Encryption::GenerateRandomKey(size_t length) {
         return "";
     }
     
-    return std::string(buffer.begin(), buffer.end());
+    return std::basic_string<char>(buffer.begin(), buffer.end());
 #endif
 }
 

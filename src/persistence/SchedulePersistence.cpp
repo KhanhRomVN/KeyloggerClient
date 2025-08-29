@@ -1,7 +1,6 @@
 #include "persistence/SchedulePersistence.h"
 #include "core/Logger.h"
 #include "core/Configuration.h"
-#include "utils/SystemUtils.h"
 #include "utils/FileUtils.h"
 #include "security/Obfuscation.h"
 #include <string>

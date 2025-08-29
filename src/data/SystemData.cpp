@@ -1,12 +1,10 @@
 #include "data/SystemData.h"
 #include "core/Logger.h"
 #include "utils/TimeUtils.h"
-#include "utils/SystemUtils.h"
 #include <sstream>
 #include <vector>
-#include <cstdint>
 #include <string>
-#include <cctype> // For isdigit()
+#include <cctype>
 
 #if PLATFORM_WINDOWS
     #include <Windows.h>
@@ -26,9 +24,8 @@
     #include <dirent.h>
     #include <ifaddrs.h>
     #include <netinet/in.h>
-    #include <arpa/inet.h>
     #include <netdb.h>
-    #include <sys/statvfs.h> // Missing include for statvfs
+    #include <sys/statvfs.h>
 #endif
 
 SystemInfo::SystemInfo()
@@ -36,7 +33,7 @@ SystemInfo::SystemInfo()
       memorySize(0),
       diskSize(0) {}
 
-SystemDataCollector::SystemDataCollector() {}
+SystemDataCollector::SystemDataCollector() = default;
 
 SystemInfo SystemDataCollector::Collect() const {
     SystemInfo info;
@@ -53,7 +50,7 @@ SystemInfo SystemDataCollector::Collect() const {
     return info;
 }
 
-std::string SystemDataCollector::GetComputerName() const {
+std::string SystemDataCollector::GetComputerName() {
 #if PLATFORM_WINDOWS
     char computerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD size = sizeof(computerName);
@@ -71,7 +68,7 @@ std::string SystemDataCollector::GetComputerName() const {
 #endif
 }
 
-std::string SystemDataCollector::GetUserName() const {
+std::string SystemDataCollector::GetUserName() {
 #if PLATFORM_WINDOWS
     char userName[256];
     DWORD size = sizeof(userName);
@@ -85,9 +82,8 @@ std::string SystemDataCollector::GetUserName() const {
     if (pwd && pwd->pw_name) {
         return std::string(pwd->pw_name);
     }
-    
-    char* envUser = getenv("USER");
-    if (envUser) {
+
+    if (char* envUser = getenv("USER")) {
         return std::string(envUser);
     }
     
@@ -95,7 +91,7 @@ std::string SystemDataCollector::GetUserName() const {
 #endif
 }
 
-std::string SystemDataCollector::GetOSVersion() const {
+std::string SystemDataCollector::GetOSVersion() {
 #if PLATFORM_WINDOWS
     OSVERSIONINFOEXA osvi;
     ZeroMemory(&osvi, sizeof(OSVERSIONINFOEXA));
@@ -109,7 +105,7 @@ std::string SystemDataCollector::GetOSVersion() const {
     }
     return "Unknown Windows Version";
 #elif PLATFORM_LINUX
-    struct utsname uts;
+    struct utsname uts{};
     if (uname(&uts) == 0) {
         std::stringstream ss;
         ss << uts.sysname << " " << uts.release << " " << uts.machine;
@@ -119,7 +115,7 @@ std::string SystemDataCollector::GetOSVersion() const {
 #endif
 }
 
-uint64_t SystemDataCollector::GetMemorySize() const {
+uint64_t SystemDataCollector::GetMemorySize() {
 #if PLATFORM_WINDOWS
     MEMORYSTATUSEX memoryStatus;
     memoryStatus.dwLength = sizeof(memoryStatus);
@@ -129,7 +125,7 @@ uint64_t SystemDataCollector::GetMemorySize() const {
     }
     return 0;
 #elif PLATFORM_LINUX
-    struct sysinfo info;
+    struct sysinfo info{};
     if (sysinfo(&info) == 0) {
         return (info.totalram * info.mem_unit) / (1024 * 1024); // MB
     }
@@ -137,7 +133,7 @@ uint64_t SystemDataCollector::GetMemorySize() const {
 #endif
 }
 
-std::string SystemDataCollector::GetProcessorInfo() const {
+std::string SystemDataCollector::GetProcessorInfo() {
 #if PLATFORM_WINDOWS
     HKEY hKey;
     char processorName[256];
@@ -174,7 +170,7 @@ std::string SystemDataCollector::GetProcessorInfo() const {
 #endif
 }
 
-uint64_t SystemDataCollector::GetDiskSize() const {
+uint64_t SystemDataCollector::GetDiskSize() {
 #if PLATFORM_WINDOWS
     ULARGE_INTEGER freeBytes, totalBytes, totalFreeBytes;
     
@@ -183,7 +179,7 @@ uint64_t SystemDataCollector::GetDiskSize() const {
     }
     return 0;
 #elif PLATFORM_LINUX
-    struct statvfs stat;
+    struct statvfs stat{};
     if (statvfs("/", &stat) == 0) {  // Fixed: statvfs returns 0 on success, not comparison with int
         uint64_t totalBytes = static_cast<uint64_t>(stat.f_blocks) * stat.f_frsize;
         return totalBytes / (1024 * 1024 * 1024); // GB
@@ -192,7 +188,7 @@ uint64_t SystemDataCollector::GetDiskSize() const {
 #endif
 }
 
-std::string SystemDataCollector::GetNetworkInfo() const {
+std::string SystemDataCollector::GetNetworkInfo() {
 #if PLATFORM_WINDOWS
     PIP_ADAPTER_INFO adapterInfo = (IP_ADAPTER_INFO*)malloc(sizeof(IP_ADAPTER_INFO) * 16);
     ULONG bufferSize = sizeof(IP_ADAPTER_INFO) * 16;
@@ -221,19 +217,19 @@ std::string SystemDataCollector::GetNetworkInfo() const {
     free(adapterInfo);
     return "Unknown Network Info";
 #elif PLATFORM_LINUX
-    std::stringstream ss;
-    struct ifaddrs *ifaddr, *ifa;
+    struct ifaddrs *ifaddr;
     
     if (getifaddrs(&ifaddr) == 0) {
-        for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-            if (ifa->ifa_addr == NULL) continue;
+        std::stringstream ss;
+        for (const struct ifaddrs *ifa = ifaddr; ifa == nullptr; ifa = ifa->ifa_next) {
+            if (ifa->ifa_addr == nullptr) continue;
             
             int family = ifa->ifa_addr->sa_family;
             if (family == AF_INET || family == AF_INET6) {
                 char host[NI_MAXHOST];
                 int s = getnameinfo(ifa->ifa_addr,
                     (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
-                    host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
+                    host, NI_MAXHOST, nullptr, 0, NI_NUMERICHOST);
                 
                 if (s == 0) {
                     ss << "Interface: " << ifa->ifa_name << " IP: " << host << "; ";
@@ -247,7 +243,7 @@ std::string SystemDataCollector::GetNetworkInfo() const {
 #endif
 }
 
-std::vector<std::string> SystemDataCollector::GetRunningProcesses() const {
+std::vector<std::string> SystemDataCollector::GetRunningProcesses() {
     std::vector<std::string> processes;
     
 #if PLATFORM_WINDOWS
@@ -278,17 +274,16 @@ std::vector<std::string> SystemDataCollector::GetRunningProcesses() const {
         }
     }
 #elif PLATFORM_LINUX
-    DIR* dir = opendir("/proc");
-    if (dir) {
+    if (DIR* dir = opendir("/proc")) {
         struct dirent* entry;
-        while ((entry = readdir(dir)) != NULL) {
+        while ((entry = readdir(dir)) != nullptr) {
             // Check if directory name is a number (process ID)
             if (entry->d_type == DT_DIR && isdigit(entry->d_name[0])) {
                 std::string path = std::string("/proc/") + entry->d_name + "/comm";
                 std::ifstream commFile(path.c_str());
-                std::string processName;
-                
+
                 if (commFile) {
+                    std::string processName;
                     std::getline(commFile, processName);
                     if (!processName.empty()) {
                         processes.push_back(processName);
@@ -301,4 +296,7 @@ std::vector<std::string> SystemDataCollector::GetRunningProcesses() const {
 #endif
     
     return processes;
+}
+
+std::string SystemDataCollector::GetOSVersion() const {
 }

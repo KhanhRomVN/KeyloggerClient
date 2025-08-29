@@ -3,8 +3,6 @@
 #include "utils/TimeUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/StringUtils.h"
-
-#include <iostream>
 #include <sstream>
 #include <memory>
 #include <vector>
@@ -27,7 +25,6 @@ std::once_flag g_gdiplusInitFlag;
 #elif PLATFORM_LINUX
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <cstdlib>
 #include <cstring>
 #include <png.h>
 #include <jpeglib.h>
@@ -48,17 +45,6 @@ Screenshot::~Screenshot() {
     // Cleanup handled by static Cleanup() method
 }
 
-void Screenshot::Initialize() {
-#if PLATFORM_WINDOWS
-    std::call_once(g_gdiplusInitFlag, []() {
-        Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-        Gdiplus::GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, nullptr);
-    });
-#elif PLATFORM_LINUX
-    // No special initialization needed for Linux
-#endif
-}
-
 bool Screenshot::Capture() {
     return Capture(nullptr);
 }
@@ -68,6 +54,17 @@ bool Screenshot::Capture(void* nativeHandle) {
     return CaptureWindows(static_cast<HWND>(nativeHandle));
 #elif PLATFORM_LINUX
     return CaptureLinux();
+#endif
+}
+
+void Screenshot::Initialize() {
+#if PLATFORM_WINDOWS
+    std::call_once(g_gdiplusInitFlag, []() {
+        Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+        Gdiplus::GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, nullptr);
+    });
+#elif PLATFORM_LINUX
+    // No special initialization needed for Linux
 #endif
 }
 
@@ -354,7 +351,7 @@ bool Screenshot::SaveToFileLinux(const std::string& path) const {
         return false;
     }
 
-    if (setjmp(png_jmpbuf(png))) {
+    if (_setjmp ((*png_set_longjmp_fn((png), longjmp, (sizeof (jmp_buf)))))) {
         png_destroy_write_struct(&png, &info);
         fclose(fp);
         LOG_ERROR("PNG error during write");
@@ -391,7 +388,7 @@ bool Screenshot::SaveToFileLinux(const std::string& path) const {
 std::vector<uint8_t> Screenshot::Compress(int quality) const {
     if (m_imageData.empty()) {
         LOG_ERROR("No image data to compress");
-        return std::vector<uint8_t>();
+        return {};
     }
 
 #if PLATFORM_WINDOWS
@@ -485,8 +482,8 @@ std::vector<uint8_t> Screenshot::CompressWindows(int quality) const {
 #elif PLATFORM_LINUX
 std::vector<uint8_t> Screenshot::CompressLinux(int quality) const {
     try {
-        struct jpeg_compress_struct cinfo;
-        struct jpeg_error_mgr jerr;
+        struct jpeg_compress_struct cinfo{};
+        struct jpeg_error_mgr jerr{};
         
         cinfo.err = jpeg_std_error(&jerr);
         jpeg_create_compress(&cinfo);
@@ -518,7 +515,7 @@ std::vector<uint8_t> Screenshot::CompressLinux(int quality) const {
         free(buffer);
         
         // Log compression results
-        double compressionRatio = (1.0 - (double)compressedData.size() / m_imageData.size()) * 100.0;
+        double compressionRatio = (1.0 - static_cast<double>(compressedData.size()) / m_imageData.size()) * 100.0;
         char logMsg[256];
         snprintf(logMsg, sizeof(logMsg), "Screenshot compressed: %zu -> %zu bytes (%.1f%%)",
                 m_imageData.size(), compressedData.size(), compressionRatio);
@@ -528,11 +525,11 @@ std::vector<uint8_t> Screenshot::CompressLinux(int quality) const {
     }
     catch (const std::exception& e) {
         LOG_ERROR(std::string("Exception in image compression: ") + e.what());
-        return std::vector<uint8_t>();
+        return {};
     }
     catch (...) {
         LOG_ERROR("Unknown exception in image compression");
-        return std::vector<uint8_t>();
+        return {};
     }
 }
 #endif
@@ -604,7 +601,7 @@ std::vector<uint8_t> Screenshot::CaptureToMemory(int quality) {
     if (screenshot.Capture()) {
         return screenshot.Compress(quality);
     }
-    return std::vector<uint8_t>();
+    return {};
 }
 
 bool Screenshot::CaptureToFile(const std::string& path, int quality) {

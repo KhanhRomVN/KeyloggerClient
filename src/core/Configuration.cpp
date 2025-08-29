@@ -206,6 +206,9 @@ bool Configuration::LoadFromEncryptedFile(const std::wstring& path) {
     }
 }
 
+bool Configuration::LoadFromRegistry() {
+}
+
 #if PLATFORM_WINDOWS
 bool Configuration::LoadFromRegistry() {
     HKEY hKey;

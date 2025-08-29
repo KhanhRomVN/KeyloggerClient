@@ -18,7 +18,6 @@
 // ===========================================
 #include <cstdint>  
 #include <string>
-#include <vector>
 #include <memory>
 #include <stdexcept>
 #include <iostream>
@@ -43,15 +42,11 @@
     #include <sys/types.h>
     #include <sys/stat.h>
     #include <fcntl.h>
-    #include <dlfcn.h>
-    #include <dirent.h>
-    #include <signal.h>
-    #include <errno.h>
+    #include <cerrno>
     #include <sys/file.h>
     #include <cstring>
     #include <netdb.h>
     #include <arpa/inet.h>
-    #include <sys/socket.h>
     #include <resolv.h>
 #endif
 
@@ -71,7 +66,7 @@
 #elif PLATFORM_LINUX
     typedef int PlatformHandle;
     typedef int PlatformError;
-    #define INVALID_PLATFORM_HANDLE -1
+    #define INVALID_PLATFORM_HANDLE (-1)
     #define PLATFORM_ERROR_ALREADY_EXISTS EEXIST
 #endif
 

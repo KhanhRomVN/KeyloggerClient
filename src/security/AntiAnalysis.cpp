@@ -21,9 +21,7 @@
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
 #include <sys/ptrace.h>
-#include <unistd.h>
 #include <fcntl.h>
-#include <cpuid.h>
 #endif
 
 namespace security {
@@ -150,8 +148,7 @@ bool AntiAnalysis::IsRunningInVM() {
     
     // Check dmesg for virtualization messages
     results.push_back([]() -> bool {
-        FILE* pipe = popen("dmesg | grep -i hypervisor 2>/dev/null", "r");
-        if (pipe) {
+        if (FILE* pipe = popen("dmesg | grep -i hypervisor 2>/dev/null", "r")) {
             char buffer[128];
             while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
                 std::string output(buffer);
@@ -176,7 +173,7 @@ bool AntiAnalysis::IsRunningInVM() {
         };
         
         for (const auto& file : vmFiles) {
-            struct stat buffer;
+            struct stat buffer{};
             if (stat(file, &buffer) == 0) {
                 return true;
             }
@@ -184,7 +181,7 @@ bool AntiAnalysis::IsRunningInVM() {
         return false;
     }());
 
-    for (bool result : results) {
+    for (const bool result : results) {
         if (result) {
             return true;
         }
@@ -204,7 +201,7 @@ bool AntiAnalysis::IsSandboxed() {
         GlobalMemoryStatusEx(&memStatus);
         return memStatus.ullTotalPhys < (2ULL * 1024 * 1024 * 1024); // Less than 2GB
 #elif PLATFORM_LINUX
-        struct sysinfo info;
+        struct sysinfo info{};
         if (sysinfo(&info) == 0) {
             return info.totalram < (2ULL * 1024 * 1024 * 1024); // Less than 2GB
         }
@@ -217,7 +214,7 @@ bool AntiAnalysis::IsSandboxed() {
 #if PLATFORM_WINDOWS
         return GetTickCount64() < (2 * 60 * 60 * 1000); // Less than 2 hours
 #elif PLATFORM_LINUX
-        struct sysinfo info;
+        struct sysinfo info{};
         if (sysinfo(&info) == 0) {
             return info.uptime < (2 * 60 * 60); // Less than 2 hours
         }
@@ -244,7 +241,7 @@ bool AntiAnalysis::IsSandboxed() {
                 return true;
             }
 #elif PLATFORM_LINUX
-            struct stat buffer;
+            struct stat buffer{};
             if (stat(path, &buffer) == 0) {
                 return true;
             }
@@ -288,7 +285,7 @@ bool AntiAnalysis::IsLowOnResources() {
     return memStatus.dwMemoryLoad > 90 || // Memory usage > 90%
            memStatus.ullAvailPhys < (512 * 1024 * 1024); // Less than 512MB available
 #elif PLATFORM_LINUX
-    struct sysinfo info;
+    struct sysinfo info{};
     if (sysinfo(&info) == 0) {
         float memoryUsage = 100.0f * (info.totalram - info.freeram) / info.totalram;
         return memoryUsage > 90.0f || // Memory usage > 90%

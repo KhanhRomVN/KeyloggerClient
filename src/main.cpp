@@ -1,7 +1,6 @@
 #include "core/Application.h"
 #include "core/Logger.h"
 #include "security/AntiAnalysis.h"
-#include "security/Obfuscation.h"
 
 #include <vector>
 #include <string>
@@ -19,9 +18,9 @@ constexpr auto OBF_SHUTDOWN = OBFUSCATE("Application shutdown complete");
 
 int main(int argc, char* argv[]) {
     // Check if running as service
-    bool runAsService = false;
     for (int i = 1; i < argc; i++) {
         if (std::string(argv[i]) == "--service") {
+            bool runAsService = false;
             runAsService = true;
             break;
         }   

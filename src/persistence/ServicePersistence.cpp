@@ -1,10 +1,8 @@
 #include "persistence/ServicePersistence.h"
 #include "core/Logger.h"
 #include "core/Configuration.h"
-#include "utils/SystemUtils.h"
 #include "utils/FileUtils.h"
 #include "security/Obfuscation.h"
-#include "security/PrivilegeEscalation.h"
 #include <string>
 #include <vector>
 

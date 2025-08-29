@@ -11,7 +11,6 @@
 #include <cstdio>
 
 #include "StringUtils.h"
-#include "SystemData.h"
 
 #if PLATFORM_WINDOWS
 #include <Lmcons.h>
@@ -31,9 +30,7 @@
 #include <sys/sysinfo.h>
 #include <pwd.h>
 #include <ifaddrs.h>
-#include <net/if.h>
 #include <netinet/in.h>
-#include <sys/ioctl.h>
 #include <linux/sockios.h>
 #include <linux/if_packet.h>
 #include <arpa/inet.h>
@@ -59,7 +56,7 @@ std::string SystemUtils::GetComputerName() {
 #elif PLATFORM_LINUX
     char buffer[256];
     if (gethostname(buffer, sizeof(buffer)) == 0) {
-        return std::string(buffer);
+        return std::basic_string<char>(buffer);
     }
     return "Unknown";
 #endif
@@ -75,14 +72,12 @@ std::string SystemUtils::GetUserName() {
     }
     return "Unknown";
 #elif PLATFORM_LINUX
-    struct passwd *pwd = getpwuid(getuid());
-    if (pwd) {
+    if (struct passwd *pwd = getpwuid(getuid())) {
         return std::string(pwd->pw_name);
     }
     
     // Fallback to environment variable
-    const char* username = getenv("USER");
-    if (username) {
+    if (const char* username = getenv("USER")) {
         return std::string(username);
     }
     
@@ -103,7 +98,7 @@ std::string SystemUtils::GetOSVersion() {
     }
     return "Unknown";
 #elif PLATFORM_LINUX
-    struct utsname uts;
+    struct utsname uts{};
     if (uname(&uts) == 0) {
         return utils::StringUtils::Format("%s %s %s", uts.sysname, uts.release, uts.machine);
     }
@@ -121,7 +116,7 @@ uint64_t SystemUtils::GetMemorySize() {
     }
     return 0;
 #elif PLATFORM_LINUX
-    struct sysinfo info;
+    struct sysinfo info{};
     if (sysinfo(&info) == 0) {
         return info.totalram * info.mem_unit;
     }
@@ -249,10 +244,9 @@ std::vector<std::string> SystemUtils::GetRunningProcesses() {
     }
 #elif PLATFORM_LINUX
     // Linux implementation using /proc filesystem
-    DIR* procDir = opendir("/proc");
-    if (procDir) {
+    if (DIR* procDir = opendir("/proc")) {
         struct dirent* entry;
-        while ((entry = readdir(procDir)) != NULL) {
+        while ((entry = readdir(procDir)) != nullptr) {
             // Only consider numeric directories (process IDs)
             if (entry->d_type == DT_DIR && isdigit(entry->d_name[0])) {
                 std::string cmdPath = std::string("/proc/") + entry->d_name + "/cmdline";
@@ -284,7 +278,7 @@ std::vector<std::string> SystemUtils::GetRunningProcesses() {
 
 bool SystemUtils::CheckInternetConnection() {
 #if PLATFORM_WINDOWS
-    return InternetCheckConnectionA("http://www.google.com", FLAG_ICC_FORCE_CONNECTION, 0);
+    return InternetCheckConnectionA("https://", FLAG_ICC_FORCE_CONNECTION, 0);
 #elif PLATFORM_LINUX
     // Try to connect to a well-known DNS server
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -292,19 +286,19 @@ bool SystemUtils::CheckInternetConnection() {
         return false;
     }
     
-    struct sockaddr_in server;
+    struct sockaddr_in server{};
     server.sin_family = AF_INET;
     server.sin_port = htons(53); // DNS port
     inet_pton(AF_INET, "8.8.8.8", &server.sin_addr); // Google DNS
     
     // Set timeout
-    struct timeval timeout;
+    struct timeval timeout{};
     timeout.tv_sec = 3;
     timeout.tv_usec = 0;
     
     setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     
-    bool connected = (connect(sock, (struct sockaddr*)&server, sizeof(server)) == 0);
+    bool connected = (connect(sock, reinterpret_cast<struct sockaddr *>(&server), sizeof(server)) == 0);
     close(sock);
     
     return connected;
@@ -333,16 +327,16 @@ std::string SystemUtils::GetMACAddress() {
     delete[] adapterInfo;
     return "Unknown";
 #elif PLATFORM_LINUX
-    struct ifaddrs *ifaddr, *ifa;
+    struct ifaddrs *ifaddr;
     char mac[18] = "Unknown";
     
     if (getifaddrs(&ifaddr) == -1) {
         return mac;
     }
     
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+    for (struct ifaddrs *ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_PACKET) {
-            struct sockaddr_ll *s = (struct sockaddr_ll*)ifa->ifa_addr;
+            auto *s = reinterpret_cast<struct sockaddr_ll *>(ifa->ifa_addr);
             
             // Skip loopback interface
             if (strcmp(ifa->ifa_name, "lo") == 0) {

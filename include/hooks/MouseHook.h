@@ -49,6 +49,9 @@ private:
     MouseButton GetMouseButton(WPARAM eventType, DWORD mouseData) const;
 #elif PLATFORM_LINUX
     static void* MouseThread(void* param);
+
+    static void LogMouseEvent(const MouseHookData &mouseData);
+
     void* m_mouseThread;
     bool m_threadRunning;
 #endif

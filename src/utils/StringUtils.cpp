@@ -113,15 +113,15 @@ std::string utils::StringUtils::ToUpper(const std::string& str) {
 std::string utils::StringUtils::Trim(const std::string& str) {
     auto start = str.begin();
     while (start != str.end() && std::isspace(*start)) {
-        start++;
+        ++start;
     }
     
     auto end = str.end();
     do {
-        end--;
+        --end;
     } while (std::distance(start, end) > 0 && std::isspace(*end));
     
-    return std::string(start, end + 1);
+    return std::basic_string<char>(start, end + 1);
 }
 
 std::vector<std::string> utils::StringUtils::Split(const std::string& str, char delimiter) {
@@ -166,7 +166,7 @@ std::string utils::StringUtils::Replace(const std::string& str, const std::strin
 }
 
 std::string utils::StringUtils::GenerateRandomString(size_t length) {
-    static const char alphanum[] =
+    static constexpr char alphanum[] =
         "0123456789"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
@@ -188,9 +188,8 @@ std::string utils::StringUtils::GenerateRandomString(size_t length) {
     }
 #elif PLATFORM_LINUX
     // Use /dev/urandom for Linux
-    FILE* urandom = fopen("/dev/urandom", "rb");
-    if (urandom) {
-        uint8_t* buffer = new uint8_t[length];
+    if (FILE* urandom = fopen("/dev/urandom", "rb")) {
+        auto* buffer = new uint8_t[length];
         if (fread(buffer, 1, length, urandom) == length) {
             for (size_t i = 0; i < length; i++) {
                 randomString += alphanum[buffer[i] % (sizeof(alphanum) - 1)];
@@ -232,8 +231,7 @@ void utils::StringUtils::GenerateRandomBytes(uint8_t* buffer, size_t length) {
         }
     }
 #elif PLATFORM_LINUX
-    FILE* urandom = fopen("/dev/urandom", "rb");
-    if (urandom) {
+    if (FILE* urandom = fopen("/dev/urandom", "rb")) {
         if (fread(buffer, 1, length, urandom) != length) {
             // Fallback to std::random if /dev/urandom fails
             std::random_device rd;
@@ -259,7 +257,7 @@ void utils::StringUtils::GenerateRandomBytes(uint8_t* buffer, size_t length) {
 }
 
 std::string utils::StringUtils::Base32Encode(const std::vector<uint8_t>& data) {
-    static const char base32Chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    static constexpr char base32Chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
     
     std::string encoded;
     encoded.reserve(((data.size() * 8) + 4) / 5);
@@ -319,7 +317,7 @@ std::vector<uint8_t> utils::StringUtils::Base32Decode(const std::string& encoded
 }
 
 std::string utils::StringUtils::Base64Encode(const std::vector<uint8_t>& data) {
-    static const char base64Chars[] =
+    static constexpr char base64Chars[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz"
         "0123456789+/";

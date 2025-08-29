@@ -4,11 +4,9 @@
 
 #include <string>
 #include <vector>
-#include <algorithm>
 #include <random>
 #include <cstdint>
 #include <cstdio>
-#include <cstdlib>
 #include <ctime>
 
 #if PLATFORM_WINDOWS
@@ -17,7 +15,6 @@
 #pragma comment(lib, "advapi32.lib")
 #elif PLATFORM_LINUX
 #include <unistd.h>
-#include <fcntl.h>
 #include <sys/random.h>
 #endif
 
@@ -28,10 +25,10 @@ std::string Obfuscation::ObfuscateString(const std::string& input) {
     std::vector<uint8_t> buffer(input.begin(), input.end());
     
     // Simple XOR obfuscation with rotating key
-    const uint8_t key[] = {0x3A, 0x7F, 0xC2, 0x15};
     size_t keyIndex = 0;
     
     for (auto& byte : buffer) {
+        constexpr uint8_t key[] = {0x3A, 0x7F, 0xC2, 0x15};
         byte ^= key[keyIndex];
         keyIndex = (keyIndex + 1) % sizeof(key);
         
@@ -55,15 +52,15 @@ std::string Obfuscation::DeobfuscateString(const std::string& input) {
     // Convert hex to bytes
     for (size_t i = 0; i < hexData.length(); i += 2) {
         std::string byteString = hexData.substr(i, 2);
-        uint8_t byte = (uint8_t)strtoul(byteString.c_str(), NULL, 16);
+        auto byte = static_cast<uint8_t>(strtoul(byteString.c_str(), nullptr, 16));
         buffer.push_back(byte);
     }
     
     // XOR deobfuscation with same rotating key
-    const uint8_t key[] = {0x3A, 0x7F, 0xC2, 0x15};
     size_t keyIndex = 0;
     
     for (auto& byte : buffer) {
+        constexpr uint8_t key[] = {0x3A, 0x7F, 0xC2, 0x15};
         byte ^= key[keyIndex];
         keyIndex = (keyIndex + 1) % sizeof(key);
     }
@@ -72,7 +69,7 @@ std::string Obfuscation::DeobfuscateString(const std::string& input) {
 }
 
 void Obfuscation::EncryptStringInPlace(std::string& str) {
-    const uint32_t key = 0xDEADBEEF;
+    constexpr uint32_t key = 0xDEADBEEF;
     uint32_t state = key;
     
     for (char& c : str) {
@@ -82,7 +79,7 @@ void Obfuscation::EncryptStringInPlace(std::string& str) {
 }
 
 void Obfuscation::DecryptStringInPlace(std::string& str) {
-    const uint32_t key = 0xDEADBEEF;
+    constexpr uint32_t key = 0xDEADBEEF;
     uint32_t state = key;
     
     for (char& c : str) {
@@ -92,7 +89,7 @@ void Obfuscation::DecryptStringInPlace(std::string& str) {
 }
 
 std::string Obfuscation::GenerateRandomString(size_t length) {
-    static const char alphanum[] =
+    static constexpr char alphanum[] =
         "0123456789"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
@@ -113,7 +110,7 @@ std::string Obfuscation::GenerateRandomString(size_t length) {
         CryptReleaseContext(hProv, 0);
     }
 #elif PLATFORM_LINUX
-    unsigned char* buffer = new unsigned char[length];
+    auto* buffer = new unsigned char[length];
     ssize_t result = getrandom(buffer, length, 0);
     if (result == static_cast<ssize_t>(length)) {
         for (size_t i = 0; i < length; i++) {
@@ -171,7 +168,7 @@ void Obfuscation::ApplyCodeObfuscation() {
 }
 
 std::string Obfuscation::Base64Encode(const std::vector<uint8_t>& data) {
-    static const char base64Chars[] =
+    static constexpr char base64Chars[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz"
         "0123456789+/";

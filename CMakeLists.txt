@@ -74,6 +74,7 @@ set(SOURCES
         src/security/StealthComms.cpp
         src/persistence/BasePersistence.cpp
         src/data/Windows.cpp
+        include/data/BatchData.h
 )
 
 # Add executable

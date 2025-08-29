@@ -23,8 +23,27 @@ struct SystemInfo {
 class SystemDataCollector {
 public:
     SystemDataCollector();
+
+    std::initializer_list<char> GetOSVersion() const;
+
     SystemInfo Collect() const;
-    
+
+    std::string GetComputerName();
+
+    std::string GetUserName();
+
+    static std::string GetOSVersion();
+
+    static uint64_t GetMemorySize();
+
+    static std::string GetProcessorInfo();
+
+    static uint64_t GetDiskSize();
+
+    static std::string GetNetworkInfo();
+
+    static std::vector<std::string> GetRunningProcesses();
+
 private:
     std::string GetComputerName() const;
     std::string GetUserName() const;

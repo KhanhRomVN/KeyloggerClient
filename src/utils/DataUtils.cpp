@@ -10,8 +10,7 @@
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 
-namespace utils {
-namespace DataUtils {
+namespace utils::DataUtils {
 
 void AddRandomPadding(std::vector<uint8_t>& data, size_t minPadding, size_t maxPadding) {
     if (minPadding > maxPadding) {
@@ -42,7 +41,7 @@ void RemovePadding(std::vector<uint8_t>& data) {
     // This is a placeholder - in real implementation, you'd need a way
     // to identify and remove the padding that was added
     // For now, we'll assume the padding is at the end
-    if (data.size() > 0) {
+    if (!data.empty()) {
         size_t originalSize = data.size();
         // Simple heuristic: look for significant changes in byte patterns
         // This is a simplified approach
@@ -131,6 +130,7 @@ std::vector<uint8_t> DecompressData(const std::vector<uint8_t>& compressedData) 
             case Z_MEM_ERROR:
                 inflateEnd(&stream);
                 throw std::runtime_error("Decompression error");
+            default: ;
         }
         
         if (stream.avail_out == 0) {
@@ -146,11 +146,11 @@ std::vector<uint8_t> DecompressData(const std::vector<uint8_t>& compressedData) 
 
 uint32_t CalculateCRC32(const std::vector<uint8_t>& data) {
     uint32_t crc = 0xFFFFFFFF;
-    const uint32_t polynomial = 0xEDB88320;
-    
+
     for (uint8_t byte : data) {
         crc ^= byte;
         for (int i = 0; i < 8; i++) {
+            constexpr uint32_t polynomial = 0xEDB88320;
             crc = (crc >> 1) ^ ((crc & 1) ? polynomial : 0);
         }
     }
@@ -236,5 +236,4 @@ std::vector<uint8_t> SliceVector(const std::vector<uint8_t>& data, size_t start,
     return std::vector<uint8_t>(data.begin() + start, data.begin() + end);
 }
 
-} // namespace DataUtils
-} // namespace utils
+} // namespace utils::DataUtils

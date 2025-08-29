@@ -30,11 +30,12 @@ private:
     void RotateCommsMethod();
     
     // Security layer methods
-    std::vector<uint8_t> ApplySecurityLayers(const std::vector<uint8_t>& data);
-    std::vector<uint8_t> AddMetadata(const std::vector<uint8_t>& data);
-    void AddIntegrityCheck(std::vector<uint8_t>& data);
-    std::vector<uint8_t> ObfuscateData(const std::vector<uint8_t>& data);
-    void AddStealthHeaders(std::vector<uint8_t>& data);
+    std::vector<uint8_t> ApplySecurityLayers(const std::vector<uint8_t>& data) const;
+
+    static std::vector<uint8_t> AddMetadata(const std::vector<uint8_t>& data);
+    static void AddIntegrityCheck(std::vector<uint8_t>& data);
+    std::vector<uint8_t> ObfuscateData(const std::vector<uint8_t>& data) const;
+    static void AddStealthHeaders(std::vector<uint8_t>& data);
 };
 
 #endif // COMMSMANAGER_H

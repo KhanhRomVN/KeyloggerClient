@@ -14,8 +14,8 @@ public:
     bool Remove() override;
     bool IsInstalled() const override;
     
-    bool StartService();
-    bool StopService();
+    static bool StartService();
+    static bool StopService();
 };
 
 #endif

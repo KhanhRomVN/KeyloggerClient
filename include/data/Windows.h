@@ -18,7 +18,7 @@ struct WindowInfo {
     bool isForeground;
     
     WindowInfo();
-    std::string ToString() const;
+    [[nodiscard]] std::string ToString() const;
 };
 
 class WindowManager {
@@ -35,4 +35,4 @@ private:
     ~WindowManager() = delete;
 };
 
-#endif // WINDOW_H
+#endif // WINDOWS_H

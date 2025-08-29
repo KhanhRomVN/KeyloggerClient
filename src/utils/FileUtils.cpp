@@ -61,8 +61,7 @@ std::string utils::FileUtils::GetAppDataPath() {
     }
     return GetTempPath();
 #elif PLATFORM_LINUX
-    const char* home = getenv("HOME");
-    if (home) {
+    if (const char* home = getenv("HOME")) {
         return std::string(home) + "/.local/share";
     }
     return GetTempPath();
@@ -93,12 +92,12 @@ std::string utils::FileUtils::GetSystemPath() {
 }
 
 bool utils::FileUtils::FileExists(const std::string& path) {
-    struct stat statbuf;
+    struct stat statbuf{};
     return (stat(path.c_str(), &statbuf) == 0 && S_ISREG(statbuf.st_mode));
 }
 
 bool utils::FileUtils::DirectoryExists(const std::string& path) {
-    struct stat statbuf;
+    struct stat statbuf{};
     return (stat(path.c_str(), &statbuf) == 0 && S_ISDIR(statbuf.st_mode));
 }
 
@@ -184,7 +183,7 @@ bool utils::FileUtils::CopyFile(const std::string& from, const std::string& to) 
 }
 
 uint64_t utils::FileUtils::GetFileSize(const std::string& path) {
-    struct stat statbuf;
+    struct stat statbuf{};
     if (stat(path.c_str(), &statbuf) != 0) {
         return 0;
     }
@@ -267,7 +266,7 @@ bool utils::FileUtils::SetFileReadOnly(const std::string& path) {
     if (attrs == INVALID_FILE_ATTRIBUTES) return false;
     return SetFileAttributesA(path.c_str(), attrs | FILE_ATTRIBUTE_READONLY);
 #elif PLATFORM_LINUX
-    struct stat statbuf;
+    struct stat statbuf{};
     if (stat(path.c_str(), &statbuf) != 0) {
         return false;
     }
@@ -276,7 +275,7 @@ bool utils::FileUtils::SetFileReadOnly(const std::string& path) {
 }
 
 uint64_t utils::FileUtils::GetFileModifiedTime(const std::string& path) {
-    struct stat statbuf;
+    struct stat statbuf{};
     if (stat(path.c_str(), &statbuf) != 0) {
         return 0;
     }

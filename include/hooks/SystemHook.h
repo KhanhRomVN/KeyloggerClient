@@ -45,11 +45,13 @@ private:
     std::string GetProcessName(HWND hwnd) const;
 #endif
     
-    void HandleShellActivated();
+    void HandleShellActivated() const;
     
 #if PLATFORM_LINUX
     void LinuxEventLoop();
     static void* LinuxEventThread(void* context);
+
+    void LinuxEventLoop() const;
 #endif
 };
 

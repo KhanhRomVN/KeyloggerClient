@@ -15,7 +15,7 @@
 #elif PLATFORM_LINUX
 #include <unistd.h>
 #include <sys/time.h>
-#include <time.h>
+#include <ctime>
 #include <sys/sysinfo.h>  // Added missing header for sysinfo
 #endif
 
@@ -42,7 +42,7 @@ uint64_t TimeUtils::GetTickCount() {
 #if PLATFORM_WINDOWS
     return ::GetTickCount64();
 #elif PLATFORM_LINUX
-    struct timespec ts;
+    timespec ts{};
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (ts.tv_sec * 1000) + (ts.tv_nsec / 1000000);
 #endif
@@ -52,7 +52,7 @@ uint64_t TimeUtils::GetSystemUptime() {
 #if PLATFORM_WINDOWS
     return ::GetTickCount64();
 #elif PLATFORM_LINUX
-    struct sysinfo info;
+    struct sysinfo info{};
     if (sysinfo(&info) == 0) {  // Fixed: sysinfo returns int, not sysinfo struct
         return static_cast<uint64_t>(info.uptime) * 1000; // Convert seconds to milliseconds
     }
@@ -76,7 +76,7 @@ void TimeUtils::JitterSleep(uint64_t baseMs, double jitterFactor) {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     
-    uint64_t jitter = static_cast<uint64_t>(baseMs * jitterFactor);
+    auto jitter = static_cast<uint64_t>(baseMs * jitterFactor);
     std::uniform_int_distribution<uint64_t> dist(
         baseMs > jitter ? baseMs - jitter : 0, 
         baseMs + jitter

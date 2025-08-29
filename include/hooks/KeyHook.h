@@ -13,7 +13,7 @@ public:
     
     bool InstallHook();
     bool RemoveHook();
-    bool IsActive() const { return m_isActive; }
+    [[nodiscard]] bool IsActive() const { return m_isActive; }
     
 private:
     DataManager* m_dataManager;
@@ -29,8 +29,8 @@ private:
     KeyModifiers GetModifierKeys() const;
     std::string PlatformKeyCodeToString(UINT vkCode) const;
 #endif
-    
-    void LogKeyEvent(const KeyData& keyData) const;
+
+    static void LogKeyEvent(const KeyData& keyData);
 };
 
 #endif

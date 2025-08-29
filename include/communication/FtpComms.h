@@ -12,12 +12,12 @@ class Configuration;
 class FtpComms : public BaseComms {
 public:
     explicit FtpComms(Configuration* config);
-    ~FtpComms();
+    ~FtpComms() override;
     
     bool Initialize() override;
     bool SendData(const std::vector<uint8_t>& data) override;
     void Cleanup() override;
-    bool TestConnection() const override;
+    [[nodiscard]] bool TestConnection() const override;
     std::vector<uint8_t> ReceiveData() override;
     
 private:

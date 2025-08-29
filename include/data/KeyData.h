@@ -3,7 +3,6 @@
 
 #include "core/Platform.h"
 #include <string>
-#include <cstdint>
 
 // Key event types
 enum class KeyEventType {
@@ -42,26 +41,26 @@ inline bool HasModifier(KeyModifiers modifiers, KeyModifiers test) {
 
 // Cross-platform virtual key codes
 enum class PlatformKey : int {
-    VK_SHIFT    = 0x10,
-    VK_CONTROL  = 0x11,
-    VK_MENU     = 0x12,     // ALT key
-    VK_LWIN     = 0x5B,
-    VK_RWIN     = 0x5C,
-    VK_CAPITAL  = 0x14,
-    VK_TAB      = 0x09,
-    VK_RETURN   = 0x0D,
-    VK_ESCAPE   = 0x1B,
-    VK_SPACE    = 0x20,
-    VK_BACK     = 0x08,
-    VK_DELETE   = 0x2E
+    KEY_SHIFT    = 0x10,
+    KEY_CONTROL  = 0x11,
+    KEY_MENU     = 0x12,     // ALT key
+    KEY_LWIN     = 0x5B,
+    KEY_RWIN     = 0x5C,
+    KEY_CAPITAL  = 0x14,
+    KEY_TAB      = 0x09,
+    KEY_RETURN   = 0x0D,
+    KEY_ESCAPE   = 0x1B,
+    KEY_SPACE    = 0x20,
+    KEY_BACK     = 0x08,
+    KEY_DELETE   = 0x2E, VK_SHIFT, VK_CONTROL, VK_MENU, VK_LWIN, VK_RWIN, VK_CAPITAL
 };
 
 class KeyData {
 public:
     KeyData();
 
-    bool IsModifierKey() const;
-    std::string ToString() const;
+    [[nodiscard]] bool IsModifierKey() const;
+    [[nodiscard]] std::string ToString() const;
 
     std::string timestamp;
     int keyCode;

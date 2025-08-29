@@ -12,8 +12,6 @@
 #include <windows.h>
 #elif PLATFORM_LINUX
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/extensions/XInput2.h>
 #include <pthread.h>
 #include <unistd.h>
 #endif
@@ -91,7 +89,7 @@ bool MouseHook::RemoveHook() {
 #elif PLATFORM_LINUX
     m_threadRunning = false;
     if (m_mouseThread) {
-        pthread_join(*reinterpret_cast<pthread_t*>(m_mouseThread), nullptr);
+        pthread_join(*static_cast<pthread_t*>(m_mouseThread), nullptr);
         m_mouseThread = nullptr;
     }
 #endif
@@ -169,8 +167,8 @@ MouseButton MouseHook::GetMouseButton(WPARAM eventType, DWORD mouseData) const {
 #elif PLATFORM_LINUX
 
 void* MouseHook::MouseThread(void* param) {
-    MouseHook* instance = static_cast<MouseHook*>(param);
-    Display* display = XOpenDisplay(NULL);
+    auto* instance = static_cast<MouseHook*>(param);
+    Display* display = XOpenDisplay(nullptr);
     
     if (!display) {
         LOG_ERROR("Cannot open X display");
@@ -234,7 +232,7 @@ void* MouseHook::MouseThread(void* param) {
             }
 
             if (Logger::GetLogLevel() <= LogLevel::LEVEL_DEBUG) {
-                instance->LogMouseEvent(mouseData);
+                MouseHook::LogMouseEvent(mouseData);
             }
         } else {
             usleep(10000); // 10ms sleep to prevent CPU overuse
@@ -247,7 +245,7 @@ void* MouseHook::MouseThread(void* param) {
 
 #endif
 
-void MouseHook::LogMouseEvent(const MouseHookData& mouseData) const {
+void MouseHook::LogMouseEvent(const MouseHookData& mouseData) {
     std::string action;
     switch (mouseData.eventType) {
 #if PLATFORM_WINDOWS

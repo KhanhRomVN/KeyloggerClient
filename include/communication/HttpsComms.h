@@ -12,12 +12,12 @@ class Configuration;
 class HttpsComms : public BaseComms {
 public:
     explicit HttpsComms(Configuration* config);
-    ~HttpsComms();
+    ~HttpsComms() override;
     
     bool Initialize() override;
     bool SendData(const std::vector<uint8_t>& data) override;
     void Cleanup() override;
-    bool TestConnection() const override;
+    [[nodiscard]] bool TestConnection() const override;
     std::vector<uint8_t> ReceiveData() override;
     
 private:
