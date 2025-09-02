@@ -6,6 +6,12 @@
 #include <mutex>
 #include <cstdint>
 
+// Forward declarations for Windows types
+struct IStream;
+struct HWND__;
+typedef HWND__* HWND;
+struct CLSID;
+
 class Screenshot {
 public:
     Screenshot();
@@ -38,7 +44,7 @@ private:
     std::string m_timestamp;
     
     void Initialize();
-    static int GetEncoderClsid(const char* format, void* pClsid);
+    static int GetEncoderClsid(const char* format, CLSID* pClsid);
     
     bool CaptureWindows(HWND hwnd);
     bool SaveToFileWindows(const std::string& path) const;

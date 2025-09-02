@@ -4,6 +4,9 @@
 #include <vector>
 #include <cstdint>
 
+// Add this macro definition
+#define OBFUSCATE(str) (::security::Obfuscation::ObfuscateString(str).c_str())
+
 namespace security {
 
 class Obfuscation {

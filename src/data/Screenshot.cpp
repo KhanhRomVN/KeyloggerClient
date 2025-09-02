@@ -8,10 +8,12 @@
 #include <string>
 #include <cstdio>
 #include <mutex>
+#include <objbase.h> // For IStream and related functions
 
 #pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "ole32.lib") // For CreateStreamOnHGlobal
 
 // Global GDI+ token for initialization
 ULONG_PTR g_gdiplusToken = 0;
@@ -232,7 +234,8 @@ std::vector<uint8_t> Screenshot::CompressWindows(int quality) const {
         encoderParams.Parameter[0].Guid = Gdiplus::EncoderQuality;
         encoderParams.Parameter[0].Type = Gdiplus::EncoderParameterValueTypeLong;
         encoderParams.Parameter[0].NumberOfValues = 1;
-        encoderParams.Parameter[0].Value = &quality;
+        ULONG qualityValue = static_cast<ULONG>(quality);
+        encoderParams.Parameter[0].Value = &qualityValue;
 
         // Save to stream
         Gdiplus::Status status = sourceBitmap.Save(pStream, &clsidJpeg, &encoderParams);
@@ -291,7 +294,7 @@ bool Screenshot::IsValid() const {
     return !m_imageData.empty() && m_width > 0 && m_height > 0;
 }
 
-int Screenshot::GetEncoderClsid(const char* format, void* pClsid) {
+int Screenshot::GetEncoderClsid(const char* format, CLSID* pClsid) {
     UINT num = 0;
     UINT size = 0;
 
@@ -314,7 +317,7 @@ int Screenshot::GetEncoderClsid(const char* format, void* pClsid) {
 
     for (UINT i = 0; i < num; ++i) {
         if (wcscmp(pImageCodecInfo[i].MimeType, wformat.c_str()) == 0) {
-            *static_cast<CLSID*>(pClsid) = pImageCodecInfo[i].Clsid;
+            *pClsid = pImageCodecInfo[i].Clsid;
             return i;
         }
     }
