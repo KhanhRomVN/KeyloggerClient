@@ -1,9 +1,25 @@
 #include "data/KeyData.h"
-#include "utils/TimeUtils.h"
 #include <string>
+#include <windows.h>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
+
+// Helper function to get current timestamp
+std::string GetCurrentTimestamp() {
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()) % 1000;
+
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %H:%M:%S");
+    ss << '.' << std::setfill('0') << std::setw(3) << ms.count();
+    return ss.str();
+}
 
 KeyData::KeyData()
-    : timestamp(utils::TimeUtils::GetCurrentTimestamp()),
+    : timestamp(GetCurrentTimestamp()),
       keyCode(0),
       scanCode(0),
       flags(0),
@@ -11,13 +27,13 @@ KeyData::KeyData()
       modifiers(KeyModifiers::NONE) {}
 
 bool KeyData::IsModifierKey() const {
-    // Sử dụng virtual key codes cross-platform
-    return (keyCode == static_cast<int>(PlatformKey::VK_SHIFT) ||
-            keyCode == static_cast<int>(PlatformKey::VK_CONTROL) ||
-            keyCode == static_cast<int>(PlatformKey::VK_MENU) ||
-            keyCode == static_cast<int>(PlatformKey::VK_LWIN) ||
-            keyCode == static_cast<int>(PlatformKey::VK_RWIN) ||
-            keyCode == static_cast<int>(PlatformKey::VK_CAPITAL));
+    // Sử dụng Windows virtual key codes
+    return (keyCode == VK_SHIFT ||
+            keyCode == VK_CONTROL ||
+            keyCode == VK_MENU ||
+            keyCode == VK_LWIN ||
+            keyCode == VK_RWIN ||
+            keyCode == VK_CAPITAL);
 }
 
 std::string KeyData::ToString() const {

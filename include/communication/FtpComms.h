@@ -3,9 +3,10 @@
 #define FTPCOMMS_H  
 
 #include "communication/BaseComms.h"
-#include "core/Platform.h"
 #include <vector>
 #include <cstdint>
+#include <windows.h>
+#include <wininet.h>
 
 class Configuration;
 
@@ -22,14 +23,8 @@ public:
     
 private:
     Configuration* m_config;
-    
-    #if PLATFORM_WINDOWS
     HINTERNET m_hInternet;
     HINTERNET m_hConnect;
-    #else
-    void* m_hInternet; // Placeholder for Linux
-    void* m_hConnect;  // Placeholder for Linux
-    #endif
 };
 
 #endif

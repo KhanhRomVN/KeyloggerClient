@@ -2,8 +2,8 @@
 #define DNSCOMMS_H
 
 #include "communication/BaseComms.h"
-#include "core/Platform.h"
 #include <string>
+#include <vector>
 
 class Configuration;
 
@@ -22,11 +22,8 @@ private:
     Configuration* m_config;
     std::string m_dnsServer;
     
-    // Platform-specific DNS query methods
-    [[nodiscard]] static bool SendDataWindows(const std::vector<std::string>& chunks);
-    [[nodiscard]] bool SendDataLinux(const std::vector<std::string>& chunks) const;
-    [[nodiscard]] static bool TestConnectionWindows();
-    [[nodiscard]] static bool TestConnectionLinux();
+    [[nodiscard]] bool SendDataInternal(const std::vector<std::string>& chunks) const;
+    [[nodiscard]] bool TestConnectionInternal() const;
 };
 
 #endif

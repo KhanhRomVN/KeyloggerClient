@@ -1,9 +1,7 @@
-// include/hooks/SystemHook.h
 #ifndef SYSTEMHOOK_H
 #define SYSTEMHOOK_H
 
-#include "core/Platform.h"
-#include "data/DataManager.h" // Add this include
+#include <windows.h>
 #include <string>
 
 class DataManager;
@@ -29,13 +27,9 @@ private:
     DataManager* m_dataManager;
     bool m_isActive;
     
-#if PLATFORM_WINDOWS
     static HHOOK s_systemHook;
-#endif
-    
     static SystemHook* s_instance;
     
-#if PLATFORM_WINDOWS
     static LRESULT CALLBACK ShellProc(int nCode, WPARAM wParam, LPARAM lParam); 
     void ProcessShellEvent(WPARAM eventType, LPARAM lParam);
     void HandleWindowCreated(HWND hwnd);
@@ -43,16 +37,8 @@ private:
     void HandleAppActivated(HWND hwnd);
     std::string GetWindowTitle(HWND hwnd) const;
     std::string GetProcessName(HWND hwnd) const;
-#endif
     
     void HandleShellActivated() const;
-    
-#if PLATFORM_LINUX
-    void LinuxEventLoop();
-    static void* LinuxEventThread(void* context);
-
-    void LinuxEventLoop() const;
-#endif
 };
 
 } // namespace hooks

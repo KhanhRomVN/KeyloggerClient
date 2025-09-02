@@ -1,7 +1,6 @@
-// src/utils/StringUtils.cpp
 #include "utils/StringUtils.h"
-#include "core/Logger.h"
-#include "core/Platform.h"
+#include <Windows.h>
+#include <wincrypt.h>
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -9,91 +8,30 @@
 #include <vector>   
 #include <cstdint>
 #include <string>
-#include <cstdarg>  // Added for va_list support
+#include <cstdarg>
 
-#if PLATFORM_WINDOWS
-#include <Windows.h>
-#include <wincrypt.h>
 #pragma comment(lib, "advapi32.lib")
-#endif
 
 std::string utils::StringUtils::WideToUtf8(const std::wstring& wide) {
     if (wide.empty()) return "";
     
-#if PLATFORM_WINDOWS
     int size = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), (int)wide.size(), 
                                  NULL, 0, NULL, NULL);
     std::string utf8(size, 0);
     WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), (int)wide.size(), 
                         &utf8[0], size, NULL, NULL);
     return utf8;
-#elif PLATFORM_LINUX
-    std::string result;
-    result.reserve(wide.size() * 4); // Maximum UTF-8 bytes per character
-    
-    for (wchar_t wc : wide) {
-        if (wc <= 0x7F) {
-            result += static_cast<char>(wc);
-        } else if (wc <= 0x7FF) {
-            result += static_cast<char>(0xC0 | ((wc >> 6) & 0x1F));
-            result += static_cast<char>(0x80 | (wc & 0x3F));
-        } else if (wc <= 0xFFFF) {
-            result += static_cast<char>(0xE0 | ((wc >> 12) & 0x0F));
-            result += static_cast<char>(0x80 | ((wc >> 6) & 0x3F));
-            result += static_cast<char>(0x80 | (wc & 0x3F));
-        } else if (wc <= 0x10FFFF) {
-            result += static_cast<char>(0xF0 | ((wc >> 18) & 0x07));
-            result += static_cast<char>(0x80 | ((wc >> 12) & 0x3F));
-            result += static_cast<char>(0x80 | ((wc >> 6) & 0x3F));
-            result += static_cast<char>(0x80 | (wc & 0x3F));
-        }
-    }
-    return result;
-#endif
 }
 
 std::wstring utils::StringUtils::Utf8ToWide(const std::string& utf8) {
     if (utf8.empty()) return L"";
     
-#if PLATFORM_WINDOWS
     int size = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), 
                                   NULL, 0);
     std::wstring wide(size, 0);
     MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), (int)utf8.size(), 
                        &wide[0], size);
     return wide;
-#elif PLATFORM_LINUX
-    std::wstring result;
-    result.reserve(utf8.size());
-    
-    for (size_t i = 0; i < utf8.size(); ) {
-        wchar_t wc = 0;
-        unsigned char c = utf8[i];
-        
-        if (c <= 0x7F) {
-            wc = c;
-            i += 1;
-        } else if ((c & 0xE0) == 0xC0) {
-            if (i + 1 >= utf8.size()) break;
-            wc = ((c & 0x1F) << 6) | (utf8[i+1] & 0x3F);
-            i += 2;
-        } else if ((c & 0xF0) == 0xE0) {
-            if (i + 2 >= utf8.size()) break;
-            wc = ((c & 0x0F) << 12) | ((utf8[i+1] & 0x3F) << 6) | (utf8[i+2] & 0x3F);
-            i += 3;
-        } else if ((c & 0xF8) == 0xF0) {
-            if (i + 3 >= utf8.size()) break;
-            wc = ((c & 0x07) << 18) | ((utf8[i+1] & 0x3F) << 12) | 
-                 ((utf8[i+2] & 0x3F) << 6) | (utf8[i+3] & 0x3F);
-            i += 4;
-        } else {
-            i++; // Invalid UTF-8, skip
-        }
-        
-        result += wc;
-    }
-    return result;
-#endif
 }
 
 std::string utils::StringUtils::ToLower(const std::string& str) {
@@ -174,7 +112,6 @@ std::string utils::StringUtils::GenerateRandomString(size_t length) {
     std::string randomString;
     randomString.reserve(length);
     
-#if PLATFORM_WINDOWS
     HCRYPTPROV hProv;
     if (CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
         BYTE* buffer = new BYTE[length];
@@ -186,19 +123,6 @@ std::string utils::StringUtils::GenerateRandomString(size_t length) {
         delete[] buffer;
         CryptReleaseContext(hProv, 0);
     }
-#elif PLATFORM_LINUX
-    // Use /dev/urandom for Linux
-    if (FILE* urandom = fopen("/dev/urandom", "rb")) {
-        auto* buffer = new uint8_t[length];
-        if (fread(buffer, 1, length, urandom) == length) {
-            for (size_t i = 0; i < length; i++) {
-                randomString += alphanum[buffer[i] % (sizeof(alphanum) - 1)];
-            }
-        }
-        delete[] buffer;
-        fclose(urandom);
-    }
-#endif
     
     // Fallback to std::random if crypto API fails
     if (randomString.empty()) {
@@ -215,7 +139,6 @@ std::string utils::StringUtils::GenerateRandomString(size_t length) {
 }
 
 void utils::StringUtils::GenerateRandomBytes(uint8_t* buffer, size_t length) {
-#if PLATFORM_WINDOWS
     HCRYPTPROV hProv;
     if (CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
         CryptGenRandom(hProv, (DWORD)length, buffer);
@@ -230,30 +153,6 @@ void utils::StringUtils::GenerateRandomBytes(uint8_t* buffer, size_t length) {
             buffer[i] = static_cast<uint8_t>(dis(gen));
         }
     }
-#elif PLATFORM_LINUX
-    if (FILE* urandom = fopen("/dev/urandom", "rb")) {
-        if (fread(buffer, 1, length, urandom) != length) {
-            // Fallback to std::random if /dev/urandom fails
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::uniform_int_distribution<> dis(0, 255);
-            
-            for (size_t i = 0; i < length; i++) {
-                buffer[i] = static_cast<uint8_t>(dis(gen));
-            }
-        }
-        fclose(urandom);
-    } else {
-        // Fallback to std::random
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(0, 255);
-        
-        for (size_t i = 0; i < length; i++) {
-            buffer[i] = static_cast<uint8_t>(dis(gen));
-        }
-    }
-#endif
 }
 
 std::string utils::StringUtils::Base32Encode(const std::vector<uint8_t>& data) {
@@ -284,7 +183,6 @@ std::string utils::StringUtils::Base32Encode(const std::vector<uint8_t>& data) {
 }
 
 std::vector<uint8_t> utils::StringUtils::Base32Decode(const std::string& encoded) {
-    // Use a function to get the base32 index instead of a large array
     auto getBase32Index = [](char c) -> int {
         if (c >= 'A' && c <= 'Z') return c - 'A';
         if (c >= 'a' && c <= 'z') return c - 'a';
@@ -299,10 +197,10 @@ std::vector<uint8_t> utils::StringUtils::Base32Decode(const std::string& encoded
     size_t bitsLeft = 0;
     
     for (char c : encoded) {
-        if (c == '=') break; // Padding
+        if (c == '=') break;
         
         int value = getBase32Index(c);
-        if (value == -1) continue; // Skip invalid characters
+        if (value == -1) continue;
         
         buffer = (buffer << 5) | value;
         bitsLeft += 5;
@@ -339,7 +237,6 @@ std::string utils::StringUtils::Base64Encode(const std::vector<uint8_t>& data) {
         encoded += base64Chars[triple & 0x3F];
     }
     
-    // Add padding
     size_t padding = data.size() % 3;
     if (padding > 0) {
         encoded[encoded.size() - 1] = '=';
@@ -352,7 +249,6 @@ std::string utils::StringUtils::Base64Encode(const std::vector<uint8_t>& data) {
 }
 
 std::vector<uint8_t> utils::StringUtils::Base64Decode(const std::string& encoded) {
-    // Use a function to get the base64 index instead of a large array
     auto getBase64Index = [](char c) -> int {
         if (c >= 'A' && c <= 'Z') return c - 'A';
         if (c >= 'a' && c <= 'z') return 26 + (c - 'a');
@@ -390,7 +286,6 @@ std::string utils::StringUtils::Format(const char* format, ...) {
     va_list args;
     va_start(args, format);
     
-    // Determine the required size
     va_list args_copy;
     va_copy(args_copy, args);
     int size = vsnprintf(nullptr, 0, format, args_copy);

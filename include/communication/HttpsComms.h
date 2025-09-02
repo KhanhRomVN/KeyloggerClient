@@ -3,9 +3,10 @@
 #define HTTPSCOMMS_H
 
 #include "communication/BaseComms.h"
-#include "core/Platform.h"
 #include <vector>
 #include <cstdint>
+#include <windows.h>
+#include <winhttp.h>
 
 class Configuration;
 
@@ -22,16 +23,10 @@ public:
     
 private:
     Configuration* m_config;
-    
-    #if PLATFORM_WINDOWS
     HINTERNET m_hSession;
     HINTERNET m_hConnect;
+    
     bool ConfigureSslWindows();
-    #else
-    void* m_hSession;
-    void* m_hConnect;
-    bool ConfigureSslLinux(void* curl);
-    #endif
 };
 
 #endif

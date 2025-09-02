@@ -3,7 +3,6 @@
 #include "utils/SystemUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/TimeUtils.h"
-#include "core/Platform.h"
 
 #include <string>
 #include <vector>
@@ -12,22 +11,13 @@
 #include <cstdint>
 #include <thread>
 #include <random>
-
-#if PLATFORM_WINDOWS
 #include <Windows.h>
 #include <winreg.h>
 #include <intrin.h>
-#elif PLATFORM_LINUX
-#include <sys/sysinfo.h>
-#include <sys/stat.h>
-#include <sys/ptrace.h>
-#include <fcntl.h>
-#endif
 
 namespace security {
 
 bool AntiAnalysis::IsDebuggerPresent() {
-#if PLATFORM_WINDOWS
     std::vector<bool(*)(void)> checks = {
         []() -> bool { return !!::IsDebuggerPresent(); },
         []() -> bool {
@@ -56,27 +46,6 @@ bool AntiAnalysis::IsDebuggerPresent() {
             return true;
         }
     }
-#elif PLATFORM_LINUX
-    // Linux debugger detection
-    std::ifstream status("/proc/self/status");
-    std::string line;
-    
-    while (std::getline(status, line)) {
-        if (line.find("TracerPid:") == 0) {
-            std::string pidStr = line.substr(10);
-            pidStr.erase(0, pidStr.find_first_not_of(" \t"));
-            int tracerPid = std::stoi(pidStr);
-            if (tracerPid != 0) {
-                return true;
-            }
-        }
-    }
-    
-    // Check via ptrace
-    if (ptrace(PTRACE_TRACEME, 0, 0, 0) != -1) {
-        return true;
-    }
-#endif
     
     return false;
 }
@@ -84,7 +53,6 @@ bool AntiAnalysis::IsDebuggerPresent() {
 bool AntiAnalysis::IsRunningInVM() {
     std::vector<bool> results;
     
-#if PLATFORM_WINDOWS
     // Windows-specific VM checks
     results.push_back([]() -> bool {
         HKEY hKey;
@@ -114,7 +82,7 @@ bool AntiAnalysis::IsRunningInVM() {
         return false;
     }());
     
-    // CPUID-based check for Windows
+    // CPUID-based check
     results.push_back([]() -> bool {
         int cpuInfo[4] = {0};
         __cpuid(cpuInfo, 0x40000000);
@@ -131,50 +99,17 @@ bool AntiAnalysis::IsRunningInVM() {
                vendor.find("KVM") != std::string::npos;
     }());
 
-#elif PLATFORM_LINUX
-    // Linux-specific VM checks
+    // Check for common VM files
     results.push_back([]() -> bool {
-        // Check /proc/cpuinfo for hypervisor flag
-        std::ifstream cpuinfo("/proc/cpuinfo");
-        std::string line;
-        
-        while (std::getline(cpuinfo, line)) {
-            if (line.find("hypervisor") != std::string::npos) {
-                return true;
-            }
-        }
-        return false;
-    }());
-    
-    // Check dmesg for virtualization messages
-    results.push_back([]() -> bool {
-        if (FILE* pipe = popen("dmesg | grep -i hypervisor 2>/dev/null", "r")) {
-            char buffer[128];
-            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-                std::string output(buffer);
-                if (output.find("hypervisor") != std::string::npos) {
-                    pclose(pipe);
-                    return true;
-                }
-            }
-            pclose(pipe);
-        }
-        return false;
-    }());
-#endif
-
-    // Cross-platform VM checks
-    results.push_back([]() -> bool {
-        // Check for common VM files
         const char* vmFiles[] = {
-            "/.dockerenv", // Docker
-            "/.dockerinit", // Docker
-            "/proc/1/cgroup", // Container check
+            "C:\\analysis",
+            "C:\\sandbox", 
+            "C:\\malware",
+            "C:\\sample"
         };
-        
-        for (const auto& file : vmFiles) {
-            struct stat buffer{};
-            if (stat(file, &buffer) == 0) {
+
+        for (const auto& path : vmFiles) {
+            if (GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES) {
                 return true;
             }
         }
@@ -195,40 +130,20 @@ bool AntiAnalysis::IsSandboxed() {
     
     // Check for small amount of memory
     results.push_back([]() -> bool {
-#if PLATFORM_WINDOWS
         MEMORYSTATUSEX memStatus;
         memStatus.dwLength = sizeof(memStatus);
         GlobalMemoryStatusEx(&memStatus);
         return memStatus.ullTotalPhys < (2ULL * 1024 * 1024 * 1024); // Less than 2GB
-#elif PLATFORM_LINUX
-        struct sysinfo info{};
-        if (sysinfo(&info) == 0) {
-            return info.totalram < (2ULL * 1024 * 1024 * 1024); // Less than 2GB
-        }
-        return false;
-#endif
     }());
 
     // Check for recent system uptime
     results.push_back([]() -> bool {
-#if PLATFORM_WINDOWS
         return GetTickCount64() < (2 * 60 * 60 * 1000); // Less than 2 hours
-#elif PLATFORM_LINUX
-        struct sysinfo info{};
-        if (sysinfo(&info) == 0) {
-            return info.uptime < (2 * 60 * 60); // Less than 2 hours
-        }
-        return false;
-#endif
     }());
 
     // Check for sandbox-specific artifacts
     results.push_back([]() -> bool {
         const char* sandboxPaths[] = {
-            "/analysis",
-            "/sandbox",
-            "/malware",
-            "/sample",
             "C:\\analysis",
             "C:\\sandbox", 
             "C:\\malware",
@@ -236,16 +151,9 @@ bool AntiAnalysis::IsSandboxed() {
         };
 
         for (const auto& path : sandboxPaths) {
-#if PLATFORM_WINDOWS
             if (GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES) {
                 return true;
             }
-#elif PLATFORM_LINUX
-            struct stat buffer{};
-            if (stat(path, &buffer) == 0) {
-                return true;
-            }
-#endif
         }
         return false;
     }());
@@ -277,22 +185,12 @@ void AntiAnalysis::EvadeAnalysis() {
 }
 
 bool AntiAnalysis::IsLowOnResources() {
-#if PLATFORM_WINDOWS
     MEMORYSTATUSEX memStatus;
     memStatus.dwLength = sizeof(memStatus);
     GlobalMemoryStatusEx(&memStatus);
 
     return memStatus.dwMemoryLoad > 90 || // Memory usage > 90%
            memStatus.ullAvailPhys < (512 * 1024 * 1024); // Less than 512MB available
-#elif PLATFORM_LINUX
-    struct sysinfo info{};
-    if (sysinfo(&info) == 0) {
-        float memoryUsage = 100.0f * (info.totalram - info.freeram) / info.totalram;
-        return memoryUsage > 90.0f || // Memory usage > 90%
-               info.freeram < (512 * 1024 * 1024); // Less than 512MB available
-    }
-    return false;
-#endif
 }
 
 void AntiAnalysis::Countermeasure() {
@@ -331,10 +229,8 @@ void AntiAnalysis::CreateDecoyArtifacts() {
         file << "This file is used by system processes for temporary storage\n";
         file.close();
         
-        // Make file hidden on Windows
-#if PLATFORM_WINDOWS
+        // Make file hidden
         SetFileAttributesA(decoyFile.c_str(), FILE_ATTRIBUTE_HIDDEN);
-#endif
     }
 }
 

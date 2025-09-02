@@ -1,7 +1,6 @@
 #ifndef FILEUTILS_H
 #define FILEUTILS_H
 
-#include "core/Platform.h"
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -36,7 +35,7 @@ public:
     static uint64_t GetFileModifiedTime(const std::string& path);
     static bool IsFileSigned(const std::string& path);
     
-    // Helper functions for path conversion if needed
+    // Helper functions for path conversion
     static std::wstring StringToWide(const std::string& str);
     static std::string WideToString(const std::wstring& wstr);
 };

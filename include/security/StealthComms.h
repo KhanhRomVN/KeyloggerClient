@@ -2,10 +2,11 @@
 #define STEALTHCOMMS_H
 
 #include "communication/BaseComms.h"
-#include "core/Platform.h"
 #include <string>
 #include <vector>
 #include <memory>
+#include <windows.h>
+#include <wininet.h>
 
 class Configuration;
 class HttpComms;
@@ -86,11 +87,10 @@ private:
     // Internal HTTP methods
     bool SendHttpRequest(const std::string& endpoint, const std::vector<uint8_t>& data);
     
-#if PLATFORM_WINDOWS
+    // Windows-specific HTTP implementation
     HINTERNET CreateHttpSession();
     bool SendSecureHttpRequest(HINTERNET hSession, const std::string& endpoint, 
                               const std::vector<uint8_t>& data);
-#endif
     
     // Method selection logic
     std::string SelectOptimalMethod();

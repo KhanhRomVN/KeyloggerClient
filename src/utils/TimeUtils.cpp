@@ -1,6 +1,5 @@
 // src/utils/TimeUtils.cpp
 #include "utils/TimeUtils.h"
-#include "core/Platform.h"
 #include <chrono>
 #include <thread>
 #include <iomanip>
@@ -9,15 +8,7 @@
 #include <cstdint>
 #include <string>
 #include <random>
-
-#if PLATFORM_WINDOWS
 #include <Windows.h>
-#elif PLATFORM_LINUX
-#include <unistd.h>
-#include <sys/time.h>
-#include <ctime>
-#include <sys/sysinfo.h>  // Added missing header for sysinfo
-#endif
 
 namespace utils {
 
@@ -39,33 +30,15 @@ std::string TimeUtils::GetCurrentTimestamp(bool forFilename) {
 }
 
 uint64_t TimeUtils::GetTickCount() {
-#if PLATFORM_WINDOWS
     return ::GetTickCount64();
-#elif PLATFORM_LINUX
-    timespec ts{};
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (ts.tv_sec * 1000) + (ts.tv_nsec / 1000000);
-#endif
 }
 
 uint64_t TimeUtils::GetSystemUptime() {
-#if PLATFORM_WINDOWS
     return ::GetTickCount64();
-#elif PLATFORM_LINUX
-    struct sysinfo info{};
-    if (sysinfo(&info) == 0) {  // Fixed: sysinfo returns int, not sysinfo struct
-        return static_cast<uint64_t>(info.uptime) * 1000; // Convert seconds to milliseconds
-    }
-    return 0;
-#endif
 }
 
 void TimeUtils::Sleep(uint64_t milliseconds) {
-#if PLATFORM_WINDOWS
     ::Sleep(static_cast<DWORD>(milliseconds));
-#elif PLATFORM_LINUX
-    usleep(milliseconds * 1000); // usleep takes microseconds
-#endif
 }
 
 void TimeUtils::JitterSleep(uint64_t baseMs, double jitterFactor) {
@@ -110,12 +83,8 @@ bool TimeUtils::IsTimeOddSecond() {
 
 void TimeUtils::SyncWithSystemTime() {
     // Placeholder for future NTP sync implementation
-    // Could use platform-specific time synchronization methods
-#if PLATFORM_WINDOWS
+    // Could use Windows time synchronization methods
     // Windows time sync could use w32tm or similar
-#elif PLATFORM_LINUX
-    // Linux could use ntpdate or chrony
-#endif
 }
 
 } // namespace utils

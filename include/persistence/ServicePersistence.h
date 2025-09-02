@@ -2,7 +2,6 @@
 #define SERVICEPERSISTENCE_H
 
 #include "persistence/BasePersistence.h"
-#include "core/Platform.h"
 
 class Configuration;
 

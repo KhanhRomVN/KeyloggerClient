@@ -2,7 +2,7 @@
 #define KEYHOOK_H
 
 #include "data/KeyData.h"
-#include "core/Platform.h"
+#include <windows.h>
 
 class DataManager;
 
@@ -19,7 +19,6 @@ private:
     DataManager* m_dataManager;
     bool m_isActive;
     
-#if PLATFORM_WINDOWS
     static HHOOK s_keyboardHook;
     static KeyHook* s_instance;
     
@@ -28,7 +27,6 @@ private:
     std::string GetActiveWindowTitle() const;
     KeyModifiers GetModifierKeys() const;
     std::string PlatformKeyCodeToString(UINT vkCode) const;
-#endif
 
     static void LogKeyEvent(const KeyData& keyData);
 };

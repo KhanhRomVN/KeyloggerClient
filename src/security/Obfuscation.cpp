@@ -1,6 +1,5 @@
 #include "security/Obfuscation.h"
 #include "core/Logger.h"
-#include "core/Platform.h"
 
 #include <string>
 #include <vector>
@@ -8,15 +7,10 @@
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
-
-#if PLATFORM_WINDOWS
 #include <Windows.h>
 #include <wincrypt.h>
+
 #pragma comment(lib, "advapi32.lib")
-#elif PLATFORM_LINUX
-#include <unistd.h>
-#include <sys/random.h>
-#endif
 
 namespace security {
 
@@ -97,7 +91,6 @@ std::string Obfuscation::GenerateRandomString(size_t length) {
     std::string randomString;
     randomString.reserve(length);
     
-#if PLATFORM_WINDOWS
     HCRYPTPROV hProv;
     if (CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
         BYTE* buffer = new BYTE[length];
@@ -109,16 +102,6 @@ std::string Obfuscation::GenerateRandomString(size_t length) {
         delete[] buffer;
         CryptReleaseContext(hProv, 0);
     }
-#elif PLATFORM_LINUX
-    auto* buffer = new unsigned char[length];
-    ssize_t result = getrandom(buffer, length, 0);
-    if (result == static_cast<ssize_t>(length)) {
-        for (size_t i = 0; i < length; i++) {
-            randomString += alphanum[buffer[i] % (sizeof(alphanum) - 1)];
-        }
-    }
-    delete[] buffer;
-#endif
     
     // Fallback to std::random if crypto API fails
     if (randomString.empty()) {
@@ -142,29 +125,15 @@ void Obfuscation::ApplyCodeObfuscation() {
         junk -= i;
     }
     
-    // Platform-specific obfuscation techniques
-#if PLATFORM_WINDOWS && defined(_MSC_VER) && defined(_M_IX86)
-    // Random jumps to disrupt static analysis on Windows (x86 only)
+    // Windows-specific obfuscation techniques (x86 only)
+    #if defined(_MSC_VER) && defined(_M_IX86)
     __asm {
         jmp $+2
         nop
         nop
         jmp $+2
     }
-#elif PLATFORM_LINUX && defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-    // Linux-specific obfuscation techniques (x86/x64 only)
-    asm volatile (
-        "jmp 1f\n\t"
-        "nop\n\t"
-        "1:\n\t"
-        "jmp 2f\n\t"
-        "nop\n\t"
-        "2:\n\t"
-        : 
-        : 
-        : "memory"
-    );
-#endif
+    #endif
 }
 
 std::string Obfuscation::Base64Encode(const std::vector<uint8_t>& data) {
@@ -203,7 +172,6 @@ std::string Obfuscation::Base64Encode(const std::vector<uint8_t>& data) {
 }
 
 std::vector<uint8_t> Obfuscation::Base64Decode(const std::string& encoded) {
-    // Use a function to generate the base64 index instead of large static array
     auto getBase64Index = [](uint8_t c) -> int {
         if (c >= 'A' && c <= 'Z') return c - 'A';
         if (c >= 'a' && c <= 'z') return c - 'a' + 26;

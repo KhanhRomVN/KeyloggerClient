@@ -2,7 +2,7 @@
 #define REGISTRYPERSISTENCE_H
 
 #include "persistence/BasePersistence.h"
-#include "core/Platform.h"
+#include <windows.h>
 
 class Configuration;
 
@@ -15,13 +15,11 @@ public:
     bool IsInstalled() const override;
     
 private:
-#if PLATFORM_WINDOWS
     HKEY m_installedHive;
     std::string m_installedKey;
     
     bool InstallInRegistry(HKEY hive, const char* key);
     bool CheckRegistryKey(HKEY hive, const char* key) const;
-#endif
 };
 
 #endif

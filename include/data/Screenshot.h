@@ -4,11 +4,7 @@
 #include <vector>
 #include <string>
 #include <mutex>
-#include "core/Platform.h"
-
-#if PLATFORM_WINDOWS
-#include <windows.h>
-#endif
+#include <cstdint>
 
 class Screenshot {
 public:
@@ -44,15 +40,9 @@ private:
     void Initialize();
     static int GetEncoderClsid(const char* format, void* pClsid);
     
-#if PLATFORM_WINDOWS
     bool CaptureWindows(HWND hwnd);
     bool SaveToFileWindows(const std::string& path) const;
     std::vector<uint8_t> CompressWindows(int quality) const;
-#elif PLATFORM_LINUX
-    bool CaptureLinux();
-    [[nodiscard]] bool SaveToFileLinux(const std::string& path) const;
-    [[nodiscard]] std::vector<uint8_t> CompressLinux(int quality) const;
-#endif
 };
 
 #endif
