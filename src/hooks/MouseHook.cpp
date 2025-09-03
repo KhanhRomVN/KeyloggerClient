@@ -75,33 +75,88 @@ LRESULT CALLBACK MouseHook::MouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
+// Helper function to convert MouseHookData to MouseData
+MouseData ConvertToMouseData(const MouseHookData& hookData, const std::string& windowTitle) {
+    MouseData mouseData;
+    
+    // Convert timestamp string to uint64_t
+    try {
+        mouseData.timestamp = std::stoull(hookData.timestamp);
+    } catch (...) {
+        mouseData.timestamp = 0;
+    }
+    
+    // Convert event type
+    switch (hookData.eventType) {
+        case WM_LBUTTONDOWN: case WM_RBUTTONDOWN: case WM_MBUTTONDOWN: case WM_XBUTTONDOWN:
+            mouseData.eventType = MouseData::EventType::MOUSE_DOWN;
+            break;
+        case WM_LBUTTONUP: case WM_RBUTTONUP: case WM_MBUTTONUP: case WM_XBUTTONUP:
+            mouseData.eventType = MouseData::EventType::MOUSE_UP;
+            break;
+        case WM_MOUSEMOVE:
+            mouseData.eventType = MouseData::EventType::MOUSE_MOVE;
+            break;
+        case WM_MOUSEWHEEL:
+            mouseData.eventType = MouseData::EventType::MOUSE_WHEEL;
+            break;
+        default:
+            mouseData.eventType = MouseData::EventType::MOUSE_MOVE;
+    }
+    
+    // Convert button
+    switch (hookData.button) {
+        case MouseButton::LEFT: mouseData.button = MouseData::Button::LEFT; break;
+        case MouseButton::RIGHT: mouseData.button = MouseData::Button::RIGHT; break;
+        case MouseButton::MIDDLE: mouseData.button = MouseData::Button::MIDDLE; break;
+        case MouseButton::X1: mouseData.button = MouseData::Button::X1; break;
+        case MouseButton::X2: mouseData.button = MouseData::Button::X2; break;
+        default: mouseData.button = MouseData::Button::NONE;
+    }
+    
+    mouseData.position.x = hookData.position.x;
+    mouseData.position.y = hookData.position.y;
+    mouseData.wheelDelta = hookData.wheelDelta;
+    mouseData.windowTitle = windowTitle;
+    
+    return mouseData;
+}
+
+// Helper function to get active window title
+std::string MouseHook::GetActiveWindowTitle() const {
+    char windowTitle[256] = {0};
+    HWND hwnd = GetForegroundWindow();
+    if (hwnd) {
+        GetWindowTextA(hwnd, windowTitle, sizeof(windowTitle));
+    }
+    return std::string(windowTitle);
+}
+
 void MouseHook::ProcessMouseEvent(WPARAM eventType, MSLLHOOKSTRUCT* mouseStruct) {
     try {
-        MouseHookData mouseData;
-        mouseData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
-        mouseData.position.x = mouseStruct->pt.x;
-        mouseData.position.y = mouseStruct->pt.y;
-        mouseData.eventType = static_cast<unsigned int>(eventType);
-        mouseData.mouseData = mouseStruct->mouseData;
-        mouseData.flags = mouseStruct->flags;
-
-        // Determine which button was pressed
-        mouseData.button = GetMouseButton(eventType, mouseStruct->mouseData);
-
-        // Add wheel delta for wheel events
-        if (eventType == WM_MOUSEWHEEL) {
-            mouseData.wheelDelta = static_cast<short>(HIWORD(mouseStruct->mouseData));
-        } else {
-            mouseData.wheelDelta = 0;
-        }
+        MouseHookData mouseHookData;
+        mouseHookData.timestamp = utils::TimeUtils::GetCurrentTimestamp();
+        mouseHookData.position.x = mouseStruct->pt.x;
+        mouseHookData.position.y = mouseStruct->pt.y;
+        mouseHookData.eventType = static_cast<unsigned int>(eventType);
+        mouseHookData.mouseData = mouseStruct->mouseData;
+        mouseHookData.flags = mouseStruct->flags;
+        mouseHookData.button = GetMouseButton(eventType, mouseStruct->mouseData);
+        mouseHookData.wheelDelta = (eventType == WM_MOUSEWHEEL) ? 
+            static_cast<short>(HIWORD(mouseStruct->mouseData)) : 0;
 
         if (m_dataManager) {
+            // Get current window title
+            std::string windowTitle = GetActiveWindowTitle();
+            
+            // Convert to the expected MouseData format
+            MouseData mouseData = ConvertToMouseData(mouseHookData, windowTitle);
             m_dataManager->AddMouseData(mouseData);
         }
 
         // Debug logging
         if (Logger::GetLogLevel() <= LogLevel::LEVEL_DEBUG) {
-            LogMouseEvent(mouseData);
+            LogMouseEvent(mouseHookData);
         }
     }
     catch (const std::exception& e) {
@@ -129,7 +184,7 @@ MouseButton MouseHook::GetMouseButton(WPARAM eventType, DWORD mouseData) const {
     }
 }
 
-void MouseHook::LogMouseEvent(const MouseHookData& mouseData) {
+void MouseHook::LogMouseEvent(const MouseHookData& mouseData) const {
     std::string action;
     switch (mouseData.eventType) {
         case WM_LBUTTONDOWN: case WM_RBUTTONDOWN: case WM_MBUTTONDOWN:

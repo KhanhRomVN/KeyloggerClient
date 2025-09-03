@@ -1,4 +1,3 @@
-// KeyLoggerClient/include/data/DataManager.h
 #ifndef DATAMANAGER_H
 #define DATAMANAGER_H
 

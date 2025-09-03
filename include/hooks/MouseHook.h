@@ -35,9 +35,10 @@ private:
     static LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam);
     void ProcessMouseEvent(WPARAM eventType, MSLLHOOKSTRUCT* mouseStruct);
     MouseButton GetMouseButton(WPARAM eventType, DWORD mouseData) const;
+    void LogMouseEvent(const MouseHookData& mouseData) const;
+    std::string GetActiveWindowTitle() const;
     
     static MouseHook* s_instance;
-    void LogMouseEvent(const MouseHookData& mouseData) const;
 };
 
 #endif // MOUSEHOOK_H

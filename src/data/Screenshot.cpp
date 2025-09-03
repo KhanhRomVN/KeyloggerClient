@@ -15,6 +15,8 @@
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "ole32.lib") // For CreateStreamOnHGlobal
 
+using namespace Gdiplus;
+
 // Global GDI+ token for initialization
 ULONG_PTR g_gdiplusToken = 0;
 std::once_flag g_gdiplusInitFlag;
@@ -44,8 +46,8 @@ bool Screenshot::Capture(void* nativeHandle) {
 
 void Screenshot::Initialize() {
     std::call_once(g_gdiplusInitFlag, []() {
-        Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-        Gdiplus::GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, nullptr);
+        GdiplusStartupInput gdiplusStartupInput;
+        GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, nullptr);
     });
 }
 
@@ -173,23 +175,23 @@ bool Screenshot::SaveToFileWindows(const std::string& path) const {
         MultiByteToWideChar(CP_UTF8, 0, path.c_str(), (int)path.size(), &wpath[0], size_needed);
 
         // Create bitmap from raw data
-        Gdiplus::Bitmap bitmap(m_width, m_height, m_width * 3, 
+        Bitmap bitmap(m_width, m_height, m_width * 3, 
                               PixelFormat24bppRGB, const_cast<uint8_t*>(m_imageData.data()));
 
-        if (bitmap.GetLastStatus() != Gdiplus::Ok) {
+        if (bitmap.GetLastStatus() != Ok) {
             return false;
         }
 
         // Get PNG encoder CLSID
         CLSID clsidPng;
-        if (GetEncoderClsid("image/png", &clsidPng) == -1) {
+        if (GetEncoderClsid(L"image/png", &clsidPng) == -1) {
             return false;
         }
 
         // Save image
-        Gdiplus::Status status = bitmap.Save(wpath.c_str(), &clsidPng, nullptr);
+        Status status = bitmap.Save(wpath.c_str(), &clsidPng, nullptr);
         
-        return status == Gdiplus::Ok;
+        return status == Ok;
     }
     catch (...) {
         return false;
@@ -207,10 +209,10 @@ std::vector<uint8_t> Screenshot::Compress(int quality) const {
 std::vector<uint8_t> Screenshot::CompressWindows(int quality) const {
     try {
         // Create source bitmap
-        Gdiplus::Bitmap sourceBitmap(m_width, m_height, m_width * 3, 
+        Bitmap sourceBitmap(m_width, m_height, m_width * 3, 
                                    PixelFormat24bppRGB, const_cast<uint8_t*>(m_imageData.data()));
 
-        if (sourceBitmap.GetLastStatus() != Gdiplus::Ok) {
+        if (sourceBitmap.GetLastStatus() != Ok) {
             return std::vector<uint8_t>();
         }
 
@@ -224,22 +226,22 @@ std::vector<uint8_t> Screenshot::CompressWindows(int quality) const {
 
         // Get JPEG encoder CLSID
         CLSID clsidJpeg;
-        if (GetEncoderClsid("image/jpeg", &clsidJpeg) == -1) {
+        if (GetEncoderClsid(L"image/jpeg", &clsidJpeg) == -1) {
             return std::vector<uint8_t>();
         }
 
         // Set encoder parameters
-        Gdiplus::EncoderParameters encoderParams;
+        EncoderParameters encoderParams;
         encoderParams.Count = 1;
-        encoderParams.Parameter[0].Guid = Gdiplus::EncoderQuality;
-        encoderParams.Parameter[0].Type = Gdiplus::EncoderParameterValueTypeLong;
+        encoderParams.Parameter[0].Guid = EncoderQuality;
+        encoderParams.Parameter[0].Type = EncoderParameterValueTypeLong;
         encoderParams.Parameter[0].NumberOfValues = 1;
         ULONG qualityValue = static_cast<ULONG>(quality);
         encoderParams.Parameter[0].Value = &qualityValue;
 
         // Save to stream
-        Gdiplus::Status status = sourceBitmap.Save(pStream, &clsidJpeg, &encoderParams);
-        if (status != Gdiplus::Ok) {
+        Status status = sourceBitmap.Save(pStream, &clsidJpeg, &encoderParams);
+        if (status != Ok) {
             return std::vector<uint8_t>();
         }
 
@@ -294,29 +296,24 @@ bool Screenshot::IsValid() const {
     return !m_imageData.empty() && m_width > 0 && m_height > 0;
 }
 
-int Screenshot::GetEncoderClsid(const char* format, CLSID* pClsid) {
+int Screenshot::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
     UINT num = 0;
     UINT size = 0;
 
-    Gdiplus::GetImageEncodersSize(&num, &size);
+    GetImageEncodersSize(&num, &size);
     if (size == 0) {
         return -1;
     }
 
     std::vector<uint8_t> buffer(size);
-    Gdiplus::ImageCodecInfo* pImageCodecInfo = reinterpret_cast<Gdiplus::ImageCodecInfo*>(buffer.data());
+    ImageCodecInfo* pImageCodecInfo = reinterpret_cast<ImageCodecInfo*>(buffer.data());
 
-    if (Gdiplus::GetImageEncoders(num, size, pImageCodecInfo) != Gdiplus::Ok) {
+    if (GetImageEncoders(num, size, pImageCodecInfo) != Ok) {
         return -1;
     }
 
-    // Convert format to wstring
-    int size_needed = MultiByteToWideChar(CP_UTF8, 0, format, -1, NULL, 0);
-    std::wstring wformat(size_needed, 0);
-    MultiByteToWideChar(CP_UTF8, 0, format, -1, &wformat[0], size_needed);
-
     for (UINT i = 0; i < num; ++i) {
-        if (wcscmp(pImageCodecInfo[i].MimeType, wformat.c_str()) == 0) {
+        if (wcscmp(pImageCodecInfo[i].MimeType, format) == 0) {
             *pClsid = pImageCodecInfo[i].Clsid;
             return i;
         }
@@ -373,7 +370,7 @@ std::vector<Screenshot> Screenshot::CaptureMultipleDisplays() {
 
 void Screenshot::Cleanup() {
     if (g_gdiplusToken) {
-        Gdiplus::GdiplusShutdown(g_gdiplusToken);
+        GdiplusShutdown(g_gdiplusToken);
         g_gdiplusToken = 0;
     }
 }

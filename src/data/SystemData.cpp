@@ -25,8 +25,8 @@ SystemInfo::SystemInfo()
 SystemInfo SystemDataCollector::Collect() const {
     SystemInfo info;
     
-    info.computerName = GetComputerName();
-    info.userName = GetUserName();
+    info.computerName = GetComputerName();        // Fixed: calling class method
+    info.userName = GetUserName();                // Fixed: calling class method
     info.osVersion = GetOSVersion();
     info.memorySize = GetMemorySize();
     info.processorInfo = GetProcessorInfo();
@@ -41,7 +41,8 @@ std::string SystemDataCollector::GetComputerName() {
     char computerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD size = sizeof(computerName);
     
-    if (GetComputerNameA(computerName, &size)) {
+    // Fixed: Correct call to Windows API function with proper parameters
+    if (::GetComputerNameA(computerName, &size)) {
         return std::string(computerName, size);
     }
     return "Unknown";
@@ -51,8 +52,9 @@ std::string SystemDataCollector::GetUserName() {
     char userName[256];
     DWORD size = sizeof(userName);
     
-    if (GetUserNameA(userName, &size)) {
-        return std::string(userName, size - 1);
+    // Fixed: Correct call to Windows API function with proper parameters
+    if (::GetUserNameA(userName, &size)) {
+        return std::string(userName, size - 1); // Remove null terminator from count
     }
     return "Unknown";
 }
@@ -62,7 +64,7 @@ std::string SystemDataCollector::GetOSVersion() {
     ZeroMemory(&osvi, sizeof(OSVERSIONINFOEXA));
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXA);
     
-    if (GetVersionExA((OSVERSIONINFOA*)&osvi)) {
+    if (::GetVersionExA((OSVERSIONINFOA*)&osvi)) {
         std::stringstream ss;
         ss << "Windows " << osvi.dwMajorVersion << "." << osvi.dwMinorVersion
            << " Build " << osvi.dwBuildNumber;
@@ -75,7 +77,7 @@ uint64_t SystemDataCollector::GetMemorySize() {
     MEMORYSTATUSEX memoryStatus;
     memoryStatus.dwLength = sizeof(memoryStatus);
     
-    if (GlobalMemoryStatusEx(&memoryStatus)) {
+    if (::GlobalMemoryStatusEx(&memoryStatus)) {
         return memoryStatus.ullTotalPhys / (1024 * 1024); // MB
     }
     return 0;
@@ -86,10 +88,10 @@ std::string SystemDataCollector::GetProcessorInfo() {
     char processorName[256];
     DWORD size = sizeof(processorName);
     
-    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, 
+    if (::RegOpenKeyExA(HKEY_LOCAL_MACHINE, 
                      "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
                      0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-        if (RegQueryValueExA(hKey, "ProcessorNameString", NULL, NULL,
+        if (::RegQueryValueExA(hKey, "ProcessorNameString", NULL, NULL,
                             (LPBYTE)processorName, &size) == ERROR_SUCCESS) {
             RegCloseKey(hKey);
             return std::string(processorName);
@@ -102,7 +104,7 @@ std::string SystemDataCollector::GetProcessorInfo() {
 uint64_t SystemDataCollector::GetDiskSize() {
     ULARGE_INTEGER freeBytes, totalBytes, totalFreeBytes;
     
-    if (GetDiskFreeSpaceExA("C:", &freeBytes, &totalBytes, &totalFreeBytes)) {
+    if (::GetDiskFreeSpaceExA("C:", &freeBytes, &totalBytes, &totalFreeBytes)) {
         return totalBytes.QuadPart / (1024 * 1024 * 1024); // GB
     }
     return 0;
@@ -112,7 +114,7 @@ std::string SystemDataCollector::GetNetworkInfo() {
     PIP_ADAPTER_INFO adapterInfo = (IP_ADAPTER_INFO*)malloc(sizeof(IP_ADAPTER_INFO) * 16);
     ULONG bufferSize = sizeof(IP_ADAPTER_INFO) * 16;
     
-    if (GetAdaptersInfo(adapterInfo, &bufferSize) == ERROR_SUCCESS) {
+    if (::GetAdaptersInfo(adapterInfo, &bufferSize) == ERROR_SUCCESS) {
         std::stringstream ss;
         PIP_ADAPTER_INFO adapter = adapterInfo;
         
@@ -142,21 +144,21 @@ std::vector<std::string> SystemDataCollector::GetRunningProcesses() {
     
     DWORD processesIds[1024], cbNeeded;
     
-    if (EnumProcesses(processesIds, sizeof(processesIds), &cbNeeded)) {
+    if (::EnumProcesses(processesIds, sizeof(processesIds), &cbNeeded)) {
         DWORD cProcesses = cbNeeded / sizeof(DWORD);
         
         for (DWORD i = 0; i < cProcesses; i++) {
             if (processesIds[i] != 0) {
                 char processName[MAX_PATH] = "<unknown>";
-                HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | 
+                HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION | 
                                             PROCESS_VM_READ, FALSE, processesIds[i]);
                 
                 if (hProcess) {
                     HMODULE hMod;
                     DWORD cbNeeded;
                     
-                    if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded)) {
-                        GetModuleBaseNameA(hProcess, hMod, processName, 
+                    if (::EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded)) {
+                        ::GetModuleBaseNameA(hProcess, hMod, processName, 
                                          sizeof(processName));
                     }
                     CloseHandle(hProcess);

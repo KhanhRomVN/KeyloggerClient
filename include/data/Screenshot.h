@@ -10,7 +10,10 @@
 struct IStream;
 struct HWND__;
 typedef HWND__* HWND;
-struct CLSID;
+
+// Include proper Windows GDI+ headers
+#include <windows.h>
+#include <gdiplus.h>
 
 class Screenshot {
 public:
@@ -44,7 +47,7 @@ private:
     std::string m_timestamp;
     
     void Initialize();
-    static int GetEncoderClsid(const char* format, CLSID* pClsid);
+    static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid); // Changed to WCHAR
     
     bool CaptureWindows(HWND hwnd);
     bool SaveToFileWindows(const std::string& path) const;

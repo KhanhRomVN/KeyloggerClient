@@ -8,7 +8,6 @@
 #include <vector>
 #include <cstdint>
 #include <string>
-#include <cstring>
 #include <ctime>
 #include <windows.h>
 #include <fileapi.h>
