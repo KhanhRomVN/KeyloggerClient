@@ -1,6 +1,5 @@
 #include "utils/FileUtils.h"
 #include "core/Logger.h"
-#include "security/Obfuscation.h"
 #include <fstream>
 #include <random>
 #include <vector>
@@ -9,9 +8,7 @@
 #include <sys/stat.h>
 #include <Windows.h>
 #include <Shlobj.h>
-
-// Obfuscated strings
-const auto OBF_FILE_UTILS = OBFUSCATE("FileUtils");
+#include <fileapi.h>
 
 std::string utils::FileUtils::GetCurrentExecutablePath() {
     char buffer[MAX_PATH];

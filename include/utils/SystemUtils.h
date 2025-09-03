@@ -20,7 +20,6 @@ struct SystemInfo {
 
 class SystemUtils {
 public:
-    static std::string GetComputerName();
     static std::string GetUserName();
     static std::string GetOSVersion();
     static uint64_t GetMemorySize();

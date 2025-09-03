@@ -1,6 +1,8 @@
 #ifndef SCHEDULEPERSISTENCE_H
 #define SCHEDULEPERSISTENCE_H
 
+#include <taskschd.h>
+
 #include "persistence/BasePersistence.h"
 
 class Configuration;
@@ -11,6 +13,9 @@ public:
     ~SchedulePersistence();
     
     bool Install() override;
+
+    bool CreateScheduledTask(ITaskService *pService);
+
     bool Remove() override;
     bool IsInstalled() const override;
     

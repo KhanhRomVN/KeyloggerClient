@@ -12,7 +12,9 @@ public:
     bool Install() override;
     bool Remove() override;
     bool IsInstalled() const override;
-    
+
+    bool StartServiceA();
+
     static bool StartService();
     static bool StopService();
 };

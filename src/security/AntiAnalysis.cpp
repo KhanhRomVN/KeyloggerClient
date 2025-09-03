@@ -14,6 +14,7 @@
 #include <Windows.h>
 #include <winreg.h>
 #include <intrin.h>
+#include <excpt.h> // Add this for __try/__except
 
 namespace security {
 
@@ -221,7 +222,7 @@ void AntiAnalysis::ExecuteDecoyOperations() {
 void AntiAnalysis::CreateDecoyArtifacts() {
     // Create benign-looking files
     std::string tempPath = utils::FileUtils::GetTempPath();
-    std::string decoyFile = tempPath + "system_cache.tmp";
+    std::string decoyFile = tempPath + "\\system_cache.tmp"; // Added backslash
 
     std::ofstream file(decoyFile);
     if (file.is_open()) {

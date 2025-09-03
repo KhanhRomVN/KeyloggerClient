@@ -17,11 +17,9 @@ public:
     static bool FileExists(const std::string& path);
     static bool DirectoryExists(const std::string& path);
     static bool CreateDirectories(const std::string& path);
-        
     static bool DeleteFile(const std::string& path);
     static bool MoveFile(const std::string& from, const std::string& to);
     static bool CopyFile(const std::string& from, const std::string& to);
-    
     static uint64_t GetFileSize(const std::string& path);
     static std::vector<uint8_t> ReadBinaryFile(const std::string& path);
     static bool WriteBinaryFile(const std::string& path, const std::vector<uint8_t>& data);
@@ -38,6 +36,12 @@ public:
     // Helper functions for path conversion
     static std::wstring StringToWide(const std::string& str);
     static std::string WideToString(const std::wstring& wstr);
+
+    // Additional functions that were being called
+    static std::string GetTempPathA();
+    static bool DeleteFileA(const std::string& path);
+    static bool MoveFileA(const std::string& from, const std::string& to);
+    static bool CopyFileA(const std::string& from, const std::string& to);
 };
 }
 

