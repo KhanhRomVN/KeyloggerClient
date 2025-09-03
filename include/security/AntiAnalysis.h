@@ -10,7 +10,7 @@ public:
     static bool IsDebuggerPresent();
     static bool IsRunningInVM();
     static bool IsSandboxed();
-    static void EvadeAnalysis();    
+    static void EvadeAnalysis();
     static bool IsLowOnResources();
     static void Countermeasure();
     static void ExecuteDecoyOperations();

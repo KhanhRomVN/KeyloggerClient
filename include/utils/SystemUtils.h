@@ -20,6 +20,10 @@ struct SystemInfo {
 
 class SystemUtils {
 public:
+    // Non-static methods
+    std::string GetComputerNameA();
+    
+    // Static methods
     static std::string GetUserName();
     static std::string GetOSVersion();
     static uint64_t GetMemorySize();
@@ -37,6 +41,7 @@ public:
     
     static void CriticalShutdown();
 };
+
 } // namespace utils
 
 #endif

